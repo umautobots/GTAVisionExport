@@ -29,17 +29,32 @@ namespace GTAVisionUtils {
             var parser = new FileIniDataParser();
             var location = AppDomain.CurrentDomain.BaseDirectory;
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
-            var settings = ScriptSettings.Load("GTAVisionExport.xml");
 
             //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
             var str = data["Database"]["ConnectionString"];
             
             var conn = new NpgsqlConnection(str);
             conn.Open();
-            settings.Save();
             return conn;
         }
 
+        public static Guid InsertSystemData(NpgsqlConnection conn)
+        {
+            var systemInfo = new WMIInformation();
+            using (var cmd = new NpgsqlCommand())
+            {
+                cmd.Parameters.AddWithValue("@system_uuid", systemInfo.system_uuid);
+                cmd.Parameters.AddWithValue("@vendor", systemInfo.vendor);
+                cmd.Parameters.AddWithValue("@dnshostname", systemInfo.dnshostname);
+                cmd.Parameters.AddWithValue("@username", systemInfo.username);
+                cmd.Parameters.AddWithValue("@systemtype", systemInfo.systemtype);
+                cmd.Parameters.AddWithValue("@totalmem", systemInfo.totalmem);
+                cmd.CommandText =
+                    "INSERT INTO systems (system_uuid, vendor, dnshostname, username, systemtype, totalmem) VALUES " +
+                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT DO NOTHING RETURNING system_uuid";
+                return Guid.Parse(cmd.ExecuteScalar() as string);
+            }
+        }
         public static int InsertInstanceData(NpgsqlConnection conn)
         {
             
@@ -132,6 +147,7 @@ namespace GTAVisionUtils {
             run.archiveKey = Path.Combine("images", run.guid + ".zip");
             var conn = OpenConnection();
             int instanceid = InsertInstanceData(conn);
+            InsertSystemData(conn);
             using (var cmd = new NpgsqlCommand())
             {
                 cmd.Connection = conn;

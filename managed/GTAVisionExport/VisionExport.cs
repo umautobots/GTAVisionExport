@@ -33,6 +33,7 @@ using System.Windows.Interop;
 using GTA.Native;
 using Color = System.Windows.Media.Color;
 using System.Configuration;
+using System.Threading;
 using IniParser;
 
 namespace GTAVisionExport {
@@ -40,9 +41,9 @@ namespace GTAVisionExport {
     class VisionExport : Script
     {
 #if DEBUG
-        const string session_name = "NEW_DATA_CAPTURE_NATURAL_V4_TRACKING";
+        const string session_name = "NEW_DATA_CAPTURE_NATURAL_V4_3";
 #else
-        const string session_name = "NEW_DATA_CAPTURE_NATURAL_V4";
+        const string session_name = "NEW_DATA_CAPTURE_NATURAL_V4_3";
 #endif
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
@@ -79,10 +80,7 @@ namespace GTAVisionExport {
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
             var access_key = data["aws"]["access_key"];
             var secret_key = data["aws"]["secret_key"];
-#if DEBUG
-#else
-            client = new AmazonS3Client(new BasicAWSCredentials(access_key, secret_key), RegionEndpoint.USEast1);
-#endif
+            //client = new AmazonS3Client(new BasicAWSCredentials(access_key, secret_key), RegionEndpoint.USEast1);
             //outputPath = @"D:\Datasets\GTA\";
             //outputPath = Path.Combine(outputPath, "testData.yaml");
             //outStream = File.CreateText(outputPath);
@@ -171,22 +169,25 @@ namespace GTAVisionExport {
             }
         }
 
-        private async Task UploadFile()
+        private void UploadFile()
         {
-#if DEBUG
             
             archive.Dispose();
             var oldOutput = outputPath;
             if (oldOutput != null)
             {
-                await Task.Run(() => File.Move(oldOutput, Path.Combine(dataPath, run.guid + ".zip")));
+                new Thread(() =>
+                {
+                    File.Move(oldOutput, Path.Combine(dataPath, run.guid + ".zip"));
+                }).Start();
             }
+            
             outputPath = Path.GetTempFileName();
             S3Stream = File.Open(outputPath, FileMode.Truncate);
             archive = new ZipArchive(S3Stream, ZipArchiveMode.Update);
-            File.Delete(oldOutput);
+            //File.Delete(oldOutput);
             
-#else
+            /*
             archive.Dispose();
             var req = new PutObjectRequest {
                 BucketName = "gtadata",
@@ -200,7 +201,7 @@ namespace GTAVisionExport {
             
             await resp;
             File.Delete(req.FilePath);
-#endif
+            */
         }
         public void OnTick(object o, EventArgs e)
         {
@@ -252,7 +253,7 @@ namespace GTAVisionExport {
             List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
             Script.Wait(500);
-            GTAData dat = GTAData.DumpData(Game.GameTime + ".tiff", new List<Weather>(wantedWeather));
+            GTAData dat = GTAData.DumpData(Game.GameTime + ".tiff", new List<Weather>());
             if (dat == null) return;
             var thisframe = VisionNative.GetCurrentTime();
             var depth = VisionNative.GetDepthBuffer();
@@ -276,7 +277,13 @@ namespace GTAVisionExport {
             var depthframe = VisionNative.GetLastConstantTime();
             var constantframe = VisionNative.GetLastConstantTime();
             //UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
-            if (depth == null || stencil == null) return;
+            UI.Notify(colors[0].Length.ToString());
+            if (depth == null || stencil == null)
+            {
+                UI.Notify("No DEPTH");
+                return;
+            }
+
             /*
              * this code checks to see if there's drift
              * it's kinda pointless because we end up "straddling" a present call,
@@ -296,8 +303,10 @@ namespace GTAVisionExport {
             ImageUtils.WaitForProcessing();
             ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
                 Game.ScreenResolution.Height, colors, depth, stencil);
+            
             PostgresExport.SaveSnapshot(dat, run.guid);
-            if (S3Stream.Length > 512 * 1024 * 1024) {
+            S3Stream.Flush();
+            if ((Int64)S3Stream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
                 ImageUtils.WaitForProcessing();
                 StopRun();
                 runTask?.Wait();
@@ -378,7 +387,6 @@ namespace GTAVisionExport {
         {
             if (curSessionId == -1) return;
             PostgresExport.StopSession(curSessionId);
-            StopRun();
             curSessionId = -1;
         }
         public async Task StartRun()
@@ -412,8 +420,8 @@ namespace GTAVisionExport {
                 S3Stream.Flush();
             }
             enabled = false;
-            UploadFile().Wait();
             PostgresExport.StopRun(run);
+            UploadFile();
             run = null;
             
             Game.Player.LastVehicle.Alpha = int.MaxValue;

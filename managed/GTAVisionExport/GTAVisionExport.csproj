@@ -73,7 +73,7 @@
     </Reference>
     <Reference Include="NativeUI, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Games\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
+      <HintPath>G:\games\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
     </Reference>
     <Reference Include="Npgsql, Version=3.2.1.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\packages\Npgsql.3.2.1\lib\net451\Npgsql.dll</HintPath>
@@ -108,10 +108,10 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="VAutodrive">
-      <HintPath>D:\Games\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VAutodrive.dll</HintPath>
+      <HintPath>G:\games\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VAutodrive.dll</HintPath>
     </Reference>
     <Reference Include="VCommonFunctions">
-      <HintPath>D:\Games\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VCommonFunctions.dll</HintPath>
+      <HintPath>G:\games\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VCommonFunctions.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="YamlDotNet, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -131,10 +131,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NativeUI.dll" />
     <Content Include="ScriptHookVDotNet.dll" />
-    <Content Include="VAutodrive.dll" />
-    <Content Include="VCommonFunctions.dll" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

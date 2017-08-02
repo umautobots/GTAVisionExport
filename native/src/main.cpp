@@ -10,7 +10,7 @@
 #include <filesystem>
 #include <wincodec.h>
 #include <cstdio>
-#include "MinHook.h"
+#include <MinHook.h>
 #include <cassert>
 #include <chrono>
 #include "export.h"
@@ -185,7 +185,7 @@ void draw_indexed_hook(ID3D11DeviceContext* self, UINT indexCount, UINT startLoc
 	ComPtr<ID3D11Device> dev;
 	self->GetDevice(&dev);
 	self->VSGetConstantBuffers(1, 1, &buf);
-	if (buf != nullptr && draw_indexed_count == 500) {
+	if (buf != nullptr && draw_indexed_count == 1000) {
 		lastConstants = buf;
 		ExtractConstantBuffer(dev.Get(), self, buf.Get());
 	}
@@ -198,8 +198,6 @@ void clear_render_target_view_hook(ID3D11DeviceContext* self, ID3D11RenderTarget
 	auto origMethod = reinterpret_cast<void (*)(ID3D11DeviceContext*, ID3D11RenderTargetView*, float[4])>(orig<50, ID3D11DeviceContext>);
 	
 	ComPtr<ID3D11RenderTargetView> curRTV;
-  ComPtr<ID3D11Device> dev;
-  self->GetDevice(&dev);
 	self->OMGetRenderTargets(1, &curRTV, nullptr);
 	if (curRTV != nullptr)
 	{
@@ -213,7 +211,6 @@ void clear_render_target_view_hook(ID3D11DeviceContext* self, ID3D11RenderTarget
 		tex->GetDesc(&desc);
 		if (desc.Format == DXGI_FORMAT_B8G8R8A8_UNORM && desc.Width > 1000 && desc.Height > 1000) {
 			lastRtv = curRTV;
-      ExtractColorBuffer(dev.Get(), self, res.Get());
 		}
 	}
 	origMethod(self, rtv, color);
