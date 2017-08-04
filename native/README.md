@@ -27,7 +27,7 @@ Build steps
 11. Open 'GTANativePlugin.sln' in Visual Studio.
 12. Select 'release' from the 'Solution Configurations' drop down.
 13. Edit GTAVisionNative project properties/configuration properties/c/c++/additional include dirs in VS to add the GTAVisionExport/src folder (this allows VS to find MinHook.h)
-14. Edit GTAVisionNative project properties/configuration properties/linker/additional dependencies to add :
+14. Edit GTAVisionNative project properties/configuration properties/linker/input/additional dependencies to add :
 `"..\..\deps\libMinHook.x64.lib"` 
 15. Press F6 to build the solution. it should now succeed and the products should be in 'GTAVisionExport\native\build\src\Release'
 16. Copy GTAVisionNative.asi & GTAVisionNative.lib to your GTAV exe folder.
