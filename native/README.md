@@ -10,9 +10,9 @@ Needed tools and libraries
 --------------------------
 AsiLoader and ScriptHookV	: http://www.dev-c.com/files/ScriptHookV_1.0.1180.2.zip
 
-cmake						: https://cmake.org/download/
+cmake				: https://cmake.org/download/
 
-Eigen3						: http://bitbucket.org/eigen/eigen/get/3.3.1.tar.bz2
+Eigen3				: http://bitbucket.org/eigen/eigen/get/3.3.1.tar.bz2
 
 MS Visual Studio 2017 		: https://www.visualstudio.com/cs/downloads/
 
