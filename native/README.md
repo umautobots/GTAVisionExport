@@ -8,9 +8,16 @@ GTX770, Windows 10 64bit, Visual Studio 2017 (community edition), cmake 3.9.0, G
 
 Needed tools and libraries
 --------------------------
-AsiLoader and ScriptHookV	: http://www.dev-c.com/files/ScriptHookV_1.0.1103.2.zip
-cmake					: https://cmake.org/download/
-Eigen3					: http://bitbucket.org/eigen/eigen/get/3.3.1.tar.bz2
+AsiLoader and ScriptHookV	: http://www.dev-c.com/files/ScriptHookV_1.0.1180.2.zip
+
+cmake						: https://cmake.org/download/
+
+Eigen3						: http://bitbucket.org/eigen/eigen/get/3.3.1.tar.bz2
+
+MS Visual Studio 2017 		: https://www.visualstudio.com/cs/downloads/
+
+MSBuild.exe in `PATH` variable, version 141.
+
 
 Build steps
 -----------
