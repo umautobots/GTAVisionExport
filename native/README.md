@@ -43,3 +43,14 @@ Build steps
 19. Get to a place where you want to grab frames and press 'l' (lowercase 'L') to grab a frame. GTAVisionExport should now create color.raw, stencil.raw and depth.raw files in your GTAV exe folder.
 
 HTH
+
+FAQ
+---
+
+The game crashes after pressing 'L':
+
+If you are using steam, be sure to disable the steam overlay for this game.
+
+If steam overlay is disabled and game still crashes, be sure to have resolution same or higher as constants in source code of this project.
+Default is 1000 x 1000, as can be seen [here](https://github.com/umautobots/GTAVisionExport/blob/4f2bf90997df056764605076c0c95b885c424c43/native/src/main.cpp#L235) and [here](https://github.com/umautobots/GTAVisionExport/blob/4f2bf90997df056764605076c0c95b885c424c43/native/src/main.cpp#L212).
+If you want to use lower resolution, change these numbers and recompile.
