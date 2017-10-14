@@ -25,6 +25,13 @@ The format of the conenction can be found at http://www.npgsql.org/doc/connectio
 ## database schema
 
 ```sql
+
+create type detection_type AS ENUM ('background', 'person', 'car', 'bicycle');
+
+create type detection_class AS ENUM ('Unknown',   'Compacts',   'Sedans',   'SUVs',   'Coupes',   'Muscle',   'SportsClassics',   'Sports',   'Super',   'Motorcycles',   'OffRoad',   'Industrial',   'Utility',   'Vans',   'Cycles',   'Boats',   'Helicopters',   'Planes',   'Service',   'Emergency',   'Military',   'Commercial',   'Train');
+
+create type weather AS ENUM ('Unknown', 'ExtraSunny', 'Clear', 'Clouds', 'Smog', 'Foggy', 'Overcast', 'Raining', 'ThunderStorm', 'Clearing', 'Neutral', 'Snowing', 'Blizzard', 'Snowlight', 'Christmas', 'Halloween');
+
 create table detections
 (
 	detection_id serial not null
@@ -38,7 +45,6 @@ create table detections
 	handle integer default '-1'::integer,
 	best_bbox box,
 	best_bbox_old box,
-	method detection_method default 'gtagame'::detection_method,
 	bbox3d box3d,
 	rot geometry,
 	coverage real default 0.0
@@ -94,7 +100,6 @@ create table snapshots
 	timeofday time,
 	currentweather weather,
 	camera_pos geometry(PointZ),
-	datasource data_source_type,
 	camera_direction geometry,
 	camera_fov real,
 	view_matrix double precision[],
