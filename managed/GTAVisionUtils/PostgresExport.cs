@@ -24,6 +24,7 @@ namespace GTAVisionUtils {
             NpgsqlConnection.MapEnumGlobally<DetectionType>();
             NpgsqlConnection.MapEnumGlobally<DetectionClass>(pgName: "detection_class", nameTranslator: new NpgsqlNullNameTranslator());
         }
+        
         public static NpgsqlConnection OpenConnection()
         {
             var parser = new FileIniDataParser();
@@ -171,6 +172,7 @@ namespace GTAVisionUtils {
         {
             await Task.Run(() => SaveSnapshotImpl(data, runId));
         }
+        
         public static void SaveSnapshotImpl(GTAData data, Guid runId)
         {
             var conn = OpenConnection();
