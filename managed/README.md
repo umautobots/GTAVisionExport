@@ -10,10 +10,14 @@ This is the managed portion of the gta vision export code. This gets information
 * NativeUI
 * others managed by nuget
 
-## building
+## Building
 First go through the refereces in visual studio and update the paths for the non-nuget dependencies. These dependencies will usually live in your GTAV ddirectory. Then simply build the GTAVisionExport project and copy the resulting files into {gtav directory}/Scripts.
 
-## database config
+There is ScriptHookVDotNet in references, but it is deprecated. Use ScriptHookVDotNet2 instead of ScriptHookVDotNet.
+
+Probably, you will need to add the System.Management dependency for it to work.
+
+## Database config
 In order the connect to the database the managed plugins needs to know your database information. 
 
 For that, create `GTAVision.ini` file in your scripts directory with following content:
@@ -30,7 +34,7 @@ Example config for localhost:
 ConnectionString=Server=127.0.0.1;Port=5432;Database=postgres;User Id=postgres;Password=postgres;
 ```
 
-## database schema
+## Database schema
 
 ```sql
 
@@ -228,3 +232,60 @@ create table system_graphics
 
 
 ```
+
+## Copying compiled files to GTA V
+After you compile the GTAVisionExport, copy compiled files from the `path to GTAVisionExport/managed/GTAVisionExport/bin/Release` to `path to GTA V/scripts`.
+Content of `scripts` directory should be following: 
+- AWSSDK.dll
+- BitMiracle.LibTiff.NET.dll
+- BitMiracle.LibTiff.NET.xml
+- gdal_csharp.dll
+- GTAVision.ini
+- GTAVisionExport.dll
+- GTAVisionUtils.dll
+- GTAVisionUtils.dll.config
+- INIFileParser.dll
+- INIFileParser.xml
+- MathNet.Numerics.dll
+- MathNet.Numerics.xml
+- Microsoft.Extensions.DependencyInjection.Abstractions.dll
+- Microsoft.Extensions.DependencyInjection.Abstractions.xml
+- Microsoft.Extensions.Logging.Abstractions.dll
+- Microsoft.Extensions.Logging.Abstractions.xml
+- Microsoft.Extensions.Logging.dll
+- Microsoft.Extensions.Logging.xml
+- NativeUI.dll
+- Npgsql.dll
+- Npgsql.xml
+- ogr_csharp.dll
+- osr_csharp.dll
+- SharpDX.dll
+- SharpDX.Mathematics.dll
+- SharpDX.Mathematics.xml
+- SharpDX.xml
+- System.Runtime.InteropServices.RuntimeInformation.dll
+- System.Threading.Tasks.Extensions.dll
+- System.Threading.Tasks.Extensions.xml
+- VAutodrive.dll
+- VAutodriveConfig.xml
+- VCommonFunctions.dll
+- YamlDotNet.dll
+- YamlDotNet.xml
+
+
+## Verifying it loaded correctly
+
+To verify all plugins loaded, see the `ScriptHookVDotNet2.log` and search for this line:
+```
+[23:02:26] [DEBUG] Starting 10 script(s) ...
+```
+
+If less than 10 scripts loaded, you have problem.
+
+## Usage
+
+In the game, turn off the HUD, MSAA and Radar.
+
+Turn the plugin on by "Page Up" in the game.
+
+Then, collect data by pressing "N" key.
