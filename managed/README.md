@@ -14,13 +14,21 @@ This is the managed portion of the gta vision export code. This gets information
 First go through the refereces in visual studio and update the paths for the non-nuget dependencies. These dependencies will usually live in your GTAV ddirectory. Then simply build the GTAVisionExport project and copy the resulting files into {gtav directory}/Scripts.
 
 ## database config
-In order the connect to the database the managed plugins needs to know your database information. This is provided in an ini file that looks like the following:
+In order the connect to the database the managed plugins needs to know your database information. 
+
+For that, create `GTAVision.ini` file in your scripts directory with following content:
 ```ini
 [Database]
 ConnectionString=<npgsql connection string>
 ```
 
 The format of the conenction can be found at http://www.npgsql.org/doc/connection-string-parameters.html
+
+Example config for localhost:
+```ini
+[Database]
+ConnectionString=Server=127.0.0.1;Port=5432;Database=postgres;User Id=postgres;Password=postgres;
+```
 
 ## database schema
 
