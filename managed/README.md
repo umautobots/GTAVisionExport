@@ -10,11 +10,17 @@ This is the managed portion of the gta vision export code. This gets information
 * NativeUI
 * others managed by nuget
 
-## building
+## Building
 First go through the refereces in visual studio and update the paths for the non-nuget dependencies. These dependencies will usually live in your GTAV ddirectory. Then simply build the GTAVisionExport project and copy the resulting files into {gtav directory}/Scripts.
 
-## database config
-In order the connect to the database the managed plugins needs to know your database information. This is provided in an ini file that looks like the following:
+There is ScriptHookVDotNet in references, but it is deprecated. Use ScriptHookVDotNet2 instead of ScriptHookVDotNet.
+
+Probably, you will need to add the System.Management dependency for it to work.
+
+## Database config
+In order the connect to the database the managed plugins needs to know your database information. 
+
+For that, create `GTAVision.ini` file in your scripts directory with following content:
 ```ini
 [Database]
 ConnectionString=<npgsql connection string>
@@ -22,9 +28,22 @@ ConnectionString=<npgsql connection string>
 
 The format of the conenction can be found at http://www.npgsql.org/doc/connection-string-parameters.html
 
-## database schema
+Example config for localhost:
+```ini
+[Database]
+ConnectionString=Server=127.0.0.1;Port=5432;Database=postgres;User Id=postgres;Password=postgres;
+```
+
+## Database schema
 
 ```sql
+
+create type detection_type AS ENUM ('background', 'person', 'car', 'bicycle');
+
+create type detection_class AS ENUM ('Unknown',   'Compacts',   'Sedans',   'SUVs',   'Coupes',   'Muscle',   'SportsClassics',   'Sports',   'Super',   'Motorcycles',   'OffRoad',   'Industrial',   'Utility',   'Vans',   'Cycles',   'Boats',   'Helicopters',   'Planes',   'Service',   'Emergency',   'Military',   'Commercial',   'Train');
+
+create type weather AS ENUM ('Unknown', 'ExtraSunny', 'Clear', 'Clouds', 'Smog', 'Foggy', 'Overcast', 'Raining', 'ThunderStorm', 'Clearing', 'Neutral', 'Snowing', 'Blizzard', 'Snowlight', 'Christmas', 'Halloween');
+
 create table detections
 (
 	detection_id serial not null
@@ -38,7 +57,6 @@ create table detections
 	handle integer default '-1'::integer,
 	best_bbox box,
 	best_bbox_old box,
-	method detection_method default 'gtagame'::detection_method,
 	bbox3d box3d,
 	rot geometry,
 	coverage real default 0.0
@@ -94,7 +112,6 @@ create table snapshots
 	timeofday time,
 	currentweather weather,
 	camera_pos geometry(PointZ),
-	datasource data_source_type,
 	camera_direction geometry,
 	camera_fov real,
 	view_matrix double precision[],
@@ -215,3 +232,60 @@ create table system_graphics
 
 
 ```
+
+## Copying compiled files to GTA V
+After you compile the GTAVisionExport, copy compiled files from the `path to GTAVisionExport/managed/GTAVisionExport/bin/Release` to `path to GTA V/scripts`.
+Content of `scripts` directory should be following: 
+- AWSSDK.dll
+- BitMiracle.LibTiff.NET.dll
+- BitMiracle.LibTiff.NET.xml
+- gdal_csharp.dll
+- GTAVision.ini
+- GTAVisionExport.dll
+- GTAVisionUtils.dll
+- GTAVisionUtils.dll.config
+- INIFileParser.dll
+- INIFileParser.xml
+- MathNet.Numerics.dll
+- MathNet.Numerics.xml
+- Microsoft.Extensions.DependencyInjection.Abstractions.dll
+- Microsoft.Extensions.DependencyInjection.Abstractions.xml
+- Microsoft.Extensions.Logging.Abstractions.dll
+- Microsoft.Extensions.Logging.Abstractions.xml
+- Microsoft.Extensions.Logging.dll
+- Microsoft.Extensions.Logging.xml
+- NativeUI.dll
+- Npgsql.dll
+- Npgsql.xml
+- ogr_csharp.dll
+- osr_csharp.dll
+- SharpDX.dll
+- SharpDX.Mathematics.dll
+- SharpDX.Mathematics.xml
+- SharpDX.xml
+- System.Runtime.InteropServices.RuntimeInformation.dll
+- System.Threading.Tasks.Extensions.dll
+- System.Threading.Tasks.Extensions.xml
+- VAutodrive.dll
+- VAutodriveConfig.xml
+- VCommonFunctions.dll
+- YamlDotNet.dll
+- YamlDotNet.xml
+
+
+## Verifying it loaded correctly
+
+To verify all plugins loaded, see the `ScriptHookVDotNet2.log` and search for this line:
+```
+[23:02:26] [DEBUG] Starting 10 script(s) ...
+```
+
+If less than 10 scripts loaded, you have problem.
+
+## Usage
+
+In the game, turn off the HUD, MSAA and Radar.
+
+Turn the plugin on by "Page Up" in the game.
+
+Then, collect data by pressing "N" key.
