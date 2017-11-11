@@ -44,6 +44,7 @@ namespace GTAVisionUtils {
             var systemInfo = new WMIInformation();
             using (var cmd = new NpgsqlCommand())
             {
+                cmd.Connection = conn;
                 cmd.Parameters.AddWithValue("@system_uuid", systemInfo.system_uuid);
                 cmd.Parameters.AddWithValue("@vendor", systemInfo.vendor);
                 cmd.Parameters.AddWithValue("@dnshostname", systemInfo.dnshostname);
@@ -56,6 +57,7 @@ namespace GTAVisionUtils {
                 return Guid.Parse(cmd.ExecuteScalar() as string);
             }
         }
+        
         public static int InsertInstanceData(NpgsqlConnection conn)
         {
             

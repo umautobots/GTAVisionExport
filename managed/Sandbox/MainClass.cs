@@ -156,7 +156,7 @@ namespace Sandbox
         public static NpgsqlConnection OpenConnection()
         {
             var parser = new FileIniDataParser();
-            var location = AppDomain.CurrentDomain.BaseDirectory;
+            var location = @"D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts";
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
 
             //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
@@ -192,10 +192,71 @@ namespace Sandbox
                 conn.Close();
             }
         }
+                
+        public static int InsertInstanceData(NpgsqlConnection conn)
+        {
+            
+            var instanceinfo = new InstanceData();
+            using (var cmd = new NpgsqlCommand())
+            {
+                cmd.Connection = conn;
+                
+                cmd.Parameters.AddWithValue("@host", System.Environment.MachineName);
+                cmd.Parameters.AddWithValue("@iid", DBNull.Value);
+                cmd.Parameters.AddWithValue("@typ", instanceinfo.type);
+                cmd.Parameters.AddWithValue("@pubhost", DBNull.Value);
+                cmd.Parameters.AddWithValue("@amiid", DBNull.Value);
+                
+                if (instanceinfo.type != "LOCALHOST")
+                {
+                    cmd.Parameters.AddWithValue("@host", instanceinfo.hostname);
+                    cmd.Parameters.AddWithValue("@iid", instanceinfo.instanceid);
+                    cmd.Parameters.AddWithValue("@typ", instanceinfo.type);
+                    cmd.Parameters.AddWithValue("@pubhost", instanceinfo.publichostname);
+                    cmd.Parameters.AddWithValue("@amiid", instanceinfo.amiid);
+                }
+                cmd.CommandText =
+                    "SELECT instance_id FROM instances WHERE hostname=@host AND instancetype=@typ AND instanceid=@iid AND amiid=@amiid AND publichostname=@pubhost";
+                var id = cmd.ExecuteScalar();
+                if (id == null)
+                {
+                    cmd.CommandText =
+                        "INSERT INTO instances (hostname, instanceid, instancetype, publichostname, amiid) VALUES (@host, @iid, @typ, @pubhost, @amiid) " +
+                        "RETURNING instance_id";
+                    return (int) cmd.ExecuteScalar();
+                }
+
+                return (int) id;
+
+            }
+        }
+
+        public static Guid InsertSystemData(NpgsqlConnection conn)
+        {
+            var systemInfo = new WMIInformation();
+            using (var cmd = new NpgsqlCommand())
+            {
+                cmd.Connection = conn;
+                cmd.Parameters.AddWithValue("@system_uuid", systemInfo.system_uuid);
+                cmd.Parameters.AddWithValue("@vendor", systemInfo.vendor);
+                cmd.Parameters.AddWithValue("@dnshostname", systemInfo.dnshostname);
+                cmd.Parameters.AddWithValue("@username", systemInfo.username);
+                cmd.Parameters.AddWithValue("@systemtype", systemInfo.systemtype);
+                cmd.Parameters.AddWithValue("@totalmem", systemInfo.totalmem);
+                cmd.CommandText =
+                    "INSERT INTO systems (system_uuid, vendor, dnshostname, username, systemtype, totalmem) VALUES " +
+                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT DO NOTHING RETURNING system_uuid";
+                return Guid.Parse(cmd.ExecuteScalar() as string);
+            }
+        }
 
         public static void Main(string[] args)
         {
             var systemInfo = new WMIInformation();
+            var conn = OpenConnection();
+            int instanceid = InsertInstanceData(conn);
+            InsertSystemData(conn);
+
 //            InitSQLTypes();
 //            InsertEnum();
         }
