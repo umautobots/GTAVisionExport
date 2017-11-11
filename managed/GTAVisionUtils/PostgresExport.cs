@@ -50,7 +50,7 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@dnshostname", systemInfo.dnshostname);
                 cmd.Parameters.AddWithValue("@username", systemInfo.username);
                 cmd.Parameters.AddWithValue("@systemtype", systemInfo.systemtype);
-                cmd.Parameters.AddWithValue("@totalmem", systemInfo.totalmem);
+                cmd.Parameters.AddWithValue("@totalmem", NpgsqlDbType.Bigint, systemInfo.totalmem);
                 cmd.CommandText =
                     "INSERT INTO systems (system_uuid, vendor, dnshostname, username, systemtype, totalmem) VALUES " +
                     "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT(system_uuid) " +
