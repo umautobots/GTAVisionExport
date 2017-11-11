@@ -141,6 +141,7 @@ create table instances
 	instancetype text,
 	publichostname text,
 	amiid text,
+    created timestamp without time zone default (now() at time zone 'utc'),
 	constraint instance_info_uniq
 		unique (hostname, instanceid, instancetype, publichostname, amiid)
 )
