@@ -38,7 +38,7 @@ namespace GTAVisionUtils
 
         public WMIGraphicsInformation(ManagementBaseObject from)
         {
-            deviceId = from.GetPropertyValue("DeivceID") as string;
+            deviceId = from.GetPropertyValue("DeviceID") as string;
             AdapterCompat = from.GetPropertyValue("AdapterCompatibility") as string;
             AdapterDACType = from.GetPropertyValue("AdapterDACType") as string;
             AdapterRAM = from.GetPropertyValue("AdapterRAM") as string;
