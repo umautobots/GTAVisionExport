@@ -59,7 +59,8 @@ create table detections
 	best_bbox_old box,
 	bbox3d box3d,
 	rot geometry,
-	coverage real default 0.0
+	coverage real default 0.0,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -73,7 +74,8 @@ create table runs
 	archivepath text,
 	localpath text,
 	session_id integer default 1,
-	instance_id integer default 0
+	instance_id integer default 0,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -87,7 +89,8 @@ create table sessions
 		constraint sessions_name_key
 			unique,
 	start timestamp with time zone,
-	"end" timestamp with time zone
+	"end" timestamp with time zone,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -141,6 +144,7 @@ create table instances
 	instancetype text,
 	publichostname text,
 	amiid text,
+    created timestamp without time zone default (now() at time zone 'utc'),
 	constraint instance_info_uniq
 		unique (hostname, instanceid, instancetype, publichostname, amiid)
 )
@@ -161,7 +165,8 @@ create table snapshot_weathers
 			references snapshots
 				on delete cascade,
 	weather_type weather,
-	snapshot_page integer
+	snapshot_page integer,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -172,7 +177,8 @@ create table uploads
 			primary key,
 	bucket text,
 	key text,
-	uploadid text
+	uploadid text,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -182,7 +188,8 @@ create table datasets
 		constraint datasets_pkey
 			primary key,
 	dataset_name text,
-	view_name text
+	view_name text,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -195,7 +202,8 @@ create table systems
 	dnshostname text,
 	username text,
 	systemtype text,
-	totalmem integer
+	totalmem bigint,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -226,7 +234,8 @@ create table system_graphics
 	rows integer,
 	refresh integer,
 	scanmode integer,
-	videomodedesc text
+	videomodedesc text,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
