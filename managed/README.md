@@ -284,8 +284,14 @@ If less than 10 scripts loaded, you have problem.
 
 ## Usage
 
+Make sure your PostgreSQL database is up.
+
+If you don't want to install one, you can use the one in docker. 
+Start the database in docker by `docker-compose up`.
+Default credentials are:
+- username: `postgres`
+- password: `postgres`
+
 In the game, turn off the HUD, MSAA and Radar.
-
 Turn the plugin on by "Page Up" in the game.
-
 Then, collect data by pressing "N" key.
