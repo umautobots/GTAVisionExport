@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace GTAVisionUtils
 {
 
-    class WMIGraphicsInformation
+    public class WMIGraphicsInformation
     {
         public string deviceId;
         public string AdapterCompat;
@@ -50,7 +50,7 @@ namespace GTAVisionUtils
 
         }
     }
-    class WMIInformation
+    public class WMIInformation
     {
         public Guid system_uuid;
         public string vendor;
