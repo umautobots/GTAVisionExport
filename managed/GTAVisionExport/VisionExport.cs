@@ -47,7 +47,7 @@ namespace GTAVisionExport {
 #endif
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
-        private readonly string dataPath = @"Z:\archives\";
+        private readonly string dataPath = @"D:\projekty\GTA-V-extractors\output\";
         private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
         private Player player;
         private string outputPath;
@@ -68,6 +68,7 @@ namespace GTAVisionExport {
         private StereoCamera cams;
         public VisionExport()
         {
+            System.IO.File.WriteAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", "VisionExport constructor called.\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
             PostgresExport.InitSQLTypes();
             player = Game.Player;
@@ -78,8 +79,8 @@ namespace GTAVisionExport {
             var parser = new FileIniDataParser();
             var location = AppDomain.CurrentDomain.BaseDirectory;
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
-            var access_key = data["aws"]["access_key"];
-            var secret_key = data["aws"]["secret_key"];
+            //var access_key = data["aws"]["access_key"];
+            //var secret_key = data["aws"]["secret_key"];
             //client = new AmazonS3Client(new BasicAWSCredentials(access_key, secret_key), RegionEndpoint.USEast1);
             //outputPath = @"D:\Datasets\GTA\";
             //outputPath = Path.Combine(outputPath, "testData.yaml");
@@ -99,7 +100,10 @@ namespace GTAVisionExport {
 
         private void handlePipeInput()
         {
-            //UI.Notify(server.Available.ToString());
+            System.IO.File.AppendAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", "VisionExport handlePipeInput called.\n");
+            UI.Notify("handlePipeInput called");
+            UI.Notify("server available:" + server.Available.ToString());
+            UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
             if (connection == null) return;
             
             byte[] inBuffer = new byte[1024];
@@ -125,7 +129,8 @@ namespace GTAVisionExport {
                 connection = null;
                 return;
             }
-            UI.Notify(str.Length.ToString());
+            UI.Notify("str length: " + str.Length.ToString());
+            UI.Notify("str: " + str.ToString());
             switch (str)
             {
                 case "START_SESSION":
@@ -171,7 +176,9 @@ namespace GTAVisionExport {
 
         private void UploadFile()
         {
-            
+            System.IO.File.AppendAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", "VisionExport UploadFile called.\n");
+            UI.Notify("UploadFile called");
+
             archive.Dispose();
             var oldOutput = outputPath;
             if (oldOutput != null)
@@ -205,7 +212,6 @@ namespace GTAVisionExport {
         }
         public void OnTick(object o, EventArgs e)
         {
-            
             
 
             if (server.Poll(10, SelectMode.SelectRead) && connection == null)
@@ -247,9 +253,13 @@ namespace GTAVisionExport {
                 case GameStatus.NoActionNeeded:
                     break;
             }
+            UI.Notify("runTask.IsCompleted: " + runTask.IsCompleted.ToString());
+            UI.Notify("postgresTask.IsCompleted: " + postgresTask.IsCompleted.ToString());
             if (!runTask.IsCompleted) return;
             if (!postgresTask.IsCompleted) return;
-            
+
+            UI.Notify("going to upload tiff");
+
             List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
             Script.Wait(500);
@@ -277,7 +287,7 @@ namespace GTAVisionExport {
             var depthframe = VisionNative.GetLastConstantTime();
             var constantframe = VisionNative.GetLastConstantTime();
             //UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
-            UI.Notify(colors[0].Length.ToString());
+            UI.Notify("colors length: " + colors[0].Length.ToString());
             if (depth == null || stencil == null)
             {
                 UI.Notify("No DEPTH");
@@ -300,6 +310,7 @@ namespace GTAVisionExport {
                 PostgresExport.SaveSnapshot(dat, run.guid);
             }
             */
+            UI.Notify("going to upload and save to postgres");
             ImageUtils.WaitForProcessing();
             ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
                 Game.ScreenResolution.Height, colors, depth, stencil);
@@ -344,6 +355,7 @@ namespace GTAVisionExport {
 
         public Bitmap CaptureScreen()
         {
+            UI.Notify("CaptureScreen called");
             var cap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
             var gfx = Graphics.FromImage(cap);
             //var dat = GTAData.DumpData(Game.GameTime + ".jpg");
@@ -490,6 +502,7 @@ namespace GTAVisionExport {
 
         public void OnKeyDown(object o, KeyEventArgs k)
         {
+            System.IO.File.AppendAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", "VisionExport OnKeyDown called.\n");
             if (k.KeyCode == Keys.PageUp)
             {
                 postgresTask?.Wait();
@@ -521,7 +534,8 @@ namespace GTAVisionExport {
 
                 //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
                 var str = settings.GetValue("", "ConnectionString");
-                UI.Notify(loc);
+                UI.Notify("BaseDirectory: " + loc);
+                UI.Notify("ConnectionString: " + str);
 
             }
             if (k.KeyCode == Keys.G) // temp modification
@@ -537,7 +551,7 @@ namespace GTAVisionExport {
                 */
                 var data = GTAData.DumpData(Game.GameTime + ".tiff", new List<Weather>(wantedWeather));
 
-                string path = @"C:\Users\NGV-02\Documents\Data\trymatrix.txt";
+                string path = @"D:\projekty\GTA-V-extractors\output\trymatrix.txt";
                 // This text is added only once to the file.
                 if (!File.Exists(path))
                 {
@@ -578,34 +592,12 @@ namespace GTAVisionExport {
 
             if (k.KeyCode == Keys.N)
             {
-                /*
-                //var color = VisionNative.GetColorBuffer();
+                UI.Notify("N pressed, going to print stats to file or what?");
                 
-                List<byte[]> colors = new List<byte[]>();
-                Game.Pause(true);
-                Script.Wait(1);
-                var depth = VisionNative.GetDepthBuffer();
-                var stencil = VisionNative.GetStencilBuffer();
-                foreach (var wea in wantedWeather) {
-                    World.TransitionToWeather(wea, 0.0f);
-                    Script.Wait(1);
-                    colors.Add(VisionNative.GetColorBuffer());
-                }
-                Game.Pause(false);
-                if (depth != null)
-                {
-                    var res = Game.ScreenResolution;
-                    var t = Tiff.Open(Path.Combine(dataPath, "test.tiff"), "w");
-                    ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
-                    t.Close();
-                    UI.Notify(GameplayCamera.FieldOfView.ToString());
-                }
-                else
-                {
-                    UI.Notify("No Depth Data quite yet");
-                }
-                //UI.Notify((connection != null && connection.Connected).ToString());
-                */
+                //var color = VisionNatGetColorBuffer();
+                
+                dumpTest();
+
                 //var color = VisionNative.GetColorBuffer();
                 for (int i = 0; i < 100; i++)
                 {
@@ -625,13 +617,13 @@ namespace GTAVisionExport {
                     var t = Tiff.Open(Path.Combine(dataPath, "info" + i.ToString() + ".tiff"), "w");
                     ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
                     t.Close();
-                    UI.Notify(GameplayCamera.FieldOfView.ToString());
+                    UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
                     //UI.Notify((connection != null && connection.Connected).ToString());
 
 
                     var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
 
-                    string path = @"C:\Users\NGV-02\Documents\Data\info.txt";
+                    string path = @"D:\projekty\GTA-V-extractors\output\info.txt";
                     // This text is added only once to the file.
                     if (!File.Exists(path))
                     {
@@ -653,6 +645,10 @@ namespace GTAVisionExport {
                         file.WriteLine(GameplayCamera.Direction.X.ToString());
                         file.WriteLine(GameplayCamera.Direction.Y.ToString());
                         file.WriteLine(GameplayCamera.Direction.Z.ToString());
+                        file.WriteLine("projection matrix");
+                        file.WriteLine(data.ProjectionMatrix.Values.ToString());
+                        file.WriteLine("view matrix");
+                        file.WriteLine(data.ViewMatrix.Values.ToString());
                         file.WriteLine("character");
                         file.WriteLine(data.Pos.X.ToString());
                         file.WriteLine(data.Pos.Y.ToString());
@@ -675,6 +671,35 @@ namespace GTAVisionExport {
                 UI.Notify(info.type);
                 UI.Notify(info.publichostname);
             }
+        }
+
+        private void dumpTest()
+        {
+            List<byte[]> colors = new List<byte[]>();
+            Game.Pause(true);
+            Script.Wait(1);
+            var depth = VisionNative.GetDepthBuffer();
+            var stencil = VisionNative.GetStencilBuffer();
+            foreach (var wea in wantedWeather)
+            {
+                World.TransitionToWeather(wea, 0.0f);
+                Script.Wait(1);
+                colors.Add(VisionNative.GetColorBuffer());
+            }
+            Game.Pause(false);
+            if (depth != null)
+            {
+                var res = Game.ScreenResolution;
+                var t = Tiff.Open(Path.Combine(dataPath, "test.tiff"), "w");
+                ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
+                t.Close();
+                UI.Notify(GameplayCamera.FieldOfView.ToString());
+            }
+            else
+            {
+                UI.Notify("No Depth Data quite yet");
+            }
+            UI.Notify((connection != null && connection.Connected).ToString());
         }
     }
 }

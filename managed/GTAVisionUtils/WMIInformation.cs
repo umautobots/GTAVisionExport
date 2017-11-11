@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace GTAVisionUtils
 {
 
-    class WMIGraphicsInformation
+    public class WMIGraphicsInformation
     {
         public string deviceId;
         public string AdapterCompat;
@@ -38,7 +38,7 @@ namespace GTAVisionUtils
 
         public WMIGraphicsInformation(ManagementBaseObject from)
         {
-            deviceId = from.GetPropertyValue("DeivceID") as string;
+            deviceId = from.GetPropertyValue("DeviceID") as string;
             AdapterCompat = from.GetPropertyValue("AdapterCompatibility") as string;
             AdapterDACType = from.GetPropertyValue("AdapterDACType") as string;
             AdapterRAM = from.GetPropertyValue("AdapterRAM") as string;
@@ -50,7 +50,7 @@ namespace GTAVisionUtils
 
         }
     }
-    class WMIInformation
+    public class WMIInformation
     {
         public Guid system_uuid;
         public string vendor;
