@@ -53,8 +53,9 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@totalmem", systemInfo.totalmem);
                 cmd.CommandText =
                     "INSERT INTO systems (system_uuid, vendor, dnshostname, username, systemtype, totalmem) VALUES " +
-                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT DO NOTHING RETURNING system_uuid";
-                return Guid.Parse(cmd.ExecuteScalar() as string);
+                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT(system_uuid) " +
+                    "DO UPDATE SET system_uuid = EXCLUDED.system_uuid RETURNING system_uuid";
+                return Guid.Parse(cmd.ExecuteScalar().ToString());
             }
         }
         
