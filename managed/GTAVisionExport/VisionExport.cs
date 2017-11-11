@@ -130,6 +130,7 @@ namespace GTAVisionExport {
                 return;
             }
             UI.Notify("str length: " + str.Length.ToString());
+            UI.Notify("str: " + str.ToString());
             switch (str)
             {
                 case "START_SESSION":
