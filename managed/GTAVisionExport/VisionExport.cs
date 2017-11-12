@@ -260,7 +260,7 @@ namespace GTAVisionExport {
 
 //            List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
-            Script.Wait(200);
+            Script.Wait(100);
             var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
             GTAData dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff", new List<Weather>());
             if (dat == null) return;
