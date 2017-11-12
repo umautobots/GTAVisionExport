@@ -59,7 +59,6 @@ namespace GTAVisionExport {
         private KeyHandling kh = new KeyHandling();
         private ZipArchive archive;
         private Stream S3Stream;
-        private AmazonS3Client client;
         private Task postgresTask;
         private Task runTask;
         private int curSessionId = -1;
@@ -79,9 +78,6 @@ namespace GTAVisionExport {
             var parser = new FileIniDataParser();
             var location = AppDomain.CurrentDomain.BaseDirectory;
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
-            //var access_key = data["aws"]["access_key"];
-            //var secret_key = data["aws"]["secret_key"];
-            //client = new AmazonS3Client(new BasicAWSCredentials(access_key, secret_key), RegionEndpoint.USEast1);
             //outputPath = @"D:\Datasets\GTA\";
             //outputPath = Path.Combine(outputPath, "testData.yaml");
             //outStream = File.CreateText(outputPath);
@@ -102,7 +98,7 @@ namespace GTAVisionExport {
         {
             System.IO.File.AppendAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", "VisionExport handlePipeInput called.\n");
             UI.Notify("handlePipeInput called");
-            UI.Notify("server available:" + server.Available.ToString());
+            UI.Notify("server connected:" + server.Connected.ToString());
             UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
             if (connection == null) return;
             
@@ -129,7 +125,6 @@ namespace GTAVisionExport {
                 connection = null;
                 return;
             }
-            UI.Notify("str length: " + str.Length.ToString());
             UI.Notify("str: " + str.ToString());
             switch (str)
             {
@@ -176,7 +171,7 @@ namespace GTAVisionExport {
 
         private void UploadFile()
         {
-            System.IO.File.AppendAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", "VisionExport UploadFile called.\n");
+            System.IO.File.AppendAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": VisionExport UploadFile called.\n");
             UI.Notify("UploadFile called");
 
             archive.Dispose();
@@ -447,6 +442,9 @@ namespace GTAVisionExport {
             */
             Model mod = new Model(GTA.Native.VehicleHash.Asea);
             var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
+            if (player == null) {UI.Notify("player is null");}
+            if (player.Character == null) {UI.Notify("player.Character is null");}
+            if (vehicle == null) {UI.Notify("vehicle is null");}
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             //vehicle.Alpha = 0; //transparent
             //player.Character.Alpha = 0;
