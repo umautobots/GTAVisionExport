@@ -44,18 +44,21 @@ namespace GTAVisionUtils {
             var systemInfo = new WMIInformation();
             using (var cmd = new NpgsqlCommand())
             {
+                cmd.Connection = conn;
                 cmd.Parameters.AddWithValue("@system_uuid", systemInfo.system_uuid);
                 cmd.Parameters.AddWithValue("@vendor", systemInfo.vendor);
                 cmd.Parameters.AddWithValue("@dnshostname", systemInfo.dnshostname);
                 cmd.Parameters.AddWithValue("@username", systemInfo.username);
                 cmd.Parameters.AddWithValue("@systemtype", systemInfo.systemtype);
-                cmd.Parameters.AddWithValue("@totalmem", systemInfo.totalmem);
+                cmd.Parameters.AddWithValue("@totalmem", NpgsqlDbType.Bigint, systemInfo.totalmem);
                 cmd.CommandText =
                     "INSERT INTO systems (system_uuid, vendor, dnshostname, username, systemtype, totalmem) VALUES " +
-                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT DO NOTHING RETURNING system_uuid";
-                return Guid.Parse(cmd.ExecuteScalar() as string);
+                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT(system_uuid) " +
+                    "DO UPDATE SET system_uuid = EXCLUDED.system_uuid RETURNING system_uuid";
+                return Guid.Parse(cmd.ExecuteScalar().ToString());
             }
         }
+        
         public static int InsertInstanceData(NpgsqlConnection conn)
         {
             
