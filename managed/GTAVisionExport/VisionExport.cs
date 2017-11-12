@@ -441,9 +441,11 @@ namespace GTAVisionExport {
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             */
             Model mod = new Model(GTA.Native.VehicleHash.Asea);
-            var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
+            if (mod == null) {UI.Notify("mod is null");}
             if (player == null) {UI.Notify("player is null");}
             if (player.Character == null) {UI.Notify("player.Character is null");}
+            UI.Notify("player position: " + player.Character.Position.ToString());
+            var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
             if (vehicle == null) {UI.Notify("vehicle is null");}
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             //vehicle.Alpha = 0; //transparent
