@@ -158,14 +158,15 @@ namespace GTAVisionExport {
                         .GetMethod("DoKeyboardMessage", BindingFlags.Instance | BindingFlags.Public);
                     m.Invoke(domain, new object[] {Keys.Insert, true, false, false, false});
                     break;
-                case "GET_SCREEN":
-                    var last = ImageUtils.getLastCapturedFrame();
-                    Int64 size = last.Length;
-                    UI.Notify("last size: " + size.ToString());
-                    size = IPAddress.HostToNetworkOrder(size);
-                    connection.Send(BitConverter.GetBytes(size));
-                    connection.Send(last);
-                    break;
+//                    uncomment when resolving, how the hell should I get image by socket correctly
+//                case "GET_SCREEN":
+//                    var last = ImageUtils.getLastCapturedFrame();
+//                    Int64 size = last.Length;
+//                    UI.Notify("last size: " + size.ToString());
+//                    size = IPAddress.HostToNetworkOrder(size);
+//                    connection.Send(BitConverter.GetBytes(size));
+//                    connection.Send(last);
+//                    break;
 
             }
         }
@@ -256,22 +257,22 @@ namespace GTAVisionExport {
 
             UI.Notify("going to upload tiff");
 
-            List<byte[]> colors = new List<byte[]>();
+//            List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
-            Script.Wait(500);
+            Script.Wait(200);
             GTAData dat = GTAData.DumpData(Game.GameTime + ".tiff", new List<Weather>());
             if (dat == null) return;
-            var thisframe = VisionNative.GetCurrentTime();
-            var depth = VisionNative.GetDepthBuffer();
-            var stencil = VisionNative.GetStencilBuffer();
-            colors.Add(VisionNative.GetColorBuffer());
+//            var thisframe = VisionNative.GetCurrentTime();
+//            var depth = VisionNative.GetDepthBuffer();
+//            var stencil = VisionNative.GetStencilBuffer();
+//            colors.Add(VisionNative.GetColorBuffer());
             /*
             foreach (var wea in wantedWeather) {
                 World.TransitionToWeather(wea, 0.0f);
                 Script.Wait(1);
                 colors.Add(VisionNative.GetColorBuffer());
             }*/
-            Game.Pause(false);
+//            Game.Pause(false);
             
             /*
             if (World.Weather != Weather.Snowing)
@@ -279,16 +280,16 @@ namespace GTAVisionExport {
                 World.TransitionToWeather(Weather.Snowing, 1);
                 
             }*/
-            var colorframe = VisionNative.GetLastColorTime();
-            var depthframe = VisionNative.GetLastConstantTime();
-            var constantframe = VisionNative.GetLastConstantTime();
+//            var colorframe = VisionNative.GetLastColorTime();
+//            var depthframe = VisionNative.GetLastConstantTime();
+//            var constantframe = VisionNative.GetLastConstantTime();
             //UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
-            UI.Notify("colors length: " + colors[0].Length.ToString());
-            if (depth == null || stencil == null)
-            {
-                UI.Notify("No DEPTH");
-                return;
-            }
+//            UI.Notify("colors length: " + colors[0].Length.ToString());
+//            if (depth == null || stencil == null)
+//            {
+//                UI.Notify("No DEPTH");
+//                return;
+//            }
 
             /*
              * this code checks to see if there's drift
@@ -306,21 +307,22 @@ namespace GTAVisionExport {
                 PostgresExport.SaveSnapshot(dat, run.guid);
             }
             */
-            UI.Notify("going to upload and save to postgres");
-            ImageUtils.WaitForProcessing();
-            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
-                Game.ScreenResolution.Height, colors, depth, stencil);
+            UI.Notify("going to save images and save to postgres");
+//            ImageUtils.WaitForProcessing();
+            saveSnapshotToFile(dat.ImageName);
+//            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
+//                Game.ScreenResolution.Height, colors, depth, stencil);
             
             UI.Notify("going to save snapshot");
             UI.Notify("current weather: " + dat.CurrentWeather.ToString());
             PostgresExport.SaveSnapshot(dat, run.guid);
-            outStream.Flush();
-            if ((Int64)outStream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
-                ImageUtils.WaitForProcessing();
-                StopRun();
-                runTask?.Wait();
-                runTask = StartRun();
-            }
+//            outStream.Flush();
+//            if ((Int64)outStream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
+//                ImageUtils.WaitForProcessing();
+//                StopRun();
+//                runTask?.Wait();
+//                runTask = StartRun();
+//            }
         }
 
         /* -1 = need restart, 0 = normal, 1 = need to enter vehicle */
@@ -610,66 +612,7 @@ namespace GTAVisionExport {
                 //var color = VisionNative.GetColorBuffer();
                 for (int i = 0; i < 100; i++)
                 {
-                    List<byte[]> colors = new List<byte[]>();
-                    Game.Pause(true);
-                    var depth = VisionNative.GetDepthBuffer();
-                    var stencil = VisionNative.GetStencilBuffer();
-                    foreach (var wea in wantedWeather)
-                    {
-                        World.TransitionToWeather(wea, 0.0f);
-                        Script.Wait(1);
-                        colors.Add(VisionNative.GetColorBuffer());
-                    }
-
-                    Game.Pause(false);
-                    var res = Game.ScreenResolution;
-                    var t = Tiff.Open(Path.Combine(dataPath, "info" + i.ToString() + ".tiff"), "w");
-                    ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
-                    t.Close();
-                    UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
-                    //UI.Notify((connection != null && connection.Connected).ToString());
-
-
-                    var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
-
-                    string path = @"D:\projekty\GTA-V-extractors\output\info.txt";
-                    // This text is added only once to the file.
-                    if (!File.Exists(path))
-                    {
-                        // Create a file to write to.
-                        using (StreamWriter file = File.CreateText(path))
-                        {
-                            file.WriteLine("cam direction & Ped pos file");
-                        }
-                    }
-
-                    using (StreamWriter file = File.AppendText(path))
-                    {
-                        file.WriteLine("==============info" + i.ToString() + ".tiff 's metadata=======================");
-                        file.WriteLine("cam pos");
-                        file.WriteLine(GameplayCamera.Position.X.ToString());
-                        file.WriteLine(GameplayCamera.Position.Y.ToString());
-                        file.WriteLine(GameplayCamera.Position.Z.ToString());
-                        file.WriteLine("cam direction");
-                        file.WriteLine(GameplayCamera.Direction.X.ToString());
-                        file.WriteLine(GameplayCamera.Direction.Y.ToString());
-                        file.WriteLine(GameplayCamera.Direction.Z.ToString());
-                        file.WriteLine("projection matrix");
-                        file.WriteLine(data.ProjectionMatrix.Values.ToString());
-                        file.WriteLine("view matrix");
-                        file.WriteLine(data.ViewMatrix.Values.ToString());
-                        file.WriteLine("character");
-                        file.WriteLine(data.Pos.X.ToString());
-                        file.WriteLine(data.Pos.Y.ToString());
-                        file.WriteLine(data.Pos.Z.ToString());
-                        foreach (var detection in data.Detections)
-                        {
-                            file.WriteLine(detection.Type.ToString());
-                            file.WriteLine(detection.Pos.X.ToString());
-                            file.WriteLine(detection.Pos.Y.ToString());
-                            file.WriteLine(detection.Pos.Z.ToString());
-                        }
-                    }
+                    saveSnapshotToFile(i.ToString() + ".tiff");
 
                     Script.Wait(200);
                 }
@@ -679,6 +622,70 @@ namespace GTAVisionExport {
                 var info = new GTAVisionUtils.InstanceData();
                 UI.Notify(info.type);
                 UI.Notify(info.publichostname);
+            }
+        }
+
+        private void saveSnapshotToFile(String name)
+        {
+            List<byte[]> colors = new List<byte[]>();
+            Game.Pause(true);
+            var depth = VisionNative.GetDepthBuffer();
+            var stencil = VisionNative.GetStencilBuffer();
+            foreach (var wea in wantedWeather)
+            {
+                World.TransitionToWeather(wea, 0.0f);
+                Script.Wait(1);
+                colors.Add(VisionNative.GetColorBuffer());
+            }
+
+            Game.Pause(false);
+            var res = Game.ScreenResolution;
+            var t = Tiff.Open(Path.Combine(dataPath, "info" + name), "w");
+            ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
+            t.Close();
+            UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
+            //UI.Notify((connection != null && connection.Connected).ToString());
+
+
+            var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
+
+            string path = @"D:\projekty\GTA-V-extractors\output\info.txt";
+            // This text is added only once to the file.
+            if (!File.Exists(path))
+            {
+                // Create a file to write to.
+                using (StreamWriter file = File.CreateText(path))
+                {
+                    file.WriteLine("cam direction & Ped pos file");
+                }
+            }
+
+            using (StreamWriter file = File.AppendText(path))
+            {
+                file.WriteLine("==============info" + i.ToString() + ".tiff 's metadata=======================");
+                file.WriteLine("cam pos");
+                file.WriteLine(GameplayCamera.Position.X.ToString());
+                file.WriteLine(GameplayCamera.Position.Y.ToString());
+                file.WriteLine(GameplayCamera.Position.Z.ToString());
+                file.WriteLine("cam direction");
+                file.WriteLine(GameplayCamera.Direction.X.ToString());
+                file.WriteLine(GameplayCamera.Direction.Y.ToString());
+                file.WriteLine(GameplayCamera.Direction.Z.ToString());
+                file.WriteLine("projection matrix");
+                file.WriteLine(data.ProjectionMatrix.Values.ToString());
+                file.WriteLine("view matrix");
+                file.WriteLine(data.ViewMatrix.Values.ToString());
+                file.WriteLine("character");
+                file.WriteLine(data.Pos.X.ToString());
+                file.WriteLine(data.Pos.Y.ToString());
+                file.WriteLine(data.Pos.Z.ToString());
+                foreach (var detection in data.Detections)
+                {
+                    file.WriteLine(detection.Type.ToString());
+                    file.WriteLine(detection.Pos.X.ToString());
+                    file.WriteLine(detection.Pos.Y.ToString());
+                    file.WriteLine(detection.Pos.Z.ToString());
+                }
             }
         }
 
