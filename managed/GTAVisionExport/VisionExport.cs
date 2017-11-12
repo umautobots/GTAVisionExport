@@ -444,6 +444,7 @@ namespace GTAVisionExport {
             var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
             if (player == null) {UI.Notify("player is null");}
             if (player.Character == null) {UI.Notify("player.Character is null");}
+            if (vehicle == null) {UI.Notify("vehicle is null");}
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             //vehicle.Alpha = 0; //transparent
             //player.Character.Alpha = 0;
