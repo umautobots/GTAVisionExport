@@ -296,6 +296,7 @@ If less than 10 scripts loaded, you have problem.
 
 ## Usage
 
+### Dependencies setup
 Make sure your PostgreSQL database is up.
 
 If you don't want to install one, you can use the one in docker. 
@@ -306,4 +307,12 @@ Default credentials are:
 
 In the game, turn off the HUD, MSAA and Radar.
 Turn the plugin on by "Page Up" in the game.
-Then, collect data by pressing "N" key.
+
+### Gathering screenshots
+There is either manual or automatic way.
+- Collect data manually by pressing "N" key.
+- Or you can use https://github.com/racinmat/GTAVisionExport-Server.
+    It contains python HTTP server with buttons to control the managed plugin. 
+    It connects to the socket server inside the managed plugin. 
+    When the main script starts, you can click the "START_SESSION" button and then it creates new car and starts 
+    driving autonomously and grabbing screenshots automatically.
