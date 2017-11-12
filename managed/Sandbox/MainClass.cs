@@ -255,11 +255,14 @@ namespace Sandbox
 
         public static void Main(string[] args)
         {
-            var systemInfo = new WMIInformation();
-            var conn = OpenConnection();
-            conn = null;
-            int instanceid = InsertInstanceData(conn);
-            InsertSystemData(conn);
+            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
+            var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
+            Console.WriteLine(fileName);
+//            var systemInfo = new WMIInformation();
+//            var conn = OpenConnection();
+//            conn = null;
+//            int instanceid = InsertInstanceData(conn);
+//            InsertSystemData(conn);
 
 //            InitSQLTypes();
 //            InsertEnum();
