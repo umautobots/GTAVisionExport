@@ -257,6 +257,7 @@ namespace Sandbox
         {
             var systemInfo = new WMIInformation();
             var conn = OpenConnection();
+            conn = null;
             int instanceid = InsertInstanceData(conn);
             InsertSystemData(conn);
 
