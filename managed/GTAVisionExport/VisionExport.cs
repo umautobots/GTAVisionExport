@@ -57,8 +57,8 @@ namespace GTAVisionExport {
         private Socket connection;
         private UTF8Encoding encoding = new UTF8Encoding(false);
         private KeyHandling kh = new KeyHandling();
-        private ZipArchive archive;
-        private Stream outStream;
+//        private ZipArchive archive;
+//        private Stream outStream;
         private Task postgresTask;
         private Task runTask;
         private int curSessionId = -1;
@@ -171,42 +171,43 @@ namespace GTAVisionExport {
             }
         }
 
-        private void UploadFile()
-        {
-            System.IO.File.AppendAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": VisionExport UploadFile called.\n");
-            UI.Notify("UploadFile called");
-
-            archive.Dispose();
-            var oldOutput = outputPath;
-            if (oldOutput != null)
-            {
-                new Thread(() =>
-                {
-                    File.Move(oldOutput, Path.Combine(dataPath, run.guid + ".zip"));
-                }).Start();
-            }
-            
-            outputPath = Path.GetTempFileName();
-            outStream = File.Open(outputPath, FileMode.Truncate);
-            archive = new ZipArchive(outStream, ZipArchiveMode.Update);
-            //File.Delete(oldOutput);
-            
-            /*
-            archive.Dispose();
-            var req = new PutObjectRequest {
-                BucketName = "gtadata",
-                Key = "images/" + run.guid + ".zip",
-                FilePath = outputPath
-            };
-            var resp = client.PutObjectAsync(req);
-            outputPath = Path.GetTempFileName();
-            S3Stream = File.Open(outputPath, FileMode.Truncate);
-            archive = new ZipArchive(S3Stream, ZipArchiveMode.Update);
-            
-            await resp;
-            File.Delete(req.FilePath);
-            */
-        }
+//        private void UploadFile()
+//        {
+//            System.IO.File.AppendAllText(@"D:\projekty\GTA-V-extractors\output\log.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": VisionExport UploadFile called.\n");
+//            UI.Notify("UploadFile called");
+//
+////            archive.Dispose();
+//            var oldOutput = outputPath;
+//            if (oldOutput != null)
+//            {
+//                new Thread(() =>
+//                {
+//                    File.Move(oldOutput, Path.Combine(dataPath, run.guid + ".zip"));
+//                }).Start();
+//            }
+//            
+//            outputPath = Path.GetTempFileName();
+//            outStream = File.Open(outputPath, FileMode.Truncate);
+////            archive = new ZipArchive(outStream, ZipArchiveMode.Update);
+//            //File.Delete(oldOutput);
+//            
+//            /*
+//            archive.Dispose();
+//            var req = new PutObjectRequest {
+//                BucketName = "gtadata",
+//                Key = "images/" + run.guid + ".zip",
+//                FilePath = outputPath
+//            };
+//            var resp = client.PutObjectAsync(req);
+//            outputPath = Path.GetTempFileName();
+//            S3Stream = File.Open(outputPath, FileMode.Truncate);
+//            archive = new ZipArchive(S3Stream, ZipArchiveMode.Update);
+//            
+//            await resp;
+//            File.Delete(req.FilePath);
+//            */
+//        }
+        
         public void OnTick(object o, EventArgs e)
         {
             
@@ -313,7 +314,7 @@ namespace GTAVisionExport {
 //            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
 //                Game.ScreenResolution.Height, colors, depth, stencil);
             
-            UI.Notify("going to save snapshot");
+            UI.Notify("going to save snapshot to db");
             UI.Notify("current weather: " + dat.CurrentWeather.ToString());
             PostgresExport.SaveSnapshot(dat, run.guid);
 //            outStream.Flush();
@@ -410,9 +411,9 @@ namespace GTAVisionExport {
             //var s3Info = new S3FileInfo(client, "gtadata", run.archiveKey);
             //S3Stream = s3Info.Create();
             
-            outputPath = Path.GetTempFileName();
-            outStream = File.Open(outputPath, FileMode.Truncate);
-            archive = new ZipArchive(outStream, ZipArchiveMode.Create);
+//            outputPath = Path.GetTempFileName();
+//            outStream = File.Open(outputPath, FileMode.Truncate);
+//            archive = new ZipArchive(outStream, ZipArchiveMode.Create);
             
             //archive = new ZipArchive(, ZipArchiveMode.Create);
             
@@ -427,13 +428,13 @@ namespace GTAVisionExport {
         {
             runTask?.Wait();
             ImageUtils.WaitForProcessing();
-            if (outStream.CanWrite)
-            {
-                outStream.Flush();
-            }
+//            if (outStream.CanWrite)
+//            {
+//                outStream.Flush();
+//            }
             enabled = false;
             PostgresExport.StopRun(run);
-            UploadFile();
+//            UploadFile();
             run = null;
             
             Game.Player.LastVehicle.Alpha = int.MaxValue;
@@ -640,53 +641,55 @@ namespace GTAVisionExport {
 
             Game.Pause(false);
             var res = Game.ScreenResolution;
-            var t = Tiff.Open(Path.Combine(dataPath, "info" + name), "w");
+            var fileName = Path.Combine(dataPath, "info-" + name);
+            var t = Tiff.Open(fileName, "w");
             ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
             t.Close();
+            UI.Notify("file saved to: " + fileName);
             UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
             //UI.Notify((connection != null && connection.Connected).ToString());
 
 
-            var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
+//            var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
 
-            string path = @"D:\projekty\GTA-V-extractors\output\info.txt";
-            // This text is added only once to the file.
-            if (!File.Exists(path))
-            {
-                // Create a file to write to.
-                using (StreamWriter file = File.CreateText(path))
-                {
-                    file.WriteLine("cam direction & Ped pos file");
-                }
-            }
-
-            using (StreamWriter file = File.AppendText(path))
-            {
-                file.WriteLine("==============info" + i.ToString() + ".tiff 's metadata=======================");
-                file.WriteLine("cam pos");
-                file.WriteLine(GameplayCamera.Position.X.ToString());
-                file.WriteLine(GameplayCamera.Position.Y.ToString());
-                file.WriteLine(GameplayCamera.Position.Z.ToString());
-                file.WriteLine("cam direction");
-                file.WriteLine(GameplayCamera.Direction.X.ToString());
-                file.WriteLine(GameplayCamera.Direction.Y.ToString());
-                file.WriteLine(GameplayCamera.Direction.Z.ToString());
-                file.WriteLine("projection matrix");
-                file.WriteLine(data.ProjectionMatrix.Values.ToString());
-                file.WriteLine("view matrix");
-                file.WriteLine(data.ViewMatrix.Values.ToString());
-                file.WriteLine("character");
-                file.WriteLine(data.Pos.X.ToString());
-                file.WriteLine(data.Pos.Y.ToString());
-                file.WriteLine(data.Pos.Z.ToString());
-                foreach (var detection in data.Detections)
-                {
-                    file.WriteLine(detection.Type.ToString());
-                    file.WriteLine(detection.Pos.X.ToString());
-                    file.WriteLine(detection.Pos.Y.ToString());
-                    file.WriteLine(detection.Pos.Z.ToString());
-                }
-            }
+//            string path = @"D:\projekty\GTA-V-extractors\output\info.txt";
+//            // This text is added only once to the file.
+//            if (!File.Exists(path))
+//            {
+//                // Create a file to write to.
+//                using (StreamWriter file = File.CreateText(path))
+//                {
+//                    file.WriteLine("cam direction & Ped pos file");
+//                }
+//            }
+//
+//            using (StreamWriter file = File.AppendText(path))
+//            {
+//                file.WriteLine("==============info" + i.ToString() + ".tiff 's metadata=======================");
+//                file.WriteLine("cam pos");
+//                file.WriteLine(GameplayCamera.Position.X.ToString());
+//                file.WriteLine(GameplayCamera.Position.Y.ToString());
+//                file.WriteLine(GameplayCamera.Position.Z.ToString());
+//                file.WriteLine("cam direction");
+//                file.WriteLine(GameplayCamera.Direction.X.ToString());
+//                file.WriteLine(GameplayCamera.Direction.Y.ToString());
+//                file.WriteLine(GameplayCamera.Direction.Z.ToString());
+//                file.WriteLine("projection matrix");
+//                file.WriteLine(data.ProjectionMatrix.Values.ToString());
+//                file.WriteLine("view matrix");
+//                file.WriteLine(data.ViewMatrix.Values.ToString());
+//                file.WriteLine("character");
+//                file.WriteLine(data.Pos.X.ToString());
+//                file.WriteLine(data.Pos.Y.ToString());
+//                file.WriteLine(data.Pos.Z.ToString());
+//                foreach (var detection in data.Detections)
+//                {
+//                    file.WriteLine(detection.Type.ToString());
+//                    file.WriteLine(detection.Pos.X.ToString());
+//                    file.WriteLine(detection.Pos.Y.ToString());
+//                    file.WriteLine(detection.Pos.Z.ToString());
+//                }
+//            }
         }
 
         private void dumpTest()
