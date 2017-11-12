@@ -178,7 +178,6 @@ namespace GTAVisionUtils {
         
         public static void SaveSnapshotImpl(GTAData data, Guid runId)
         {
-            UI.Notify("going to save snapshot");
             var conn = OpenConnection();
             var trans = conn.BeginTransaction();
             using (NpgsqlCommand cmd = new NpgsqlCommand())
@@ -186,7 +185,6 @@ namespace GTAVisionUtils {
                 
                 cmd.Connection = conn;
                 cmd.Transaction = trans;
-                UI.Notify("current weather: " + data.CurrentWeather.ToString());
                 cmd.CommandText =
                     "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_direction, camera_fov, view_matrix, proj_matrix, width, height) " +
                     "VALUES ( (SELECT run_id FROM runs WHERE runguid=@guid), " +

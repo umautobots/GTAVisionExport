@@ -311,6 +311,8 @@ namespace GTAVisionExport {
             ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
                 Game.ScreenResolution.Height, colors, depth, stencil);
             
+            UI.Notify("going to save snapshot");
+            UI.Notify("current weather: " + dat.CurrentWeather.ToString());
             PostgresExport.SaveSnapshot(dat, run.guid);
             outStream.Flush();
             if ((Int64)outStream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
