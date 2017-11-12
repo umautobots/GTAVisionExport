@@ -251,8 +251,10 @@ Content of `scripts` directory should be following:
 - gdal_csharp.dll
 - GTAVision.ini
 - GTAVisionExport.dll
+- GTAVisionExport.pdb
 - GTAVisionUtils.dll
 - GTAVisionUtils.dll.config
+- GTAVisionUtils.pdb
 - INIFileParser.dll
 - INIFileParser.xml
 - MathNet.Numerics.dll
@@ -281,6 +283,7 @@ Content of `scripts` directory should be following:
 - YamlDotNet.dll
 - YamlDotNet.xml
 
+PDB files enable you to see line number in the stacktrace, which is useful for debugging.
 
 ## Verifying it loaded correctly
 
