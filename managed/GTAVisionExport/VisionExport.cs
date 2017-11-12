@@ -58,7 +58,7 @@ namespace GTAVisionExport {
         private UTF8Encoding encoding = new UTF8Encoding(false);
         private KeyHandling kh = new KeyHandling();
         private ZipArchive archive;
-        private Stream S3Stream;
+        private Stream outStream;
         private Task postgresTask;
         private Task runTask;
         private int curSessionId = -1;
@@ -161,6 +161,7 @@ namespace GTAVisionExport {
                 case "GET_SCREEN":
                     var last = ImageUtils.getLastCapturedFrame();
                     Int64 size = last.Length;
+                    UI.Notify("last size: " + size.ToString());
                     size = IPAddress.HostToNetworkOrder(size);
                     connection.Send(BitConverter.GetBytes(size));
                     connection.Send(last);
@@ -185,8 +186,8 @@ namespace GTAVisionExport {
             }
             
             outputPath = Path.GetTempFileName();
-            S3Stream = File.Open(outputPath, FileMode.Truncate);
-            archive = new ZipArchive(S3Stream, ZipArchiveMode.Update);
+            outStream = File.Open(outputPath, FileMode.Truncate);
+            archive = new ZipArchive(outStream, ZipArchiveMode.Update);
             //File.Delete(oldOutput);
             
             /*
@@ -311,8 +312,8 @@ namespace GTAVisionExport {
                 Game.ScreenResolution.Height, colors, depth, stencil);
             
             PostgresExport.SaveSnapshot(dat, run.guid);
-            S3Stream.Flush();
-            if ((Int64)S3Stream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
+            outStream.Flush();
+            if ((Int64)outStream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
                 ImageUtils.WaitForProcessing();
                 StopRun();
                 runTask?.Wait();
@@ -406,8 +407,8 @@ namespace GTAVisionExport {
             //S3Stream = s3Info.Create();
             
             outputPath = Path.GetTempFileName();
-            S3Stream = File.Open(outputPath, FileMode.Truncate);
-            archive = new ZipArchive(S3Stream, ZipArchiveMode.Create);
+            outStream = File.Open(outputPath, FileMode.Truncate);
+            archive = new ZipArchive(outStream, ZipArchiveMode.Create);
             
             //archive = new ZipArchive(, ZipArchiveMode.Create);
             
@@ -422,9 +423,9 @@ namespace GTAVisionExport {
         {
             runTask?.Wait();
             ImageUtils.WaitForProcessing();
-            if (S3Stream.CanWrite)
+            if (outStream.CanWrite)
             {
-                S3Stream.Flush();
+                outStream.Flush();
             }
             enabled = false;
             PostgresExport.StopRun(run);
