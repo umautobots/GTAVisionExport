@@ -35,22 +35,19 @@ namespace GTAVisionUtils {
             List<byte[]> colors, byte[] depth, byte[] stencil)
         {
             var memstream = new MemoryStream();
-            var tiff = Tiff.ClientOpen(name, "w", memstream, new TiffStream());
-            WriteToTiff(tiff, w, h, colors, depth, stencil);
-            tiff.Flush();
-            tiff.Close();
+            WriteToTiff(name, w, h, colors, depth, stencil);
             var entry = archive.CreateEntry(name + ".tiff", CompressionLevel.NoCompression);
             var entryStream = entry.Open();
             lastCapturedBytes = memstream.ToArray();
             entryStream.Write(lastCapturedBytes, 0, lastCapturedBytes.Length);
             entryStream.Close();
-            //tiff.Close();
             memstream.Close();
 
         }
 
-        public static void WriteToTiff(Tiff t, int width, int height, List<byte[]> colors, byte[] depth, byte[] stencil)
+        public static void WriteToTiff(string name, int width, int height, List<byte[]> colors, byte[] depth, byte[] stencil)
         {
+            var t = Tiff.Open(name, "w");
             var pages = colors.Count + 2;
             var page = 0;
             foreach (var color in colors)
@@ -107,6 +104,7 @@ namespace GTAVisionUtils {
             t.WriteEncodedStrip(0, stencil, stencil.Length);
             t.WriteDirectory();
             t.Flush();
+            t.Close();
         }
         
     }

@@ -643,9 +643,7 @@ namespace GTAVisionExport {
             Game.Pause(false);
             var res = Game.ScreenResolution;
             var fileName = Path.Combine(dataPath, "info-" + name);
-            var t = Tiff.Open(fileName, "w");
-            ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
-            t.Close();
+            ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil);
             UI.Notify("file saved to: " + fileName);
             UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
             //UI.Notify((connection != null && connection.Connected).ToString());
@@ -710,9 +708,7 @@ namespace GTAVisionExport {
             if (depth != null)
             {
                 var res = Game.ScreenResolution;
-                var t = Tiff.Open(Path.Combine(dataPath, "test.tiff"), "w");
-                ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
-                t.Close();
+                ImageUtils.WriteToTiff(Path.Combine(dataPath, "test.tiff"), res.Width, res.Height, colors, depth, stencil);
                 UI.Notify(GameplayCamera.FieldOfView.ToString());
             }
             else
