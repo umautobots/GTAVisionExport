@@ -262,7 +262,7 @@ namespace GTAVisionExport {
             Game.Pause(true);
             Script.Wait(100);
             var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss";
-            GTAData dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff", new List<Weather>());
+            GTAData dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather.ToList());
             if (dat == null) return;
 //            var thisframe = VisionNative.GetCurrentTime();
 //            var depth = VisionNative.GetDepthBuffer();
@@ -311,7 +311,7 @@ namespace GTAVisionExport {
             */
             UI.Notify("going to save images and save to postgres");
 //            ImageUtils.WaitForProcessing();
-            saveSnapshotToFile(dat.ImageName);
+            saveSnapshotToFile(dat.ImageName, wantedWeather);
 //            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
 //                Game.ScreenResolution.Height, colors, depth, stencil);
             
@@ -614,7 +614,7 @@ namespace GTAVisionExport {
                 //var color = VisionNative.GetColorBuffer();
                 for (int i = 0; i < 100; i++)
                 {
-                    saveSnapshotToFile(i.ToString() + ".tiff");
+                    saveSnapshotToFile(i.ToString(), wantedWeather);
 
                     Script.Wait(200);
                 }
@@ -627,13 +627,13 @@ namespace GTAVisionExport {
             }
         }
 
-        private void saveSnapshotToFile(String name)
+        private void saveSnapshotToFile(String name, Weather[] weathers)
         {
             List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
-            foreach (var wea in wantedWeather)
+            foreach (var wea in weathers)
             {
                 World.TransitionToWeather(wea, 0.0f);
                 Script.Wait(1);
@@ -645,7 +645,7 @@ namespace GTAVisionExport {
             var fileName = Path.Combine(dataPath, "info-" + name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil);
             UI.Notify("file saved to: " + fileName);
-            UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
+//            UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
             //UI.Notify((connection != null && connection.Connected).ToString());
 
 
@@ -708,7 +708,7 @@ namespace GTAVisionExport {
             if (depth != null)
             {
                 var res = Game.ScreenResolution;
-                ImageUtils.WriteToTiff(Path.Combine(dataPath, "test.tiff"), res.Width, res.Height, colors, depth, stencil);
+                ImageUtils.WriteToTiff(Path.Combine(dataPath, "test"), res.Width, res.Height, colors, depth, stencil);
                 UI.Notify(GameplayCamera.FieldOfView.ToString());
             }
             else
