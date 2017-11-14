@@ -196,25 +196,25 @@ namespace Sandbox
         public static int InsertInstanceData(NpgsqlConnection conn)
         {
             
-            var instanceinfo = new InstanceData();
+//            var instanceinfo = new InstanceData();
             using (var cmd = new NpgsqlCommand())
             {
                 cmd.Connection = conn;
                 
-                cmd.Parameters.AddWithValue("@host", System.Environment.MachineName);
-                cmd.Parameters.AddWithValue("@iid", DBNull.Value);
-                cmd.Parameters.AddWithValue("@typ", instanceinfo.type);
-                cmd.Parameters.AddWithValue("@pubhost", DBNull.Value);
-                cmd.Parameters.AddWithValue("@amiid", DBNull.Value);
-                
-                if (instanceinfo.type != "LOCALHOST")
-                {
-                    cmd.Parameters.AddWithValue("@host", instanceinfo.hostname);
-                    cmd.Parameters.AddWithValue("@iid", instanceinfo.instanceid);
-                    cmd.Parameters.AddWithValue("@typ", instanceinfo.type);
-                    cmd.Parameters.AddWithValue("@pubhost", instanceinfo.publichostname);
-                    cmd.Parameters.AddWithValue("@amiid", instanceinfo.amiid);
-                }
+//                cmd.Parameters.AddWithValue("@host", System.Environment.MachineName);
+//                cmd.Parameters.AddWithValue("@iid", DBNull.Value);
+//                cmd.Parameters.AddWithValue("@typ", instanceinfo.type);
+//                cmd.Parameters.AddWithValue("@pubhost", DBNull.Value);
+//                cmd.Parameters.AddWithValue("@amiid", DBNull.Value);
+//                
+//                if (instanceinfo.type != "LOCALHOST")
+//                {
+//                    cmd.Parameters.AddWithValue("@host", instanceinfo.hostname);
+//                    cmd.Parameters.AddWithValue("@iid", instanceinfo.instanceid);
+//                    cmd.Parameters.AddWithValue("@typ", instanceinfo.type);
+//                    cmd.Parameters.AddWithValue("@pubhost", instanceinfo.publichostname);
+//                    cmd.Parameters.AddWithValue("@amiid", instanceinfo.amiid);
+//                }
                 cmd.CommandText =
                     "SELECT instance_id FROM instances WHERE hostname=@host AND instancetype=@typ AND instanceid=@iid AND amiid=@amiid AND publichostname=@pubhost";
                 var id = cmd.ExecuteScalar();

@@ -251,12 +251,12 @@ namespace GTAVisionExport {
                 case GameStatus.NoActionNeeded:
                     break;
             }
-            UI.Notify("runTask.IsCompleted: " + runTask.IsCompleted.ToString());
-            UI.Notify("postgresTask.IsCompleted: " + postgresTask.IsCompleted.ToString());
+//            UI.Notify("runTask.IsCompleted: " + runTask.IsCompleted.ToString());
+//            UI.Notify("postgresTask.IsCompleted: " + postgresTask.IsCompleted.ToString());
             if (!runTask.IsCompleted) return;
             if (!postgresTask.IsCompleted) return;
 
-            UI.Notify("going to save tiff");
+//            UI.Notify("going to save tiff");
 
 //            List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
@@ -315,8 +315,8 @@ namespace GTAVisionExport {
 //            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
 //                Game.ScreenResolution.Height, colors, depth, stencil);
             
-            UI.Notify("going to save snapshot to db");
-            UI.Notify("current weather: " + dat.CurrentWeather.ToString());
+//            UI.Notify("going to save snapshot to db");
+//            UI.Notify("current weather: " + dat.CurrentWeather.ToString());
             PostgresExport.SaveSnapshot(dat, run.guid);
 //            outStream.Flush();
 //            if ((Int64)outStream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
@@ -644,7 +644,8 @@ namespace GTAVisionExport {
             var res = Game.ScreenResolution;
             var fileName = Path.Combine(dataPath, "info-" + name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil);
-            UI.Notify("file saved to: " + fileName);
+//            UI.Notify("file saved to: " + fileName);
+            
 //            UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
             //UI.Notify((connection != null && connection.Connected).ToString());
 

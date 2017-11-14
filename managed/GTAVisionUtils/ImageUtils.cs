@@ -45,7 +45,12 @@ namespace GTAVisionUtils {
 
         }
 
-        public static void WriteToTiff(string name, int width, int height, List<byte[]> colors, byte[] depth, byte[] stencil)
+        public static async void WriteToTiff(string name, int width, int height, List<byte[]> colors, byte[] depth,  byte[] stencil)
+        {
+            await Task.Run(() => WriteToTiffImpl(name, width, height, colors, depth, stencil));
+        }
+
+        public static void WriteToTiffImpl(string name, int width, int height, List<byte[]> colors, byte[] depth, byte[] stencil)
         {
             var t = Tiff.Open(name + ".tiff", "w");
             var pages = colors.Count;
@@ -62,7 +67,6 @@ namespace GTAVisionUtils {
                 t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
                 t.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
                 t.SetField(TiffTag.COMPRESSION, Compression.LZW);
-//                t.SetField(TiffTag.JPEGQUALITY, 60);
                 t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
                 t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
                 t.SetField(TiffTag.PAGENUMBER, page, pages);
