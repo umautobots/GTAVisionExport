@@ -256,7 +256,7 @@ namespace GTAVisionExport {
             if (!runTask.IsCompleted) return;
             if (!postgresTask.IsCompleted) return;
 
-//            UI.Notify("going to save tiff");
+//            UI.Notify("going to save images and save to postgres");
 
 //            List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
@@ -309,7 +309,6 @@ namespace GTAVisionExport {
                 PostgresExport.SaveSnapshot(dat, run.guid);
             }
             */
-            UI.Notify("going to save images and save to postgres");
 //            ImageUtils.WaitForProcessing();
             saveSnapshotToFile(dat.ImageName, wantedWeather);
 //            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
