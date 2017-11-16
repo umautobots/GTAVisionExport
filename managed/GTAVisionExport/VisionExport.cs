@@ -35,6 +35,7 @@ using Color = System.Windows.Media.Color;
 using System.Configuration;
 using System.Threading;
 using IniParser;
+using Newtonsoft.Json;
 
 namespace GTAVisionExport {
     
@@ -126,7 +127,9 @@ namespace GTAVisionExport {
                 return;
             }
             UI.Notify("str: " + str.ToString());
-            switch (str)
+            dynamic parameters = JsonConvert.DeserializeObject(str);
+            string commandName = parameters.name;
+            switch (commandName)
             {
                 case "START_SESSION":
                     postgresTask?.Wait();
@@ -159,16 +162,13 @@ namespace GTAVisionExport {
                     m.Invoke(domain, new object[] {Keys.Insert, true, false, false, false});
                     break;
                 case "SET_TIME":
-                    num = connection.Receive(inBuffer);
-                    var dataLen = int.Parse(encoding.GetString(inBuffer, 0, num));
-                    connection.Send(BitConverter.GetBytes(dataLen));
-                    num = connection.Receive(inBuffer);
-                    var time = encoding.GetString(inBuffer, 0, num);
-                    UI.Notify("set time, obtained: " + time);
+                    var time = parameters.time;
+                    UI.Notify("starting set time, obtained: " + time);
                     var hoursAndMinutes = time.Split(':');
                     var hours = int.Parse(hoursAndMinutes[0]);
                     var minutes = int.Parse(hoursAndMinutes[1]);
                     GTA.World.CurrentDayTime = new TimeSpan(hours, minutes, 0);
+                    UI.Notify("Time Set");
                     break;
 //                    uncomment when resolving, how the hell should I get image by socket correctly
 //                case "GET_SCREEN":
