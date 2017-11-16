@@ -158,6 +158,18 @@ namespace GTAVisionExport {
                         .GetMethod("DoKeyboardMessage", BindingFlags.Instance | BindingFlags.Public);
                     m.Invoke(domain, new object[] {Keys.Insert, true, false, false, false});
                     break;
+                case "SET_TIME":
+                    num = connection.Receive(inBuffer);
+                    var dataLen = int.Parse(encoding.GetString(inBuffer, 0, num));
+                    connection.Send(BitConverter.GetBytes(dataLen));
+                    num = connection.Receive(inBuffer);
+                    var time = encoding.GetString(inBuffer, 0, num);
+                    UI.Notify("set time, obtained: " + time);
+                    var hoursAndMinutes = time.Split(':');
+                    var hours = int.Parse(hoursAndMinutes[0]);
+                    var minutes = int.Parse(hoursAndMinutes[1]);
+                    GTA.World.CurrentDayTime = new TimeSpan(hours, minutes, 0);
+                    break;
 //                    uncomment when resolving, how the hell should I get image by socket correctly
 //                case "GET_SCREEN":
 //                    var last = ImageUtils.getLastCapturedFrame();
