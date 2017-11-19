@@ -128,7 +128,7 @@ namespace GTAVisionExport {
             }
             UI.Notify("str: " + str.ToString());
             dynamic parameters = JsonConvert.DeserializeObject(str);
-            string commandName = parameters.name;
+            string commandName = parameters.name.Value<string>();
             switch (commandName)
             {
                 case "START_SESSION":
@@ -162,7 +162,7 @@ namespace GTAVisionExport {
                     m.Invoke(domain, new object[] {Keys.Insert, true, false, false, false});
                     break;
                 case "SET_TIME":
-                    var time = parameters.time;
+                    var time = parameters.time.Value<string>();
                     UI.Notify("starting set time, obtained: " + time);
                     var hoursAndMinutes = time.Split(':');
                     var hours = int.Parse(hoursAndMinutes[0]);

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Management;
 using GTAVisionUtils;
 using IniParser;
+using Newtonsoft.Json;
 using Npgsql;
 using Npgsql.NameTranslation;
 using NpgsqlTypes;
@@ -255,9 +256,9 @@ namespace Sandbox
 
         public static void Main(string[] args)
         {
-            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
-            var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
-            Console.WriteLine(fileName);
+//            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
+//            var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
+//            Console.WriteLine(fileName);
 //            var systemInfo = new WMIInformation();
 //            var conn = OpenConnection();
 //            conn = null;
@@ -266,6 +267,15 @@ namespace Sandbox
 
 //            InitSQLTypes();
 //            InsertEnum();
+            var str = "{\"name\": \"SET_TIME\", \"time\": \"05:20\"}";
+            dynamic parameters = JsonConvert.DeserializeObject(str);
+            var time = parameters.time.Value<string>();
+            var hoursAndMinutes = time.Split(':');
+            var hours = int.Parse(hoursAndMinutes[0]);
+            var minutes = int.Parse(hoursAndMinutes[1]);
+            var timeSpan = new TimeSpan(hours, minutes, 0);
+
+
         }
     }
 }
