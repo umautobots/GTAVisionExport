@@ -299,7 +299,12 @@ If less than 10 scripts loaded, you have problem.
 ### Dependencies setup
 Make sure your PostgreSQL database is up.
 
-If you don't want to install one, you can use the one in docker. 
+If you don't want to install one, you can use the one in docker.
+
+Before starting it, if you want the data persistent (hint: you want the data persitent), 
+create external volume. This is the only way to create volume in docker which is ok for postgresql.
+Create it by `docker volume create gtav-postgresql`. 
+
 Start the database in docker by `docker-compose up`.
 Default credentials are:
 - username: `postgres`

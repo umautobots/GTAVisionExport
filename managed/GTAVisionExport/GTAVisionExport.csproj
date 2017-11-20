@@ -78,6 +78,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
     </Reference>
+    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -88,6 +91,9 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="ScriptHookVDotNet2">
       <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
+    </Reference>
+    <Reference Include="ScriptHookVDotNet2, Version=2.10.3.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -115,8 +121,14 @@
     <Reference Include="VAutodrive">
       <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VAutodrive.dll</HintPath>
     </Reference>
+    <Reference Include="VAutodrive, Version=7.0.3.23292, Culture=neutral, PublicKeyToken=null">
+      <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VAutodrive.dll</HintPath>
+    </Reference>
     <Reference Include="VCommonFunctions">
       <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VCommonFunctions.dll</HintPath>
+    </Reference>
+    <Reference Include="VCommonFunctions, Version=2.9.1.32038, Culture=neutral, PublicKeyToken=null">
+      <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VCommonFunctions.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="YamlDotNet, Version=4.1.0.0, Culture=neutral, processorArchitecture=MSIL">
