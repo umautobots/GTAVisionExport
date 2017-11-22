@@ -49,6 +49,7 @@ namespace GTAVisionExport {
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
         private readonly string dataPath = @"D:\GTAV_extraction_output\";
+        private readonly string logFilePath = @"D:\GTAV_extraction_output\log.txt";
         private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
         private Player player;
         private string outputPath;
@@ -68,7 +69,16 @@ namespace GTAVisionExport {
         private StereoCamera cams;
         public VisionExport()
         {
-            System.IO.File.WriteAllText(@"D:\GTAV_extraction_output\log.txt", "VisionExport constructor called.\n");
+            // loading ini file
+            var parser = new FileIniDataParser();
+            var location = AppDomain.CurrentDomain.BaseDirectory;
+            var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
+
+            //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
+            dataPath = data["Snapshots"]["OutputDir"];
+            logFilePath = data["Snapshots"]["LogFile"];
+
+            System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
             PostgresExport.InitSQLTypes();
             player = Game.Player;
@@ -76,9 +86,6 @@ namespace GTAVisionExport {
             server.Bind(new IPEndPoint(IPAddress.Loopback, 5555));
             server.Listen(5);
             //server = new UdpClient(5555);
-            var parser = new FileIniDataParser();
-            var location = AppDomain.CurrentDomain.BaseDirectory;
-            var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
             //outputPath = @"D:\Datasets\GTA\";
             //outputPath = Path.Combine(outputPath, "testData.yaml");
             //outStream = File.CreateText(outputPath);
@@ -97,7 +104,7 @@ namespace GTAVisionExport {
 
         private void handlePipeInput()
         {
-            System.IO.File.AppendAllText(@"D:\GTAV_extraction_output\log.txt", "VisionExport handlePipeInput called.\n");
+            System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
             UI.Notify("handlePipeInput called");
             UI.Notify("server connected:" + server.Connected.ToString());
             UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
@@ -185,7 +192,7 @@ namespace GTAVisionExport {
 
 //        private void UploadFile()
 //        {
-//            System.IO.File.AppendAllText(@"D:\GTAV_extraction_output\log.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": VisionExport UploadFile called.\n");
+//            System.IO.File.AppendAllText(logFilePath, DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": VisionExport UploadFile called.\n");
 //            UI.Notify("UploadFile called");
 //
 ////            archive.Dispose();
@@ -526,7 +533,7 @@ namespace GTAVisionExport {
 
         public void OnKeyDown(object o, KeyEventArgs k)
         {
-            System.IO.File.AppendAllText(@"D:\GTAV_extraction_output\log.txt", "VisionExport OnKeyDown called.\n");
+            System.IO.File.AppendAllText(logFilePath, "VisionExport OnKeyDown called.\n");
             if (k.KeyCode == Keys.PageUp)
             {
                 postgresTask?.Wait();
