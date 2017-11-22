@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.PerformanceData;
 using System.IO;
 using System.Linq;
 using System.Management;
@@ -52,42 +53,42 @@ namespace Sandbox
 
         }
     }
-    public class WMIInformation
-    {
-        public Guid system_uuid;
-        public string vendor;
-        public string dnshostname;
-        public string username;
-        public string systemtype;
-        public UInt64 totalmem;
-        public List<WMIGraphicsInformation> gfxCards;
-        /// <summary>
-        /// gets wmi info for the current computer
-        /// </summary>
-        public WMIInformation()
-        {
-            var scope = new ManagementScope("ROOT\\CIMV2");
-            var genQuery = new ObjectQuery("SELECT * FROM Win32_ComputerSystem");
-            var result = new ManagementObjectSearcher(scope, genQuery).Get().Cast<ManagementBaseObject>();
-            dnshostname = result.First().GetPropertyValue("DNSHostName") as string;
-            username = result.First().GetPropertyValue("UserName") as string;
-            systemtype = result.First().GetPropertyValue("SystemType") as string;
-            totalmem = (UInt64) result.First().GetPropertyValue("TotalPhysicalMemory");
-            var prodQuery = new ObjectQuery("SELECT * FROM Win32_ComputerSystemProduct");
-            result = new ManagementObjectSearcher(scope, prodQuery).Get().Cast<ManagementBaseObject>();
-            system_uuid = Guid.Parse( result.First().GetPropertyValue("UUID") as string);
-            vendor = result.First().GetPropertyValue("Vendor") as string;
-
-            var videoQuery = new ObjectQuery("SELECT * FROM Win32_VideoController");
-            result = new ManagementObjectSearcher(scope, videoQuery).Get().Cast<ManagementBaseObject>();
-            gfxCards = new List<WMIGraphicsInformation>();
-            foreach (var obj in result)
-            {
-                gfxCards.Add(new WMIGraphicsInformation(obj));
-            }
-
-        }
-    }
+//    public class WMIInformation
+//    {
+//        public Guid system_uuid;
+//        public string vendor;
+//        public string dnshostname;
+//        public string username;
+//        public string systemtype;
+//        public UInt64 totalmem;
+//        public List<WMIGraphicsInformation> gfxCards;
+//        /// <summary>
+//        /// gets wmi info for the current computer
+//        /// </summary>
+//        public WMIInformation()
+//        {
+//            var scope = new ManagementScope("ROOT\\CIMV2");
+//            var genQuery = new ObjectQuery("SELECT * FROM Win32_ComputerSystem");
+//            var result = new ManagementObjectSearcher(scope, genQuery).Get().Cast<ManagementBaseObject>();
+//            dnshostname = result.First().GetPropertyValue("DNSHostName") as string;
+//            username = result.First().GetPropertyValue("UserName") as string;
+//            systemtype = result.First().GetPropertyValue("SystemType") as string;
+//            totalmem = (UInt64) result.First().GetPropertyValue("TotalPhysicalMemory");
+//            var prodQuery = new ObjectQuery("SELECT * FROM Win32_ComputerSystemProduct");
+//            result = new ManagementObjectSearcher(scope, prodQuery).Get().Cast<ManagementBaseObject>();
+//            system_uuid = Guid.Parse( result.First().GetPropertyValue("UUID") as string);
+//            vendor = result.First().GetPropertyValue("Vendor") as string;
+//
+//            var videoQuery = new ObjectQuery("SELECT * FROM Win32_VideoController");
+//            result = new ManagementObjectSearcher(scope, videoQuery).Get().Cast<ManagementBaseObject>();
+//            gfxCards = new List<WMIGraphicsInformation>();
+//            foreach (var obj in result)
+//            {
+//                gfxCards.Add(new WMIGraphicsInformation(obj));
+//            }
+//
+//        }
+//    }
     
     public enum DetectionType
     {
@@ -157,7 +158,7 @@ namespace Sandbox
         public static NpgsqlConnection OpenConnection()
         {
             var parser = new FileIniDataParser();
-            var location = @"D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts";
+            var location = @"D:\Program Files\Rockstar Games\Grand Theft Auto V\scripts";
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
 
             //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
@@ -259,22 +260,25 @@ namespace Sandbox
 //            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
 //            var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
 //            Console.WriteLine(fileName);
-//            var systemInfo = new WMIInformation();
-//            var conn = OpenConnection();
+            var systemInfo = new WMIInformation();
+            Console.WriteLine(systemInfo.dnshostname);
+            Console.WriteLine(systemInfo.username);
+            var conn = OpenConnection();
 //            conn = null;
 //            int instanceid = InsertInstanceData(conn);
 //            InsertSystemData(conn);
 
 //            InitSQLTypes();
 //            InsertEnum();
-            var str = "{\"name\": \"SET_TIME\", \"time\": \"05:20\"}";
-            dynamic parameters = JsonConvert.DeserializeObject(str);
-            var time = parameters.time.Value<string>();
-            var hoursAndMinutes = time.Split(':');
-            var hours = int.Parse(hoursAndMinutes[0]);
-            var minutes = int.Parse(hoursAndMinutes[1]);
-            var timeSpan = new TimeSpan(hours, minutes, 0);
+//            var str = "{\"name\": \"SET_TIME\", \"time\": \"05:20\"}";
+//            dynamic parameters = JsonConvert.DeserializeObject(str);
+//            var time = parameters.time.Value<string>();
+//            var hoursAndMinutes = time.Split(':');
+//            var hours = int.Parse(hoursAndMinutes[0]);
+//            var minutes = int.Parse(hoursAndMinutes[1]);
+//            var timeSpan = new TimeSpan(hours, minutes, 0);
 
+            Console.WriteLine("the end");
 
         }
     }

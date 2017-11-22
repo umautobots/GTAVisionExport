@@ -69,6 +69,10 @@ namespace GTAVisionUtils
             var result = new ManagementObjectSearcher(scope, genQuery).Get().Cast<ManagementBaseObject>();
             dnshostname = result.First().GetPropertyValue("DNSHostName") as string;
             username = result.First().GetPropertyValue("UserName") as string;
+            if (username == null)
+            {
+                username = Environment.UserName;
+            }
             systemtype = result.First().GetPropertyValue("SystemType") as string;
             totalmem = (UInt64) result.First().GetPropertyValue("TotalPhysicalMemory");
             var prodQuery = new ObjectQuery("SELECT * FROM Win32_ComputerSystemProduct");
