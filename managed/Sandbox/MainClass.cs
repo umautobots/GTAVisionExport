@@ -258,9 +258,9 @@ namespace Sandbox
         public static void Main(string[] args)
         {
 //            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
+            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss-fff";
             for (int i = 0; i < 100; i++)
             {
-                var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss-ffff";
                 var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
                 Console.WriteLine(fileName);
             }
