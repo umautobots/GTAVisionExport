@@ -75,7 +75,7 @@ namespace GTAVisionExport {
             var location = AppDomain.CurrentDomain.BaseDirectory;
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
 
-            //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
+            //UINotify(ConfigurationManager.AppSettings["database_connection"]);
             dataPath = data["Snapshots"]["OutputDir"];
             logFilePath = data["Snapshots"]["LogFile"];
 
@@ -106,9 +106,9 @@ namespace GTAVisionExport {
         private void handlePipeInput()
         {
             System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
-            UI.Notify("handlePipeInput called");
-            UI.Notify("server connected:" + server.Connected.ToString());
-            UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
+            UINotify("handlePipeInput called");
+            UINotify("server connected:" + server.Connected.ToString());
+            UINotify(connection == null ? "connection is null" : "connection:" + connection.ToString());
             if (connection == null) return;
             
             byte[] inBuffer = new byte[1024];
@@ -134,7 +134,7 @@ namespace GTAVisionExport {
                 connection = null;
                 return;
             }
-            UI.Notify("str: " + str.ToString());
+            UINotify("str: " + str.ToString());
             dynamic parameters = JsonConvert.DeserializeObject(str);
             string commandName = parameters.name;
             switch (commandName)
@@ -153,7 +153,7 @@ namespace GTAVisionExport {
                     ToggleNavigation();
                     break;
                 case "ENTER_VEHICLE":
-                    UI.Notify("Trying to enter vehicle");
+                    UINotify("Trying to enter vehicle");
                     EnterVehicle();
                     break;
                 case "AUTOSTART":
@@ -171,18 +171,18 @@ namespace GTAVisionExport {
                     break;
                 case "SET_TIME":
                     string time = parameters.time;
-                    UI.Notify("starting set time, obtained: " + time);
+                    UINotify("starting set time, obtained: " + time);
                     var hoursAndMinutes = time.Split(':');
                     var hours = int.Parse(hoursAndMinutes[0]);
                     var minutes = int.Parse(hoursAndMinutes[1]);
                     GTA.World.CurrentDayTime = new TimeSpan(hours, minutes, 0);
-                    UI.Notify("Time Set");
+                    UINotify("Time Set");
                     break;
 //                    uncomment when resolving, how the hell should I get image by socket correctly
 //                case "GET_SCREEN":
 //                    var last = ImageUtils.getLastCapturedFrame();
 //                    Int64 size = last.Length;
-//                    UI.Notify("last size: " + size.ToString());
+//                    UINotify("last size: " + size.ToString());
 //                    size = IPAddress.HostToNetworkOrder(size);
 //                    connection.Send(BitConverter.GetBytes(size));
 //                    connection.Send(last);
@@ -194,7 +194,7 @@ namespace GTAVisionExport {
 //        private void UploadFile()
 //        {
 //            System.IO.File.AppendAllText(logFilePath, DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": VisionExport UploadFile called.\n");
-//            UI.Notify("UploadFile called");
+//            UINotify("UploadFile called");
 //
 ////            archive.Dispose();
 //            var oldOutput = outputPath;
@@ -235,7 +235,7 @@ namespace GTAVisionExport {
             if (server.Poll(10, SelectMode.SelectRead) && connection == null)
             {
                 connection = server.Accept();
-                UI.Notify("CONNECTED");
+                UINotify("CONNECTED");
                 connection.Blocking = false;
             }
             handlePipeInput();
@@ -252,7 +252,7 @@ namespace GTAVisionExport {
                     runTask = StartRun();
                     //StopSession();
                     //Autostart();
-                    UI.Notify("need reload game");
+                    UINotify("need reload game");
                     Script.Wait(100);
                     ReloadGame();
                     break;
@@ -271,12 +271,12 @@ namespace GTAVisionExport {
                 case GameStatus.NoActionNeeded:
                     break;
             }
-//            UI.Notify("runTask.IsCompleted: " + runTask.IsCompleted.ToString());
-//            UI.Notify("postgresTask.IsCompleted: " + postgresTask.IsCompleted.ToString());
+//            UINotify("runTask.IsCompleted: " + runTask.IsCompleted.ToString());
+//            UINotify("postgresTask.IsCompleted: " + postgresTask.IsCompleted.ToString());
             if (!runTask.IsCompleted) return;
             if (!postgresTask.IsCompleted) return;
 
-//            UI.Notify("going to save images and save to postgres");
+//            UINotify("going to save images and save to postgres");
 
 //            List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
@@ -305,11 +305,11 @@ namespace GTAVisionExport {
 //            var colorframe = VisionNative.GetLastColorTime();
 //            var depthframe = VisionNative.GetLastConstantTime();
 //            var constantframe = VisionNative.GetLastConstantTime();
-            //UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
-//            UI.Notify("colors length: " + colors[0].Length.ToString());
+            //UINotify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
+//            UINotify("colors length: " + colors[0].Length.ToString());
 //            if (depth == null || stencil == null)
 //            {
-//                UI.Notify("No DEPTH");
+//                UINotify("No DEPTH");
 //                return;
 //            }
 
@@ -334,8 +334,8 @@ namespace GTAVisionExport {
 //            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
 //                Game.ScreenResolution.Height, colors, depth, stencil);
             
-//            UI.Notify("going to save snapshot to db");
-//            UI.Notify("current weather: " + dat.CurrentWeather.ToString());
+//            UINotify("going to save snapshot to db");
+//            UINotify("current weather: " + dat.CurrentWeather.ToString());
             PostgresExport.SaveSnapshot(dat, run.guid);
 //            outStream.Flush();
 //            if ((Int64)outStream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
@@ -354,7 +354,7 @@ namespace GTAVisionExport {
             if (player.IsInVehicle())
             {
                 Vehicle vehicle = player.CurrentVehicle;
-                //UI.Notify("T:" + Game.GameTime.ToString() + " S: " + vehicle.Speed.ToString());
+                //UINotify("T:" + Game.GameTime.ToString() + " S: " + vehicle.Speed.ToString());
                 if (vehicle.Speed < 1.0f) //speed is in mph
                 {
                     if (lowSpeedTime.checkTrafficJam(Game.GameTime, vehicle.Speed))
@@ -376,7 +376,7 @@ namespace GTAVisionExport {
 
         public Bitmap CaptureScreen()
         {
-            UI.Notify("CaptureScreen called");
+            UINotify("CaptureScreen called");
             var cap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
             var gfx = Graphics.FromImage(cap);
             //var dat = GTAData.DumpData(Game.GameTime + ".jpg");
@@ -514,7 +514,7 @@ namespace GTAVisionExport {
             */
             // or use CLEAR_AREA_OF_VEHICLES
             Ped player = Game.Player.Character;
-            //UI.Notify("x = " + player.Position.X + "y = " + player.Position.Y + "z = " + player.Position.Z);
+            //UINotify("x = " + player.Position.X + "y = " + player.Position.Y + "z = " + player.Position.Z);
             // no need to release the autodrive here
             // delete all surrounding vehicles & the driver's car
             Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y, player.Position.Z, 1000f, false, false, false, false);
@@ -585,7 +585,7 @@ namespace GTAVisionExport {
                 var settings = ScriptSettings.Load("GTAVisionExport.xml");
                 var loc = AppDomain.CurrentDomain.BaseDirectory;
 
-                //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
+                //UINotify(ConfigurationManager.AppSettings["database_connection"]);
                 var str = settings.GetValue("", "ConnectionString");
                 UINotify("BaseDirectory: " + loc);
                 UINotify("ConnectionString: " + str);
@@ -638,14 +638,14 @@ namespace GTAVisionExport {
                 /* set it between 0 = stop, 1 = heavy rain. set it too high will lead to sloppy ground */
                 Function.Call(GTA.Native.Hash._SET_RAIN_FX_INTENSITY, 0.5f);
                 var test = Function.Call<float>(GTA.Native.Hash.GET_RAIN_LEVEL);
-                UI.Notify("" + test);
+                UINotify("" + test);
                 World.CurrentDayTime = new TimeSpan(12, 0, 0);
                 //Script.Wait(5000);
             }
 
             if (k.KeyCode == Keys.N)
             {
-                UI.Notify("N pressed, going to print stats to file or what?");
+                UINotify("N pressed, going to print stats to file or what?");
                 
                 //var color = VisionNatGetColorBuffer();
                 
@@ -662,8 +662,8 @@ namespace GTAVisionExport {
             if (k.KeyCode == Keys.I)
             {
                 var info = new GTAVisionUtils.InstanceData();
-                UI.Notify(info.type);
-                UI.Notify(info.publichostname);
+                UINotify(info.type);
+                UINotify(info.publichostname);
             }
         }
 
@@ -684,10 +684,10 @@ namespace GTAVisionExport {
             var res = Game.ScreenResolution;
             var fileName = Path.Combine(dataPath, "info-" + name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil);
-//            UI.Notify("file saved to: " + fileName);
+//            UINotify("file saved to: " + fileName);
             
-//            UI.Notify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
-            //UI.Notify((connection != null && connection.Connected).ToString());
+//            UINotify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
+            //UINotify((connection != null && connection.Connected).ToString());
 
 
 //            var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
@@ -750,13 +750,13 @@ namespace GTAVisionExport {
             {
                 var res = Game.ScreenResolution;
                 ImageUtils.WriteToTiff(Path.Combine(dataPath, "test"), res.Width, res.Height, colors, depth, stencil);
-                UI.Notify(GameplayCamera.FieldOfView.ToString());
+                UINotify(GameplayCamera.FieldOfView.ToString());
             }
             else
             {
-                UI.Notify("No Depth Data quite yet");
+                UINotify("No Depth Data quite yet");
             }
-            UI.Notify((connection != null && connection.Connected).ToString());
+            UINotify((connection != null && connection.Connected).ToString());
         }
     }
 }
