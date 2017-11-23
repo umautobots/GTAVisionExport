@@ -66,6 +66,7 @@ namespace GTAVisionExport {
         private int curSessionId = -1;
         private speedAndTime lowSpeedTime = new speedAndTime();
         private bool IsGamePaused = false;
+        private bool notificationsAllowed = true;
         private StereoCamera cams;
         public VisionExport()
         {
@@ -459,6 +460,15 @@ namespace GTAVisionExport {
             Game.Player.LastVehicle.Alpha = int.MaxValue;
         }
 
+        public void UINotify(string message)
+        {
+            //just wrapper for UI.Notify, but lets us disable showing notifications ar all
+            if (notificationsAllowed)
+            {
+                UI.Notify(message);                
+            }
+        }
+        
         public void EnterVehicle()
         {
             /*
@@ -466,14 +476,14 @@ namespace GTAVisionExport {
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             */
             Model mod = new Model(GTA.Native.VehicleHash.Asea);
-            if (mod == null) {UI.Notify("mod is null");}
-            if (player == null) {UI.Notify("player is null");}
-            if (player.Character == null) {UI.Notify("player.Character is null");}
-            UI.Notify("player position: " + player.Character.Position.ToString());
+            if (mod == null) {UINotify("mod is null");}
+            if (player == null) {UINotify("player is null");}
+            if (player.Character == null) {UINotify("player.Character is null");}
+            UINotify("player position: " + player.Character.Position.ToString());
             var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
             if (vehicle == null)
             {
-                UI.Notify("vehicle is null. Something is fucked up");
+                UINotify("vehicle is null. Something is fucked up");
             }
             else
             {
@@ -540,23 +550,35 @@ namespace GTAVisionExport {
                 postgresTask = StartSession();
                 runTask?.Wait();
                 runTask = StartRun();
-                UI.Notify("GTA Vision Enabled");
+                UINotify("GTA Vision Enabled");
             }
             if (k.KeyCode == Keys.PageDown)
             {
                 StopRun();
                 StopSession();
-                UI.Notify("GTA Vision Disabled");
+                UINotify("GTA Vision Disabled");
             }
             if (k.KeyCode == Keys.H) // temp modification
             {
                 EnterVehicle();
-                UI.Notify("Trying to enter vehicle");
+                UINotify("Trying to enter vehicle");
                 ToggleNavigation();
             }
             if (k.KeyCode == Keys.Y) // temp modification
             {
                 ReloadGame();
+            }
+            if (k.KeyCode == Keys.X) // temp modification
+            {
+                notificationsAllowed = !notificationsAllowed;
+                if (notificationsAllowed)
+                {
+                    UI.Notify("Notifications Enabled");
+                }
+                else
+                {
+                    UI.Notify("Notifications Disabled");
+                }
             }
             if (k.KeyCode == Keys.U) // temp modification
             {
@@ -565,8 +587,8 @@ namespace GTAVisionExport {
 
                 //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
                 var str = settings.GetValue("", "ConnectionString");
-                UI.Notify("BaseDirectory: " + loc);
-                UI.Notify("ConnectionString: " + str);
+                UINotify("BaseDirectory: " + loc);
+                UINotify("ConnectionString: " + str);
 
             }
             if (k.KeyCode == Keys.G) // temp modification
