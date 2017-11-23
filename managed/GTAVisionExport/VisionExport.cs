@@ -478,6 +478,8 @@ namespace GTAVisionExport {
 
         public void ToggleNavigation()
         {
+            //todo: probably here try to set camera, maybe by SET_FOLLOW_VEHICLE_CAM_VIEW_MODE(int viewMode), or by SET_FOLLOW_VEHICLE_CAM_ZOOM_LEVEL(int zoomLevel)
+            // or just something with the GTA.GameplayCamera
             //YOLO
             MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
