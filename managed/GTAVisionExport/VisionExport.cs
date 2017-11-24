@@ -48,8 +48,8 @@ namespace GTAVisionExport {
 #endif
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
-        private readonly string dataPath = @"D:\GTAV_extraction_output\";
-        private readonly string logFilePath = @"D:\GTAV_extraction_output\log.txt";
+        private readonly string dataPath;
+        private readonly string logFilePath;
         private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
         private Player player;
         private string outputPath;
