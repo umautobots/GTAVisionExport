@@ -93,7 +93,7 @@ namespace GTAVisionExport {
             this.Tick += new EventHandler(this.OnTick);
             this.KeyDown += OnKeyDown;
             
-            Interval = 1000;
+            Interval = 100;
             if (enabled)
             {
                 postgresTask?.Wait();
