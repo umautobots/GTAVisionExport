@@ -258,12 +258,16 @@ namespace Sandbox
         public static void Main(string[] args)
         {
 //            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
-//            var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
-//            Console.WriteLine(fileName);
-            var systemInfo = new WMIInformation();
-            Console.WriteLine(systemInfo.dnshostname);
-            Console.WriteLine(systemInfo.username);
-            var conn = OpenConnection();
+            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss-fff";
+            for (int i = 0; i < 1000; i++)
+            {
+                var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
+                Console.WriteLine(fileName);
+            }
+//            var systemInfo = new WMIInformation();
+//            Console.WriteLine(systemInfo.dnshostname);
+//            Console.WriteLine(systemInfo.username);
+//            var conn = OpenConnection();
 //            conn = null;
 //            int instanceid = InsertInstanceData(conn);
 //            InsertSystemData(conn);

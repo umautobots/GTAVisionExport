@@ -310,8 +310,22 @@ Default credentials are:
 - username: `postgres`
 - password: `postgres`
 
-In the game, turn off the HUD, MSAA and Radar.
-Turn the plugin on by "Page Up" in the game.
+### In-game settings
+Turn the plugin on by pressing "Page Up" in the game.
+Turn NativeUI notifications off by pressing "X" in the game.
+
+In settings, set up these things:
+- In Camera
+    - set First Person Velicle Hood to On
+- In Display
+    - set Radar to Off
+    - set HUD to Off
+- In Graphics
+    - set MSAA to Off
+- In Notifications
+    - set all notifications to Off
+
+Set the camera to be on the hood of the car by pressing "V" repeatedly, until camera is on desired position.
 
 ### Gathering screenshots
 There is either manual or automatic way.
