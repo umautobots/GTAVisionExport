@@ -683,7 +683,7 @@ namespace GTAVisionExport {
             Game.Pause(false);
             var res = Game.ScreenResolution;
             var fileName = Path.Combine(dataPath, "info-" + name);
-            ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil);
+            ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil, false);
 //            UINotify("file saved to: " + fileName);
             
 //            UINotify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
