@@ -7,8 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using BitMiracle.LibTiff.Classic;
 
-namespace GTAVisionUtils {
-
+namespace GTAVisionUtils
+{
     public class ImageUtils
     {
         private static Task imageTask;
@@ -19,6 +19,7 @@ namespace GTAVisionUtils {
             WaitForProcessing();
             return lastCapturedBytes;
         }
+
         public static void WaitForProcessing()
         {
             if (imageTask == null) return;
@@ -30,7 +31,8 @@ namespace GTAVisionUtils {
         {
             WaitForProcessing();
             imageTask = Task.Run(() => UploadToArchive(archive, name, w, h, colors, depth, stencil));
-        } 
+        }
+
         public static void UploadToArchive(ZipArchive archive, string name, int w, int h,
             List<byte[]> colors, byte[] depth, byte[] stencil)
         {
@@ -42,75 +44,139 @@ namespace GTAVisionUtils {
             entryStream.Write(lastCapturedBytes, 0, lastCapturedBytes.Length);
             entryStream.Close();
             memstream.Close();
-
         }
 
-        public static async void WriteToTiff(string name, int width, int height, List<byte[]> colors, byte[] depth,  byte[] stencil)
+        public static async void WriteToTiff(string name, int width, int height, List<byte[]> colors, byte[] depth,
+            byte[] stencil, bool oneFile = true)
         {
-            await Task.Run(() => WriteToTiffImpl(name, width, height, colors, depth, stencil));
+            await Task.Run(() => WriteToTiffImpl(name, width, height, colors, depth, stencil, oneFile));
         }
 
-        public static void WriteToTiffImpl(string name, int width, int height, List<byte[]> colors, byte[] depth, byte[] stencil)
+        public static void WriteToTiffImpl(string name, int width, int height, List<byte[]> colors, byte[] depth,
+            byte[] stencil, bool oneFile = true)
         {
-            var t = Tiff.Open(name + ".tiff", "w");
-            var pages = colors.Count;
-            var page = 0;
-            foreach (var color in colors)
+            if (oneFile)
             {
+                var t = Tiff.Open(name + ".tiff", "w");
+                var pages = colors.Count + 2;
+                var page = 0;
+                foreach (var color in colors)
+                {
+                    t.CreateDirectory();
+                    t.SetField(TiffTag.IMAGEWIDTH, width);
+                    t.SetField(TiffTag.IMAGELENGTH, height);
+                    t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                    t.SetField(TiffTag.SAMPLESPERPIXEL, 4);
+                    t.SetField(TiffTag.ROWSPERSTRIP, height);
+                    t.SetField(TiffTag.BITSPERSAMPLE, 8);
+                    t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
+                    t.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
+                    t.SetField(TiffTag.COMPRESSION, Compression.JPEG);
+                    t.SetField(TiffTag.JPEGQUALITY, 60);
+                    t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
+                    t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
+                    t.SetField(TiffTag.PAGENUMBER, page, pages);
+                    t.WriteEncodedStrip(0, color, color.Length);
+                    page++;
+                    t.WriteDirectory();
+                }
+
                 t.CreateDirectory();
+                //page 2
                 t.SetField(TiffTag.IMAGEWIDTH, width);
                 t.SetField(TiffTag.IMAGELENGTH, height);
-                t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
-                t.SetField(TiffTag.SAMPLESPERPIXEL, 4);
                 t.SetField(TiffTag.ROWSPERSTRIP, height);
+                t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                t.SetField(TiffTag.SAMPLESPERPIXEL, 1);
+                t.SetField(TiffTag.BITSPERSAMPLE, 32);
+                t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
+                t.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
+                t.SetField(TiffTag.COMPRESSION, Compression.LZW);
+                t.SetField(TiffTag.PREDICTOR, Predictor.FLOATINGPOINT);
+                t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.IEEEFP);
+                t.SetField(TiffTag.PAGENUMBER, page, pages);
+                t.WriteEncodedStrip(0, depth, depth.Length);
+                page++;
+                t.WriteDirectory();
+
+                t.SetField(TiffTag.IMAGEWIDTH, width);
+                t.SetField(TiffTag.IMAGELENGTH, height);
+                t.SetField(TiffTag.ROWSPERSTRIP, height);
+                t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                t.SetField(TiffTag.SAMPLESPERPIXEL, 1);
                 t.SetField(TiffTag.BITSPERSAMPLE, 8);
                 t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
-                t.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
+                t.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
                 t.SetField(TiffTag.COMPRESSION, Compression.LZW);
                 t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
                 t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
                 t.SetField(TiffTag.PAGENUMBER, page, pages);
-                t.WriteEncodedStrip(0, color, color.Length);
-                page++;
+                t.WriteEncodedStrip(0, stencil, stencil.Length);
                 t.WriteDirectory();
+                t.Flush();
+                t.Close();
             }
+            else
+            {
+                var t = Tiff.Open(name + ".tiff", "w");
+                var pages = colors.Count;
+                var page = 0;
+                foreach (var color in colors)
+                {
+                    t.CreateDirectory();
+                    t.SetField(TiffTag.IMAGEWIDTH, width);
+                    t.SetField(TiffTag.IMAGELENGTH, height);
+                    t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                    t.SetField(TiffTag.SAMPLESPERPIXEL, 4);
+                    t.SetField(TiffTag.ROWSPERSTRIP, height);
+                    t.SetField(TiffTag.BITSPERSAMPLE, 8);
+                    t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
+                    t.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
+                    t.SetField(TiffTag.COMPRESSION, Compression.LZW);
+                    t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
+                    t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
+                    t.SetField(TiffTag.PAGENUMBER, page, pages);
+                    t.WriteEncodedStrip(0, color, color.Length);
+                    page++;
+                    t.WriteDirectory();
+                }
 
-            t.Flush();
-            t.Close();
+                t.Flush();
+                t.Close();
 
-            t = Tiff.Open(name + "-depth.tiff", "w");
-            t.SetField(TiffTag.IMAGEWIDTH, width);
-            t.SetField(TiffTag.IMAGELENGTH, height);
-            t.SetField(TiffTag.ROWSPERSTRIP, height);
-            t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
-            t.SetField(TiffTag.SAMPLESPERPIXEL, 1);
-            t.SetField(TiffTag.BITSPERSAMPLE, 32);
-            t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
-            t.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
-            t.SetField(TiffTag.COMPRESSION, Compression.LZW);
-            t.SetField(TiffTag.PREDICTOR, Predictor.FLOATINGPOINT);
-            t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.IEEEFP);
-            t.WriteEncodedStrip(0, depth, depth.Length);
-            
-            t.Flush();
-            t.Close();
+                t = Tiff.Open(name + "-depth.tiff", "w");
+                t.SetField(TiffTag.IMAGEWIDTH, width);
+                t.SetField(TiffTag.IMAGELENGTH, height);
+                t.SetField(TiffTag.ROWSPERSTRIP, height);
+                t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                t.SetField(TiffTag.SAMPLESPERPIXEL, 1);
+                t.SetField(TiffTag.BITSPERSAMPLE, 32);
+                t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
+                t.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
+                t.SetField(TiffTag.COMPRESSION, Compression.LZW);
+                t.SetField(TiffTag.PREDICTOR, Predictor.FLOATINGPOINT);
+                t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.IEEEFP);
+                t.WriteEncodedStrip(0, depth, depth.Length);
 
-            t = Tiff.Open(name + "-stencil.tiff", "w");
-            t.SetField(TiffTag.IMAGEWIDTH, width);
-            t.SetField(TiffTag.IMAGELENGTH, height);
-            t.SetField(TiffTag.ROWSPERSTRIP, height);
-            t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
-            t.SetField(TiffTag.SAMPLESPERPIXEL, 1);
-            t.SetField(TiffTag.BITSPERSAMPLE, 8);
-            t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
-            t.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
-            t.SetField(TiffTag.COMPRESSION, Compression.LZW);
-            t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
-            t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
-            t.WriteEncodedStrip(0, stencil, stencil.Length);
-            t.Flush();
-            t.Close();
+                t.Flush();
+                t.Close();
+
+                t = Tiff.Open(name + "-stencil.tiff", "w");
+                t.SetField(TiffTag.IMAGEWIDTH, width);
+                t.SetField(TiffTag.IMAGELENGTH, height);
+                t.SetField(TiffTag.ROWSPERSTRIP, height);
+                t.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
+                t.SetField(TiffTag.SAMPLESPERPIXEL, 1);
+                t.SetField(TiffTag.BITSPERSAMPLE, 8);
+                t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
+                t.SetField(TiffTag.PHOTOMETRIC, Photometric.MINISBLACK);
+                t.SetField(TiffTag.COMPRESSION, Compression.LZW);
+                t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
+                t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
+                t.WriteEncodedStrip(0, stencil, stencil.Length);
+                t.Flush();
+                t.Close();
+            }
         }
-        
     }
 }
