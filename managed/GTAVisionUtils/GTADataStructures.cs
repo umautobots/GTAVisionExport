@@ -252,15 +252,17 @@ namespace GTAVisionUtils
                 rv.Max.X = Math.Max(rv.Max.X, s.X);
                 rv.Max.Y = Math.Max(rv.Max.Y, s.Y);
             }
-            /*
-            int x = (int)(rv.Min.X * 1920);
-            int y = (int)(rv.Min.Y * 1080);
-            int x2 = (int)(rv.Max.X);
-            int y2 = (int)(rv.Max.Y * 1080);
-            float w = rv.Max.X - rv.Min.X;
-            float h = rv.Max.Y - rv.Min.Y;
-            HashFunctions.DrawRect(rv.Min.X + w/2, rv.Min.Y + h/2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y, 255, 255, 255, 100);*/
-            //new UIRectangle(new Point((int)(rv.Min.X * 1920), (int)(rv.Min.Y * 1080)), rv.)
+
+//            int width = 1280;
+//            int height = 960;
+//            int x = (int)(rv.Min.X * width);
+//            int y = (int)(rv.Min.Y * height);
+//            int x2 = (int)(rv.Max.X * width);
+//            int y2 = (int)(rv.Max.Y * height);
+//            float w = rv.Max.X - rv.Min.X;
+//            float h = rv.Max.Y - rv.Min.Y;
+//            HashFunctions.DrawRect(rv.Min.X + w/2, rv.Min.Y + h/2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y, 255, 255, 255, 100);
+//            new UIRectangle(new Point((int)(rv.Min.X * 1920), (int)(rv.Min.Y * 1080)), rv.)
             return rv;
         }
         public static bool CheckVisible(Entity e) {
