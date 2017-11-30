@@ -47,6 +47,11 @@ HTH
 FAQ
 ---
 
+Can not configure in CMake, `gdi32.lib` is missing:
+This is probably due to incorrect Visual Studio SDK, can be solved by installing Windows 10 SDK (10.0.15063.0) for Desktop C++ x86 and x64 in the VS Installer. 
+
+Source: https://stackoverflow.com/questions/33599723/fatal-error-lnk1104-cannot-open-file-gdi32-lib
+
 The game crashes after pressing 'L':
 
 If you are using steam, be sure to disable the steam overlay for this game.

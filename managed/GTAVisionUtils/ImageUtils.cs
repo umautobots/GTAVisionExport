@@ -7,8 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using BitMiracle.LibTiff.Classic;
 
-namespace GTAVisionUtils {
-
+namespace GTAVisionUtils
+{
     public class ImageUtils
     {
         private static Task imageTask;
@@ -19,6 +19,7 @@ namespace GTAVisionUtils {
             WaitForProcessing();
             return lastCapturedBytes;
         }
+
         public static void WaitForProcessing()
         {
             if (imageTask == null) return;
@@ -30,7 +31,8 @@ namespace GTAVisionUtils {
         {
             WaitForProcessing();
             imageTask = Task.Run(() => UploadToArchive(archive, name, w, h, colors, depth, stencil));
-        } 
+        }
+
         public static void UploadToArchive(ZipArchive archive, string name, int w, int h,
             List<byte[]> colors, byte[] depth, byte[] stencil)
         {

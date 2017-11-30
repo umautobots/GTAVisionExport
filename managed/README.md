@@ -40,7 +40,7 @@ ConnectionString=Server=127.0.0.1;Port=5432;Database=postgres;User Id=postgres;P
 
 create type detection_type AS ENUM ('background', 'person', 'car', 'bicycle');
 
-create type detection_class AS ENUM ('Unknown',   'Compacts',   'Sedans',   'SUVs',   'Coupes',   'Muscle',   'SportsClassics',   'Sports',   'Super',   'Motorcycles',   'OffRoad',   'Industrial',   'Utility',   'Vans',   'Cycles',   'Boats',   'Helicopters',   'Planes',   'Service',   'Emergency',   'Military',   'Commercial',   'Train');
+create type detection_class AS ENUM ('Unknown',   'Compacts',   'Sedans',   'SUVs',   'Coupes',   'Muscle',   'SportsClassics',   'Sports',   'Super',   'Motorcycles',   'OffRoad',   'Industrial',   'Utility',   'Vans',   'Cycles',   'Boats',   'Helicopters',   'Planes',   'Service',   'Emergency',   'Military',   'Commercial',   'Trains');
 
 create type weather AS ENUM ('Unknown', 'ExtraSunny', 'Clear', 'Clouds', 'Smog', 'Foggy', 'Overcast', 'Raining', 'ThunderStorm', 'Clearing', 'Neutral', 'Snowing', 'Blizzard', 'Snowlight', 'Christmas', 'Halloween');
 
@@ -59,7 +59,8 @@ create table detections
 	best_bbox_old box,
 	bbox3d box3d,
 	rot geometry,
-	coverage real default 0.0
+	coverage real default 0.0,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -73,7 +74,8 @@ create table runs
 	archivepath text,
 	localpath text,
 	session_id integer default 1,
-	instance_id integer default 0
+	instance_id integer default 0,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -87,7 +89,8 @@ create table sessions
 		constraint sessions_name_key
 			unique,
 	start timestamp with time zone,
-	"end" timestamp with time zone
+	"end" timestamp with time zone,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -141,6 +144,7 @@ create table instances
 	instancetype text,
 	publichostname text,
 	amiid text,
+    created timestamp without time zone default (now() at time zone 'utc'),
 	constraint instance_info_uniq
 		unique (hostname, instanceid, instancetype, publichostname, amiid)
 )
@@ -161,7 +165,8 @@ create table snapshot_weathers
 			references snapshots
 				on delete cascade,
 	weather_type weather,
-	snapshot_page integer
+	snapshot_page integer,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -172,7 +177,8 @@ create table uploads
 			primary key,
 	bucket text,
 	key text,
-	uploadid text
+	uploadid text,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -182,7 +188,8 @@ create table datasets
 		constraint datasets_pkey
 			primary key,
 	dataset_name text,
-	view_name text
+	view_name text,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -195,7 +202,8 @@ create table systems
 	dnshostname text,
 	username text,
 	systemtype text,
-	totalmem integer
+	totalmem bigint,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -226,7 +234,8 @@ create table system_graphics
 	rows integer,
 	refresh integer,
 	scanmode integer,
-	videomodedesc text
+	videomodedesc text,
+    created timestamp without time zone default (now() at time zone 'utc')
 )
 ;
 
@@ -242,8 +251,10 @@ Content of `scripts` directory should be following:
 - gdal_csharp.dll
 - GTAVision.ini
 - GTAVisionExport.dll
+- GTAVisionExport.pdb
 - GTAVisionUtils.dll
 - GTAVisionUtils.dll.config
+- GTAVisionUtils.pdb
 - INIFileParser.dll
 - INIFileParser.xml
 - MathNet.Numerics.dll
@@ -272,6 +283,7 @@ Content of `scripts` directory should be following:
 - YamlDotNet.dll
 - YamlDotNet.xml
 
+PDB files enable you to see line number in the stacktrace, which is useful for debugging.
 
 ## Verifying it loaded correctly
 
@@ -284,8 +296,43 @@ If less than 10 scripts loaded, you have problem.
 
 ## Usage
 
-In the game, turn off the HUD, MSAA and Radar.
+### Dependencies setup
+Make sure your PostgreSQL database is up.
 
-Turn the plugin on by "Page Up" in the game.
+If you don't want to install one, you can use the one in docker.
 
-Then, collect data by pressing "N" key.
+Before starting it, if you want the data persistent (hint: you want the data persitent), 
+create external volume. This is the only way to create volume in docker which is ok for postgresql.
+Create it by `docker volume create gtav-postgresql`. 
+
+Start the database in docker by `docker-compose up`.
+Default credentials are:
+- username: `postgres`
+- password: `postgres`
+
+### In-game settings
+Turn the plugin on by pressing "Page Up" in the game.
+Turn NativeUI notifications off by pressing "X" in the game.
+
+In settings, set up these things:
+- In Camera
+    - set First Person Velicle Hood to On
+- In Display
+    - set Radar to Off
+    - set HUD to Off
+- In Graphics
+    - set MSAA to Off
+    - set Pause Game on Focus Loss to Off
+- In Notifications
+    - set all notifications to Off
+
+Set the camera to be on the hood of the car by pressing "V" repeatedly, until camera is on desired position.
+
+### Gathering screenshots
+There is either manual or automatic way.
+- Collect data manually by pressing "N" key.
+- Or you can use https://github.com/racinmat/GTAVisionExport-Server.
+    It contains python HTTP server with buttons to control the managed plugin. 
+    It connects to the socket server inside the managed plugin. 
+    When the main script starts, you can click the "START_SESSION" button and then it creates new car and starts 
+    driving autonomously and grabbing screenshots automatically.

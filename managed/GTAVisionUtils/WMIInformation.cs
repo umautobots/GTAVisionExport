@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace GTAVisionUtils
 {
 
-    class WMIGraphicsInformation
+    public class WMIGraphicsInformation
     {
         public string deviceId;
         public string AdapterCompat;
@@ -38,7 +38,7 @@ namespace GTAVisionUtils
 
         public WMIGraphicsInformation(ManagementBaseObject from)
         {
-            deviceId = from.GetPropertyValue("DeivceID") as string;
+            deviceId = from.GetPropertyValue("DeviceID") as string;
             AdapterCompat = from.GetPropertyValue("AdapterCompatibility") as string;
             AdapterDACType = from.GetPropertyValue("AdapterDACType") as string;
             AdapterRAM = from.GetPropertyValue("AdapterRAM") as string;
@@ -50,7 +50,7 @@ namespace GTAVisionUtils
 
         }
     }
-    class WMIInformation
+    public class WMIInformation
     {
         public Guid system_uuid;
         public string vendor;
@@ -69,6 +69,10 @@ namespace GTAVisionUtils
             var result = new ManagementObjectSearcher(scope, genQuery).Get().Cast<ManagementBaseObject>();
             dnshostname = result.First().GetPropertyValue("DNSHostName") as string;
             username = result.First().GetPropertyValue("UserName") as string;
+            if (username == null)
+            {
+                username = Environment.UserName;
+            }
             systemtype = result.First().GetPropertyValue("SystemType") as string;
             totalmem = (UInt64) result.First().GetPropertyValue("TotalPhysicalMemory");
             var prodQuery = new ObjectQuery("SELECT * FROM Win32_ComputerSystemProduct");
