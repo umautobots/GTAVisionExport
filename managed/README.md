@@ -322,6 +322,7 @@ In settings, set up these things:
     - set HUD to Off
 - In Graphics
     - set MSAA to Off
+    - set Pause Game on Focus Loss to Off
 - In Notifications
     - set all notifications to Off
 
