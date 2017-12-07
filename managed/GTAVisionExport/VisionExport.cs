@@ -178,6 +178,13 @@ namespace GTAVisionExport {
                     GTA.World.CurrentDayTime = new TimeSpan(hours, minutes, 0);
                     UINotify("Time Set");
                     break;
+                case "SET_WEATHER":
+                    string weather = parameters.weather;
+                    UINotify("starting set time, obtained: " + weather);
+                    Enum.TryParse(weather, out Weather weatherEnum);
+                    GTA.World.Weather = weatherEnum;
+                    UINotify("Weather Set");
+                    break;
 //                    uncomment when resolving, how the hell should I get image by socket correctly
 //                case "GET_SCREEN":
 //                    var last = ImageUtils.getLastCapturedFrame();
@@ -278,72 +285,23 @@ namespace GTAVisionExport {
 
 //            UINotify("going to save images and save to postgres");
 
-//            List<byte[]> colors = new List<byte[]>();
-            Game.Pause(true);
-            Script.Wait(100);
-            var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
-            GTAData dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather.ToList());
-            if (dat == null) return;
-//            var thisframe = VisionNative.GetCurrentTime();
-//            var depth = VisionNative.GetDepthBuffer();
-//            var stencil = VisionNative.GetStencilBuffer();
-//            colors.Add(VisionNative.GetColorBuffer());
-            /*
-            foreach (var wea in wantedWeather) {
-                World.TransitionToWeather(wea, 0.0f);
-                Script.Wait(1);
-                colors.Add(VisionNative.GetColorBuffer());
-            }*/
-//            Game.Pause(false);
-            
-            /*
-            if (World.Weather != Weather.Snowing)
+            try
             {
-                World.TransitionToWeather(Weather.Snowing, 1);
-                
-            }*/
-//            var colorframe = VisionNative.GetLastColorTime();
-//            var depthframe = VisionNative.GetLastConstantTime();
-//            var constantframe = VisionNative.GetLastConstantTime();
-            //UINotify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
-//            UINotify("colors length: " + colors[0].Length.ToString());
-//            if (depth == null || stencil == null)
-//            {
-//                UINotify("No DEPTH");
-//                return;
-//            }
+                Game.Pause(true);
+                Script.Wait(100);
+                var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
+                GTAData dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather.ToList());
+                if (dat == null) return;
 
-            /*
-             * this code checks to see if there's drift
-             * it's kinda pointless because we end up "straddling" a present call,
-             * so the capture time difference can be ~1/4th of a frame but still the
-             * depth/stencil and color buffers are one frame offset from each other
-            if (Math.Abs(thisframe - colorframe) < 60 && Math.Abs(colorframe - depthframe) < 60 &&
-                Math.Abs(colorframe - constantframe) < 60)
-            {
-                
-
-
-
-                
+                saveSnapshotToFile(dat.ImageName, wantedWeather);
                 PostgresExport.SaveSnapshot(dat, run.guid);
             }
-            */
-//            ImageUtils.WaitForProcessing();
-            saveSnapshotToFile(dat.ImageName, wantedWeather);
-//            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
-//                Game.ScreenResolution.Height, colors, depth, stencil);
-            
-//            UINotify("going to save snapshot to db");
-//            UINotify("current weather: " + dat.CurrentWeather.ToString());
-            PostgresExport.SaveSnapshot(dat, run.guid);
-//            outStream.Flush();
-//            if ((Int64)outStream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
-//                ImageUtils.WaitForProcessing();
-//                StopRun();
-//                runTask?.Wait();
-//                runTask = StartRun();
-//            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("exception occured, logging and continuing");
+                Console.WriteLine(exception);
+                throw;
+            }
         }
 
         /* -1 = need restart, 0 = normal, 1 = need to enter vehicle */
