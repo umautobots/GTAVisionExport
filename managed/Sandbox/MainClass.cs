@@ -4,6 +4,7 @@ using System.Diagnostics.PerformanceData;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Threading.Tasks;
 using GTAVisionUtils;
 using IniParser;
 using Newtonsoft.Json;
@@ -255,15 +256,68 @@ namespace Sandbox
             }
         }
 
+        public static async void Printing(int i)
+        {
+            await Task.Run(() => PrintingImpl(i));
+        }
+        
+        public static void PrintingImpl(int i)
+        {
+            System.Threading.Thread.Sleep(1000); // wait 1 second
+            Console.WriteLine(i);
+        }
+
+        public static async void Printing(string i)
+        {
+            await Task.Run(() => PrintingImpl(i));
+        }
+        
+        public static void PrintingImpl(string i)
+        {
+            System.Threading.Thread.Sleep(1000); // wait 1 second
+            Console.WriteLine(i);
+        }
+
+        public static async void Printing(byte[] i)
+        {
+            await Task.Run(() => PrintingImpl(i));
+        }
+        
+        public static void PrintingImpl(byte[] i)
+        {
+            System.Threading.Thread.Sleep(1000); // wait 1 second
+            Console.WriteLine(BitConverter.ToString(i));
+        }
+
+        public static void tryThreads()
+        {
+//            var i = 1;
+//            var i = "h";
+            var i = new byte[] { 0x20, 0x20, 0x20, 0x20};
+            Printing(i);
+            System.Threading.Thread.Sleep(500);
+//            i = 2;
+//            i = "he";
+            i = new byte[] { 0x30, 0x30, 0x30, 0x30};
+            Printing(i);
+            System.Threading.Thread.Sleep(500);
+//            i = 3;
+//            i = "hello";
+            i = new byte[] { 0x40, 0x40, 0x40, 0x40};
+            Printing(i);
+            System.Threading.Thread.Sleep(3000);
+        }
+        
         public static void Main(string[] args)
         {
+            tryThreads();
 //            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
-            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss-fff";
-            for (int i = 0; i < 1000; i++)
-            {
-                var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
-                Console.WriteLine(fileName);
-            }
+//            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss-fff";
+//            for (int i = 0; i < 1000; i++)
+//            {
+//                var fileName = DateTime.UtcNow.ToString(dateTimeFormat) + ".tiff";
+//                Console.WriteLine(fileName);
+//            }
 //            var systemInfo = new WMIInformation();
 //            Console.WriteLine(systemInfo.dnshostname);
 //            Console.WriteLine(systemInfo.username);
