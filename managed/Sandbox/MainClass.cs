@@ -310,7 +310,12 @@ namespace Sandbox
         
         public static void Main(string[] args)
         {
-            tryThreads();
+//            tryThreads();
+            
+            string weather = "Clear";
+//            string weather = "Overcast";
+            var weatherEnum = Enum.Parse(typeof(Weather), weather);
+            Console.WriteLine(weatherEnum);
 //            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss";
 //            var dateTimeFormat = @"dd-MM-yyyy--HH-mm-ss-fff";
 //            for (int i = 0; i < 1000; i++)

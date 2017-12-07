@@ -179,12 +179,19 @@ namespace GTAVisionExport {
                     UINotify("Time Set");
                     break;
                 case "SET_WEATHER":
-                    string weather = parameters.weather;
-                    UINotify("starting set time, obtained: " + weather);
-                    Enum.TryParse(weather, out Weather weatherEnum);
-                    GTA.World.Weather = weatherEnum;
-                    UINotify("Weather Set");
-                    break;
+                    try
+                    {
+                        string weather = parameters.weather;
+                        UINotify("starting set time, obtained: " + weather);
+                        Weather weatherEnum = (Weather) Enum.Parse(typeof(Weather), weather);
+                        GTA.World.Weather = weatherEnum;
+                        UINotify("Weather Set");
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
 //                    uncomment when resolving, how the hell should I get image by socket correctly
 //                case "GET_SCREEN":
 //                    var last = ImageUtils.getLastCapturedFrame();
