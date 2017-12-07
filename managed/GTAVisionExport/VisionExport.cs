@@ -68,6 +68,9 @@ namespace GTAVisionExport {
         private bool IsGamePaused = false;
         private bool notificationsAllowed = true;
         private StereoCamera cams;
+        private bool timeIntervalEnabled = false;
+        private TimeSpan timeFrom;
+        private TimeSpan timeTo;
         public VisionExport()
         {
             // loading ini file
@@ -186,12 +189,27 @@ namespace GTAVisionExport {
                         Weather weatherEnum = (Weather) Enum.Parse(typeof(Weather), weather);
                         GTA.World.Weather = weatherEnum;
                         UINotify("Weather Set to " + weatherEnum.ToString());
-                        break;
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
                     }
+                    break;
+                case "SET_TIME_INTERVAL":
+                    string timeFrom = parameters.timeFrom;
+                    string timeTo = parameters.timeTo;
+                    UINotify("starting set time, obtained from: " + timeFrom + ", to: " + timeTo);
+                    var hoursAndMinutesFrom = timeFrom.Split(':');
+                    var hoursAndMinutesTo = timeTo.Split(':');
+                    var hoursFrom = int.Parse(hoursAndMinutesFrom[0]);
+                    var minutesFrom = int.Parse(hoursAndMinutesFrom[1]);
+                    var hoursTo = int.Parse(hoursAndMinutesTo[0]);
+                    var minutesTo = int.Parse(hoursAndMinutesTo[1]);
+                    this.timeIntervalEnabled = true;
+                    this.timeFrom = new TimeSpan(hoursFrom, minutesFrom, 0);
+                    this.timeTo = new TimeSpan(hoursTo, minutesTo, 0);
+                    UINotify("Time Interval Set");
+                    break;
 //                    uncomment when resolving, how the hell should I get image by socket correctly
 //                case "GET_SCREEN":
 //                    var last = ImageUtils.getLastCapturedFrame();
@@ -307,6 +325,16 @@ namespace GTAVisionExport {
             {
                 Console.WriteLine("exception occured, logging and continuing");
                 Console.WriteLine(exception);
+            }
+            
+//            if time interval is enabled, checkes game time and sets it to timeFrom, it current time is after timeTo
+            if (timeIntervalEnabled)
+            {
+                var currentTime = GTA.World.CurrentDayTime;
+                if (currentTime > timeTo)
+                {
+                    GTA.World.CurrentDayTime = timeFrom;
+                }
             }
         }
 
