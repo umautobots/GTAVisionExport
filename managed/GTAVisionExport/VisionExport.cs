@@ -300,7 +300,6 @@ namespace GTAVisionExport {
             {
                 Console.WriteLine("exception occured, logging and continuing");
                 Console.WriteLine(exception);
-                throw;
             }
         }
 
@@ -614,8 +613,11 @@ namespace GTAVisionExport {
                 //var color = VisionNative.GetColorBuffer();
                 for (int i = 0; i < 100; i++)
                 {
-                    saveSnapshotToFile(i.ToString(), wantedWeather);
+                    var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
+                    GTAData dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather.ToList());
+                    saveSnapshotToFile(dat.ImageName, wantedWeather);
 
+                    PostgresExport.SaveSnapshot(dat, run.guid);
                     Script.Wait(200);
                 }
         }
