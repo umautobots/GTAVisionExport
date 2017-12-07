@@ -185,7 +185,7 @@ namespace GTAVisionExport {
                         UINotify("starting set time, obtained: " + weather);
                         Weather weatherEnum = (Weather) Enum.Parse(typeof(Weather), weather);
                         GTA.World.Weather = weatherEnum;
-                        UINotify("Weather Set");
+                        UINotify("Weather Set to " + weatherEnum.ToString());
                         break;
                     }
                     catch (Exception e)
