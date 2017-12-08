@@ -412,17 +412,16 @@ namespace GTAVisionExport
             if (run != null) PostgresExport.StopRun(run);
             var runid = await PostgresExport.StartRun(curSessionId);
             run = runid;
-            enabled = true;
+            if (enable)
+            {
+                enabled = true;                
+            }
         }
 
         public void StopRun()
         {
             runTask?.Wait();
             ImageUtils.WaitForProcessing();
-//            if (outStream.CanWrite)
-//            {
-//                outStream.Flush();
-//            }
             enabled = false;
             PostgresExport.StopRun(run);
 //            UploadFile();
@@ -644,6 +643,8 @@ namespace GTAVisionExport
                 UINotify("N pressed, going to dump to file");
 
                 startRunAndSessionManual();
+                postgresTask?.Wait();
+                runTask?.Wait();
                 for (int i = 0; i < 10; i++)
                 {
                     var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
@@ -663,8 +664,6 @@ namespace GTAVisionExport
                         saveSnapshotToFile(dat.ImageName, weather);
                     }
 
-//                    tady dát nějaký "manual" id, na tom to padá
-//                    ToolStripDropDown: fixnout
                     PostgresExport.SaveSnapshot(dat, run.guid);
                     Game.Pause(false);
                     Script.Wait(200); // hoping game will go on during this wait
