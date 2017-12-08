@@ -153,7 +153,10 @@ namespace GTAVisionExport
             switch (commandName)
             {
                 case "START_SESSION":
-                    startRunAndSession();
+                    postgresTask?.Wait();
+                    postgresTask = StartSession();
+                    runTask?.Wait();
+                    runTask = StartRun();
                     break;
                 case "STOP_SESSION":
                     StopRun();
@@ -229,12 +232,13 @@ namespace GTAVisionExport
             }
         }
 
-        public void startRunAndSession()
+        public void startRunAndSessionManual()
         {
+//            this method does not enable mod (used for manual data gathering)
             postgresTask?.Wait();
             postgresTask = StartSession();
             runTask?.Wait();
-            runTask = StartRun();
+            runTask = StartRun(false);
         }
 
         public void OnTick(object o, EventArgs e)
@@ -402,24 +406,11 @@ namespace GTAVisionExport
             curSessionId = -1;
         }
 
-        public async Task StartRun()
+        public async Task StartRun(bool enable = true)
         {
             await postgresTask;
             if (run != null) PostgresExport.StopRun(run);
             var runid = await PostgresExport.StartRun(curSessionId);
-
-            //var s3Info = new S3FileInfo(client, "gtadata", run.archiveKey);
-            //S3Stream = s3Info.Create();
-
-//            outputPath = Path.GetTempFileName();
-//            outStream = File.Open(outputPath, FileMode.Truncate);
-//            archive = new ZipArchive(outStream, ZipArchiveMode.Create);
-
-            //archive = new ZipArchive(, ZipArchiveMode.Create);
-
-            //archive = ZipFile.Open(Path.Combine(dataPath, run.guid + ".zip"), ZipArchiveMode.Create);
-
-
             run = runid;
             enabled = true;
         }
@@ -652,18 +643,7 @@ namespace GTAVisionExport
             {
                 UINotify("N pressed, going to dump to file");
 
-                if (curSessionId == -1 || run == null)
-                {
-                    UINotify("Please, enable plugin by PageUp");
-                }
-                
-                //var color = VisionNatGetColorBuffer();
-
-//                dumpTest();
-
-                //var color = VisionNative.GetColorBuffer();
-
-                startRunAndSession();
+                startRunAndSessionManual();
                 for (int i = 0; i < 10; i++)
                 {
                     var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
@@ -689,7 +669,8 @@ namespace GTAVisionExport
                     Game.Pause(false);
                     Script.Wait(200); // hoping game will go on during this wait
                 }
-                
+                StopRun();
+                StopSession();
             }
             if (k.KeyCode == Keys.I)
             {

@@ -49,7 +49,21 @@ namespace GTAVisionUtils
         public static async void WriteToTiff(string name, int width, int height, List<byte[]> colors, byte[] depth,
             byte[] stencil, bool oneFile = true)
         {
-            await Task.Run(() => WriteToTiffImpl(name, width, height, colors, depth, stencil, oneFile));
+            await Task.Run(() =>
+            {
+                try
+                {
+                    WriteToTiffImpl(name, width, height, colors, depth, stencil, oneFile);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    Console.WriteLine("width: " + width.ToString());
+                    Console.WriteLine("height: " + height.ToString());
+                    Console.WriteLine("oneFile: " + oneFile.ToString());
+                    throw;
+                }
+            });
         }
 
         public static void WriteToTiffImpl(string name, int width, int height, List<byte[]> colors, byte[] depth,
