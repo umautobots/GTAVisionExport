@@ -57,10 +57,11 @@ namespace GTAVisionUtils
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    Console.WriteLine("width: " + width.ToString());
-                    Console.WriteLine("height: " + height.ToString());
-                    Console.WriteLine("oneFile: " + oneFile.ToString());
+                    
+                    Logger.writeLine(e);
+                    Logger.writeLine("width: " + width.ToString());
+                    Logger.writeLine("height: " + height.ToString());
+                    Logger.writeLine("oneFile: " + oneFile.ToString());
                     throw;
                 }
             });

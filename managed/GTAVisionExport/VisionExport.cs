@@ -49,7 +49,7 @@ namespace GTAVisionExport
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
         private readonly string dataPath;
-        private readonly string logFilePath;
+        public static string logFilePath;
 
         private readonly Weather[] wantedWeathers = new Weather[]
             {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
@@ -91,6 +91,7 @@ namespace GTAVisionExport
             //UINotify(ConfigurationManager.AppSettings["database_connection"]);
             dataPath = data["Snapshots"]["OutputDir"];
             logFilePath = data["Snapshots"]["LogFile"];
+            Logger.setLogFilePath(logFilePath);
 
             System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
@@ -202,7 +203,7 @@ namespace GTAVisionExport
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
+                        Logger.writeLine(e);
                     }
                     break;
                 case "SET_TIME_INTERVAL":
@@ -315,8 +316,8 @@ namespace GTAVisionExport
             }
             catch (Exception exception)
             {
-                Console.WriteLine("exception occured, logging and continuing");
-                Console.WriteLine(exception);
+                Logger.writeLine("exception occured, logging and continuing");
+                Logger.writeLine(exception);
             }
 
 //            if time interval is enabled, checkes game time and sets it to timeFrom, it current time is after timeTo
@@ -526,7 +527,7 @@ namespace GTAVisionExport
 
         public void OnKeyDown(object o, KeyEventArgs k)
         {
-            System.IO.File.AppendAllText(logFilePath, "VisionExport OnKeyDown called.\n");
+            Logger.writeLine("VisionExport OnKeyDown called.");
             if (k.KeyCode == Keys.PageUp)
             {
                 postgresTask?.Wait();
@@ -640,11 +641,12 @@ namespace GTAVisionExport
 
             if (k.KeyCode == Keys.N)
             {
-                UINotify("N pressed, going to dump to file");
+                UINotify("N pressed, going to take screenshots");
 
                 startRunAndSessionManual();
                 postgresTask?.Wait();
                 runTask?.Wait();
+                UINotify("starting screenshots");
                 for (int i = 0; i < 10; i++)
                 {
                     var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
@@ -671,6 +673,7 @@ namespace GTAVisionExport
                 StopRun();
                 StopSession();
             }
+            
             if (k.KeyCode == Keys.I)
             {
                 var info = new GTAVisionUtils.InstanceData();
