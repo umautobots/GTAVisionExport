@@ -646,12 +646,12 @@ namespace GTAVisionExport
                 startRunAndSessionManual();
                 postgresTask?.Wait();
                 runTask?.Wait();
+                var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
                 UINotify("starting screenshots");
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 5; i++)
                 {
-                    var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
                     Game.Pause(true);
-                    Script.Wait(100);
+                    Script.Wait(200);
 
                     GTAData dat;
                     if (multipleWeathers)
