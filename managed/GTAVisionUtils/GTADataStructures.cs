@@ -283,6 +283,12 @@ namespace GTAVisionUtils
             //return e.IsInRangeOf(res.HitCoords, 10);
             //return res.HitEntity == e;
         }
+
+        public static GTAData DumpData(string imageName, Weather capturedWeather)
+        {
+            return DumpData(imageName, new List<Weather>() {capturedWeather});
+        }
+
         public static GTAData DumpData(string imageName, List<Weather> capturedWeathers)
         {
             var ret = new GTAData();

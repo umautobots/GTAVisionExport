@@ -50,7 +50,9 @@ namespace GTAVisionExport {
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
         private readonly string dataPath;
         private readonly string logFilePath;
-        private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
+        private readonly Weather[] wantedWeathers = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
+        private readonly Weather wantedWeather = Weather.Clear;
+        private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private Player player;
         private string outputPath;
         private GTARun run;
@@ -315,10 +317,21 @@ namespace GTAVisionExport {
                 Game.Pause(true);
                 Script.Wait(100);
                 var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
-                GTAData dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather.ToList());
-                if (dat == null) return;
-
-                saveSnapshotToFile(dat.ImageName, wantedWeather);
+                GTAData dat;
+                if (multipleWeathers)
+                {
+                    dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeathers.ToList());
+                    if (dat == null) return;
+                    saveSnapshotToFile(dat.ImageName, wantedWeathers);
+                }
+                else
+                {
+                    dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather);
+                    if (dat == null) return;
+                    saveSnapshotToFile(dat.ImageName, wantedWeather);
+                }
+                    
+                Game.Pause(false);
                 PostgresExport.SaveSnapshot(dat, run.guid);
             }
             catch (Exception exception)
@@ -596,7 +609,17 @@ namespace GTAVisionExport {
                 IsGamePaused = false;
                 Game.Pause(false);
                 */
-                var data = GTAData.DumpData(Game.GameTime + ".tiff", new List<Weather>(wantedWeather));
+                Weather[] weathers;
+                if (multipleWeathers)
+                {
+                    weathers = wantedWeathers;
+                }
+                else
+                {
+                    weathers = new Weather[] {wantedWeather};
+                }
+                
+                var data = GTAData.DumpData(Game.GameTime + ".tiff", weathers.ToList());
 
                 string path = @"D:\GTAV_extraction_output\trymatrix.txt";
                 // This text is added only once to the file.
@@ -646,14 +669,27 @@ namespace GTAVisionExport {
                 dumpTest();
 
                 //var color = VisionNative.GetColorBuffer();
-                for (int i = 0; i < 100; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
-                    GTAData dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather.ToList());
-                    saveSnapshotToFile(dat.ImageName, wantedWeather);
+                    Game.Pause(true);
+                    Script.Wait(100);
+
+                    GTAData dat;
+                    if (multipleWeathers)
+                    {
+                        dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeathers.ToList());
+                        saveSnapshotToFile(dat.ImageName, wantedWeathers);
+                    }
+                    else
+                    {
+                        dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather);
+                        saveSnapshotToFile(dat.ImageName, wantedWeather);
+                    }
+                    
 
                     PostgresExport.SaveSnapshot(dat, run.guid);
-                    Script.Wait(200);
+                    Game.Pause(false);
                 }
         }
             if (k.KeyCode == Keys.I)
@@ -682,51 +718,22 @@ namespace GTAVisionExport {
             var fileName = Path.Combine(dataPath, "info-" + name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil, false);
 //            UINotify("file saved to: " + fileName);
-            
-//            UINotify("FieldOfView: " + GameplayCamera.FieldOfView.ToString());
-            //UINotify((connection != null && connection.Connected).ToString());
+        }
 
+        private void saveSnapshotToFile(String name, Weather weather)
+        {
+            Game.Pause(true);
+            World.TransitionToWeather(weather, 0.0f);
+            Script.Wait(1);
+            var depth = VisionNative.GetDepthBuffer();
+            var stencil = VisionNative.GetStencilBuffer();
+            var color = VisionNative.GetColorBuffer();
 
-//            var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
-
-//            string path = @"D:\GTAV_extraction_output\info.txt";
-//            // This text is added only once to the file.
-//            if (!File.Exists(path))
-//            {
-//                // Create a file to write to.
-//                using (StreamWriter file = File.CreateText(path))
-//                {
-//                    file.WriteLine("cam direction & Ped pos file");
-//                }
-//            }
-//
-//            using (StreamWriter file = File.AppendText(path))
-//            {
-//                file.WriteLine("==============info" + i.ToString() + ".tiff 's metadata=======================");
-//                file.WriteLine("cam pos");
-//                file.WriteLine(GameplayCamera.Position.X.ToString());
-//                file.WriteLine(GameplayCamera.Position.Y.ToString());
-//                file.WriteLine(GameplayCamera.Position.Z.ToString());
-//                file.WriteLine("cam direction");
-//                file.WriteLine(GameplayCamera.Direction.X.ToString());
-//                file.WriteLine(GameplayCamera.Direction.Y.ToString());
-//                file.WriteLine(GameplayCamera.Direction.Z.ToString());
-//                file.WriteLine("projection matrix");
-//                file.WriteLine(data.ProjectionMatrix.Values.ToString());
-//                file.WriteLine("view matrix");
-//                file.WriteLine(data.ViewMatrix.Values.ToString());
-//                file.WriteLine("character");
-//                file.WriteLine(data.Pos.X.ToString());
-//                file.WriteLine(data.Pos.Y.ToString());
-//                file.WriteLine(data.Pos.Z.ToString());
-//                foreach (var detection in data.Detections)
-//                {
-//                    file.WriteLine(detection.Type.ToString());
-//                    file.WriteLine(detection.Pos.X.ToString());
-//                    file.WriteLine(detection.Pos.Y.ToString());
-//                    file.WriteLine(detection.Pos.Z.ToString());
-//                }
-//            }
+            Game.Pause(false);
+            var res = Game.ScreenResolution;
+            var fileName = Path.Combine(dataPath, "info-" + name);
+            ImageUtils.WriteToTiff(fileName, res.Width, res.Height, new List<byte[]>() {color}, depth, stencil, false);
+//            UINotify("file saved to: " + fileName);
         }
 
         private void dumpTest()
@@ -736,7 +743,7 @@ namespace GTAVisionExport {
             Script.Wait(1);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
-            foreach (var wea in wantedWeather)
+            foreach (var wea in wantedWeathers)
             {
                 World.TransitionToWeather(wea, 0.0f);
                 Script.Wait(1);
