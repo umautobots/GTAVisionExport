@@ -37,8 +37,8 @@ using System.Threading;
 using IniParser;
 using Newtonsoft.Json;
 
-namespace GTAVisionExport {
-    
+namespace GTAVisionExport
+{
     class VisionExport : Script
     {
 #if DEBUG
@@ -50,7 +50,10 @@ namespace GTAVisionExport {
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
         private readonly string dataPath;
         private readonly string logFilePath;
-        private readonly Weather[] wantedWeathers = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
+
+        private readonly Weather[] wantedWeathers = new Weather[]
+            {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
+
         private readonly Weather wantedWeather = Weather.Clear;
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private readonly bool currentWeather = true;
@@ -61,10 +64,13 @@ namespace GTAVisionExport {
         private Socket server;
         private Socket connection;
         private UTF8Encoding encoding = new UTF8Encoding(false);
+
         private KeyHandling kh = new KeyHandling();
+
 //        private ZipArchive archive;
 //        private Stream outStream;
         private Task postgresTask;
+
         private Task runTask;
         private int curSessionId = -1;
         private speedAndTime lowSpeedTime = new speedAndTime();
@@ -74,6 +80,7 @@ namespace GTAVisionExport {
         private bool timeIntervalEnabled = false;
         private TimeSpan timeFrom;
         private TimeSpan timeTo;
+
         public VisionExport()
         {
             // loading ini file
@@ -98,7 +105,7 @@ namespace GTAVisionExport {
             //outStream = File.CreateText(outputPath);
             this.Tick += new EventHandler(this.OnTick);
             this.KeyDown += OnKeyDown;
-            
+
             Interval = 100;
             if (enabled)
             {
@@ -116,7 +123,7 @@ namespace GTAVisionExport {
             UINotify("server connected:" + server.Connected.ToString());
             UINotify(connection == null ? "connection is null" : "connection:" + connection.ToString());
             if (connection == null) return;
-            
+
             byte[] inBuffer = new byte[1024];
             string str = "";
             int num = 0;
@@ -146,10 +153,7 @@ namespace GTAVisionExport {
             switch (commandName)
             {
                 case "START_SESSION":
-                    postgresTask?.Wait();
-                    postgresTask = StartSession();
-                    runTask?.Wait();
-                    runTask = StartRun();
+                    startRunAndSession();
                     break;
                 case "STOP_SESSION":
                     StopRun();
@@ -169,7 +173,8 @@ namespace GTAVisionExport {
                     ReloadGame();
                     break;
                 case "RELOAD":
-                    FieldInfo f = this.GetType().GetField("_scriptdomain", BindingFlags.NonPublic | BindingFlags.Instance);
+                    FieldInfo f = this.GetType()
+                        .GetField("_scriptdomain", BindingFlags.NonPublic | BindingFlags.Instance);
                     object domain = f.GetValue(this);
                     MethodInfo m = domain.GetType()
                         .GetMethod("DoKeyboardMessage", BindingFlags.Instance | BindingFlags.Public);
@@ -221,51 +226,19 @@ namespace GTAVisionExport {
 //                    connection.Send(BitConverter.GetBytes(size));
 //                    connection.Send(last);
 //                    break;
-
             }
         }
 
-//        private void UploadFile()
-//        {
-//            System.IO.File.AppendAllText(logFilePath, DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": VisionExport UploadFile called.\n");
-//            UINotify("UploadFile called");
-//
-////            archive.Dispose();
-//            var oldOutput = outputPath;
-//            if (oldOutput != null)
-//            {
-//                new Thread(() =>
-//                {
-//                    File.Move(oldOutput, Path.Combine(dataPath, run.guid + ".zip"));
-//                }).Start();
-//            }
-//            
-//            outputPath = Path.GetTempFileName();
-//            outStream = File.Open(outputPath, FileMode.Truncate);
-////            archive = new ZipArchive(outStream, ZipArchiveMode.Update);
-//            //File.Delete(oldOutput);
-//            
-//            /*
-//            archive.Dispose();
-//            var req = new PutObjectRequest {
-//                BucketName = "gtadata",
-//                Key = "images/" + run.guid + ".zip",
-//                FilePath = outputPath
-//            };
-//            var resp = client.PutObjectAsync(req);
-//            outputPath = Path.GetTempFileName();
-//            S3Stream = File.Open(outputPath, FileMode.Truncate);
-//            archive = new ZipArchive(S3Stream, ZipArchiveMode.Update);
-//            
-//            await resp;
-//            File.Delete(req.FilePath);
-//            */
-//        }
-        
+        public void startRunAndSession()
+        {
+            postgresTask?.Wait();
+            postgresTask = StartSession();
+            runTask?.Wait();
+            runTask = StartRun();
+        }
+
         public void OnTick(object o, EventArgs e)
         {
-            
-
             if (server.Poll(10, SelectMode.SelectRead) && connection == null)
             {
                 connection = server.Accept();
@@ -274,11 +247,12 @@ namespace GTAVisionExport {
             }
             handlePipeInput();
             if (!enabled) return;
-            
+
             //Array values = Enum.GetValues(typeof(Weather));
 
 
-            switch (checkStatus()) {
+            switch (checkStatus())
+            {
                 case GameStatus.NeedReload:
                     //TODO: need to get a new session and run?
                     StopRun();
@@ -295,7 +269,7 @@ namespace GTAVisionExport {
                     //Autostart();
                     // use reloading temporarily
                     StopRun();
-                    
+
                     ReloadGame();
                     Script.Wait(100);
                     runTask?.Wait();
@@ -331,7 +305,7 @@ namespace GTAVisionExport {
                     if (dat == null) return;
                     saveSnapshotToFile(dat.ImageName, weather);
                 }
-                    
+
                 Game.Pause(false);
                 PostgresExport.SaveSnapshot(dat, run.guid);
             }
@@ -340,7 +314,7 @@ namespace GTAVisionExport {
                 Console.WriteLine("exception occured, logging and continuing");
                 Console.WriteLine(exception);
             }
-            
+
 //            if time interval is enabled, checkes game time and sets it to timeFrom, it current time is after timeTo
             if (timeIntervalEnabled)
             {
@@ -401,7 +375,6 @@ namespace GTAVisionExport {
             } */
             return cap;
             //cap.Save(GetFileName(".png"), ImageFormat.Png);
-
         }
 
         public void Autostart()
@@ -428,23 +401,24 @@ namespace GTAVisionExport {
             PostgresExport.StopSession(curSessionId);
             curSessionId = -1;
         }
+
         public async Task StartRun()
         {
             await postgresTask;
-            if(run != null) PostgresExport.StopRun(run);
+            if (run != null) PostgresExport.StopRun(run);
             var runid = await PostgresExport.StartRun(curSessionId);
 
             //var s3Info = new S3FileInfo(client, "gtadata", run.archiveKey);
             //S3Stream = s3Info.Create();
-            
+
 //            outputPath = Path.GetTempFileName();
 //            outStream = File.Open(outputPath, FileMode.Truncate);
 //            archive = new ZipArchive(outStream, ZipArchiveMode.Create);
-            
+
             //archive = new ZipArchive(, ZipArchiveMode.Create);
-            
+
             //archive = ZipFile.Open(Path.Combine(dataPath, run.guid + ".zip"), ZipArchiveMode.Create);
-            
+
 
             run = runid;
             enabled = true;
@@ -462,7 +436,7 @@ namespace GTAVisionExport {
             PostgresExport.StopRun(run);
 //            UploadFile();
             run = null;
-            
+
             Game.Player.LastVehicle.Alpha = int.MaxValue;
         }
 
@@ -471,10 +445,10 @@ namespace GTAVisionExport {
             //just wrapper for UI.Notify, but lets us disable showing notifications ar all
             if (notificationsAllowed)
             {
-                UI.Notify(message);                
+                UI.Notify(message);
             }
         }
-        
+
         public void EnterVehicle()
         {
             /*
@@ -482,9 +456,18 @@ namespace GTAVisionExport {
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             */
             Model mod = new Model(GTA.Native.VehicleHash.Asea);
-            if (mod == null) {UINotify("mod is null");}
-            if (player == null) {UINotify("player is null");}
-            if (player.Character == null) {UINotify("player.Character is null");}
+            if (mod == null)
+            {
+                UINotify("mod is null");
+            }
+            if (player == null)
+            {
+                UINotify("player is null");
+            }
+            if (player.Character == null)
+            {
+                UINotify("player.Character is null");
+            }
             UINotify("player position: " + player.Character.Position.ToString());
             var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
             if (vehicle == null)
@@ -493,7 +476,7 @@ namespace GTAVisionExport {
             }
             else
             {
-                player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);                
+                player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             }
             //vehicle.Alpha = 0; //transparent
             //player.Character.Alpha = 0;
@@ -504,7 +487,8 @@ namespace GTAVisionExport {
             //todo: probably here try to set camera, maybe by SET_FOLLOW_VEHICLE_CAM_VIEW_MODE(int viewMode), or by SET_FOLLOW_VEHICLE_CAM_ZOOM_LEVEL(int zoomLevel)
             // or just something with the GTA.GameplayCamera
             //YOLO
-            MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo inf =
+                kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
 
@@ -525,18 +509,19 @@ namespace GTAVisionExport {
             //UINotify("x = " + player.Position.X + "y = " + player.Position.Y + "z = " + player.Position.Z);
             // no need to release the autodrive here
             // delete all surrounding vehicles & the driver's car
-            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y, player.Position.Z, 1000f, false, false, false, false);
+            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y,
+                player.Position.Z, 1000f, false, false, false, false);
             player.LastVehicle.Delete();
             // teleport to the spawning position, defined in GameUtils.cs, subject to changes
             player.Position = GTAConst.StartPos;
-            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y, player.Position.Z, 100f, false, false, false, false);
+            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y,
+                player.Position.Z, 100f, false, false, false, false);
             // start a new run
             EnterVehicle();
             //Script.Wait(2000);
             ToggleNavigation();
 
             lowSpeedTime.clearTime();
-
         }
 
         public void TraverseWeather()
@@ -544,7 +529,7 @@ namespace GTAVisionExport {
             for (int i = 1; i < 14; i++)
             {
                 //World.Weather = (Weather)i;
-                World.TransitionToWeather((Weather)i, 0.0f);
+                World.TransitionToWeather((Weather) i, 0.0f);
                 //Script.Wait(1000);
             }
         }
@@ -597,7 +582,6 @@ namespace GTAVisionExport {
                 var str = settings.GetValue("", "ConnectionString");
                 UINotify("BaseDirectory: " + loc);
                 UINotify("ConnectionString: " + str);
-
             }
             if (k.KeyCode == Keys.G) // temp modification
             {
@@ -628,17 +612,21 @@ namespace GTAVisionExport {
                     // Create a file to write to.
                     using (StreamWriter file = File.CreateText(path))
                     {
-                        
-                        
                         file.WriteLine("cam direction file");
                         file.WriteLine("direction:");
-                        file.WriteLine(GameplayCamera.Direction.X.ToString() + ' ' + GameplayCamera.Direction.Y.ToString() + ' ' + GameplayCamera.Direction.Z.ToString());
+                        file.WriteLine(GameplayCamera.Direction.X.ToString() + ' ' +
+                                       GameplayCamera.Direction.Y.ToString() + ' ' +
+                                       GameplayCamera.Direction.Z.ToString());
                         file.WriteLine("Dot Product:");
                         file.WriteLine(Vector3.Dot(GameplayCamera.Direction, GameplayCamera.Rotation));
                         file.WriteLine("position:");
-                        file.WriteLine(GameplayCamera.Position.X.ToString() + ' ' + GameplayCamera.Position.Y.ToString() + ' ' + GameplayCamera.Position.Z.ToString());
+                        file.WriteLine(GameplayCamera.Position.X.ToString() + ' ' +
+                                       GameplayCamera.Position.Y.ToString() + ' ' +
+                                       GameplayCamera.Position.Z.ToString());
                         file.WriteLine("rotation:");
-                        file.WriteLine(GameplayCamera.Rotation.X.ToString() + ' ' + GameplayCamera.Rotation.Y.ToString() + ' ' + GameplayCamera.Rotation.Z.ToString());
+                        file.WriteLine(GameplayCamera.Rotation.X.ToString() + ' ' +
+                                       GameplayCamera.Rotation.Y.ToString() + ' ' +
+                                       GameplayCamera.Rotation.Z.ToString());
                         file.WriteLine("relative heading:");
                         file.WriteLine(GameplayCamera.RelativeHeading.ToString());
                         file.WriteLine("relative pitch:");
@@ -662,13 +650,20 @@ namespace GTAVisionExport {
 
             if (k.KeyCode == Keys.N)
             {
-                UINotify("N pressed, going to print stats to file");
+                UINotify("N pressed, going to dump to file");
+
+                if (curSessionId == -1 || run == null)
+                {
+                    UINotify("Please, enable plugin by PageUp");
+                }
                 
                 //var color = VisionNatGetColorBuffer();
-                
+
 //                dumpTest();
 
                 //var color = VisionNative.GetColorBuffer();
+
+                startRunAndSession();
                 for (int i = 0; i < 10; i++)
                 {
                     var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
@@ -690,10 +685,12 @@ namespace GTAVisionExport {
 
 //                    tady dát nějaký "manual" id, na tom to padá
 //                    ToolStripDropDown: fixnout
-//                    PostgresExport.SaveSnapshot(dat, -1);
+                    PostgresExport.SaveSnapshot(dat, run.guid);
                     Game.Pause(false);
+                    Script.Wait(200); // hoping game will go on during this wait
                 }
-        }
+                
+            }
             if (k.KeyCode == Keys.I)
             {
                 var info = new GTAVisionUtils.InstanceData();
