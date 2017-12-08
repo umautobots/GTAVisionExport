@@ -53,6 +53,8 @@ namespace GTAVisionUtils
             {
                 try
                 {
+                    Logger.writeLine("writing to tiff");
+                    Logger.writeLine("name: " + name);
                     WriteToTiffImpl(name, width, height, colors, depth, stencil, oneFile);
                 }
                 catch (Exception e)

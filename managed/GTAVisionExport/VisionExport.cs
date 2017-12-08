@@ -119,7 +119,7 @@ namespace GTAVisionExport
 
         private void handlePipeInput()
         {
-            System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
+            Logger.writeLine("VisionExport handlePipeInput called.");
             UINotify("handlePipeInput called");
             UINotify("server connected:" + server.Connected.ToString());
             UINotify(connection == null ? "connection is null" : "connection:" + connection.ToString());
