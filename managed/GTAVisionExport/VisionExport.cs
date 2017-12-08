@@ -53,6 +53,7 @@ namespace GTAVisionExport {
         private readonly Weather[] wantedWeathers = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
         private readonly Weather wantedWeather = Weather.Clear;
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
+        private readonly bool currentWeather = true;
         private Player player;
         private string outputPath;
         private GTARun run;
@@ -187,10 +188,9 @@ namespace GTAVisionExport {
                     try
                     {
                         string weather = parameters.weather;
-                        UINotify("starting set time, obtained: " + weather);
+                        UINotify("Weather Set to " + weather.ToString());
                         Weather weatherEnum = (Weather) Enum.Parse(typeof(Weather), weather);
                         GTA.World.Weather = weatherEnum;
-                        UINotify("Weather Set to " + weatherEnum.ToString());
                     }
                     catch (Exception e)
                     {
@@ -326,9 +326,10 @@ namespace GTAVisionExport {
                 }
                 else
                 {
-                    dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather);
+                    Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
+                    dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
                     if (dat == null) return;
-                    saveSnapshotToFile(dat.ImageName, wantedWeather);
+                    saveSnapshotToFile(dat.ImageName, weather);
                 }
                     
                 Game.Pause(false);
@@ -609,17 +610,16 @@ namespace GTAVisionExport {
                 IsGamePaused = false;
                 Game.Pause(false);
                 */
-                Weather[] weathers;
+                GTAData data;
                 if (multipleWeathers)
                 {
-                    weathers = wantedWeathers;
+                    data = GTAData.DumpData(Game.GameTime + ".tiff", wantedWeathers.ToList());
                 }
                 else
                 {
-                    weathers = new Weather[] {wantedWeather};
+                    Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
+                    data = GTAData.DumpData(Game.GameTime + ".tiff", weather);
                 }
-                
-                var data = GTAData.DumpData(Game.GameTime + ".tiff", weathers.ToList());
 
                 string path = @"D:\GTAV_extraction_output\trymatrix.txt";
                 // This text is added only once to the file.
@@ -662,11 +662,11 @@ namespace GTAVisionExport {
 
             if (k.KeyCode == Keys.N)
             {
-                UINotify("N pressed, going to print stats to file or what?");
+                UINotify("N pressed, going to print stats to file");
                 
                 //var color = VisionNatGetColorBuffer();
                 
-                dumpTest();
+//                dumpTest();
 
                 //var color = VisionNative.GetColorBuffer();
                 for (int i = 0; i < 10; i++)
@@ -683,12 +683,14 @@ namespace GTAVisionExport {
                     }
                     else
                     {
-                        dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeather);
-                        saveSnapshotToFile(dat.ImageName, wantedWeather);
+                        Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
+                        dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
+                        saveSnapshotToFile(dat.ImageName, weather);
                     }
-                    
 
-                    PostgresExport.SaveSnapshot(dat, run.guid);
+//                    tady dát nějaký "manual" id, na tom to padá
+//                    ToolStripDropDown: fixnout
+//                    PostgresExport.SaveSnapshot(dat, -1);
                     Game.Pause(false);
                 }
         }
