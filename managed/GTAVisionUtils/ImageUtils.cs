@@ -58,6 +58,7 @@ namespace GTAVisionUtils
                 catch (Exception e)
                 {
                     Logger.writeLine(e);
+                    Logger.writeLine("name: " + name);
                     Logger.writeLine("width: " + width.ToString());
                     Logger.writeLine("height: " + height.ToString());
                     Logger.writeLine("oneFile: " + oneFile.ToString());
