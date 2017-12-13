@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GTA;
 using GTA.Math;
 using GTA.Native;
 
@@ -40,6 +42,15 @@ namespace GTAVisionUtils
                 (int)col_a
             });
         }
+        
+        public static void Draw3DLine(Vector3 iniPos, Vector3 finPos, Color color) {
+            Draw3DLine(iniPos, finPos, color.R, color.G, color.B, color.A);
+        }
+        
+        public static void Draw3DLine(Vector3 iniPos, Vector3 finPos, Color color, byte a) {
+            Draw3DLine(iniPos, finPos, color.R, color.G, color.B, a);
+        }
+        
         public static void DrawRect(float x, float y, float w, float h, byte r = 255, byte g = 255, byte b = 255, byte a = 255) {
             Function.Call(Hash.DRAW_RECT, new InputArgument[] {
                 x, y,
@@ -47,6 +58,32 @@ namespace GTAVisionUtils
                 (int)r, (int)g, (int)b, (int)a
             });
         }
+
+        public static void DrawRect(float x, float y, float w, float h, Color color) {
+            DrawRect(x, y, w, h, color.R, color.G, color.B, color.A);
+        }
+
+        public static void DrawRect(float x, float y, float w, float h, Color color, byte a) {
+            DrawRect(x, y, w, h, color.R, color.G, color.B, a);
+        }
         
+        public static void Draw2DText(string text, float x, float y, Color color) {
+            Draw2DText(text, x, y, color.R, color.G, color.B, color.A);
+        }
+
+        public static void Draw2DText(string text, float x, float y, byte r = 255, byte g = 255, byte b = 255, byte a = 255) {
+            Function.Call(Hash.SET_TEXT_FONT, 0);
+            Function.Call(Hash.SET_TEXT_SCALE, 0.3f, 0.3f);
+            Function.Call(Hash.SET_TEXT_COLOUR, (int)r, (int)g, (int)b, (int)a);
+            Function.Call(Hash.SET_TEXT_CENTRE, 1);
+            Function.Call(Hash._SET_TEXT_ENTRY, "STRING");
+            Function.Call(Hash._ADD_TEXT_COMPONENT_STRING, text);
+            Function.Call(Hash._DRAW_TEXT, x, y);
+        }
+
+        public static void Draw2DText(string text, float x, float y, Color color, byte a) {
+            Draw2DText(text, x, y, color.R, color.G, color.B, a);
+        }
+
     }
 }

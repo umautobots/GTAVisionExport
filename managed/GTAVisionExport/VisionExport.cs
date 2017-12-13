@@ -737,6 +737,7 @@ namespace GTAVisionExport
             var fileName = Path.Combine(dataPath, "info-" + name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, new List<byte[]>() {color}, depth, stencil, false);
 //            UINotify("file saved to: " + fileName);
+            return true;
         }
 
         private void dumpTest()
