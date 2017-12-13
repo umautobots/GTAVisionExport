@@ -22,7 +22,14 @@ namespace GTAVisionUtils
         public static void writeLine(string line)
         {
             var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss";
-            System.IO.File.AppendAllText(logFilePath, DateTime.UtcNow.ToString(dateTimeFormat) + ":  " + line + "\n");            
+            try
+            {
+                System.IO.File.AppendAllText(logFilePath, DateTime.UtcNow.ToString(dateTimeFormat) + ":  " + line + "\n");            
+            }
+            catch (System.IO.IOException e)
+            {
+//             just silently fail, better than throwing   
+            }
         }
 
         public static void writeLine(Exception e)
