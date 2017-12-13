@@ -107,8 +107,7 @@ create table snapshots
 			primary key,
 	run_id integer
 		constraint snapshots_run_fkey
-			references runs
-				on delete cascade,
+			references runs,
 	version integer,
 	imagepath text,
 	timestamp timestamp with time zone,
