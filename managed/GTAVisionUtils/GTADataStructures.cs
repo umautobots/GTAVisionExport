@@ -253,32 +253,25 @@ namespace GTAVisionUtils
                 rv.Max.Y = Math.Max(rv.Max.Y, s.Y);
             }
 
-//            int width = 1280;
-//            int height = 960;
-//            int x = (int)(rv.Min.X * width);
-//            int y = (int)(rv.Min.Y * height);
-//            int x2 = (int)(rv.Max.X * width);
-//            int y2 = (int)(rv.Max.Y * height);
-//            float w = rv.Max.X - rv.Min.X;
-//            float h = rv.Max.Y - rv.Min.Y;
-//            HashFunctions.DrawRect(rv.Min.X + w/2, rv.Min.Y + h/2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y, 255, 255, 255, 100);
-//            new UIRectangle(new Point((int)(rv.Min.X * 1920), (int)(rv.Min.Y * 1080)), rv.)
+            float w = rv.Max.X - rv.Min.X;
+            float h = rv.Max.Y - rv.Min.Y;
+            HashFunctions.DrawRect(rv.Min.X + w/2, rv.Min.Y + h/2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y, 255, 255, 255, 100);
             return rv;
         }
         public static bool CheckVisible(Entity e) {
-            return true;
+//            return true;
             //var p = Game.Player.LastVehicle;
 
             var ppos = GameplayCamera.Position;
             var isLOS = Function.Call<bool>((GTA.Native.Hash) 0x0267D00AF114F17A, Game.Player.Character, e);
             return isLOS;
-            //var ppos = GameplayCamera.Position;
+//            var ppos = GameplayCamera.Position;
 
-            //var res = World.Raycast(ppos, e.Position, IntersectOptions.Everything, Game.Player.Character.CurrentVehicle);
-            //HashFunctions.Draw3DLine(ppos, e.Position);
-            //UI.Notify("Camera: " + ppos.X + " Ent: " + e.Position.X);
+//            var res = World.Raycast(ppos, e.Position, IntersectOptions.Everything, Game.Player.Character.CurrentVehicle);
+//            HashFunctions.Draw3DLine(ppos, e.Position);
+//            UI.Notify("Camera: " + ppos.X + " Ent: " + e.Position.X);
             //World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, p.Position, (e.Position - p.Position).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Red);
-            //return res.HitEntity == e;
+//            return res.HitEntity == e;
             //if (res.HitCoords == null) return false;
             //return e.IsInRangeOf(res.HitCoords, 10);
             //return res.HitEntity == e;
@@ -326,13 +319,14 @@ namespace GTAVisionUtils
             ret.ViewMatrix = V as DenseMatrix;
             
             var pedList = from ped in peds
-                where ped.IsHuman && ped.IsOnFoot
+                where ped.IsHuman && ped.IsOnFoot && CheckVisible(ped)
                 select new GTADetection(ped);
             var cycles = from ped in peds
-                where ped.IsOnBike
+                where ped.IsOnBike && CheckVisible(ped)
                 select new GTADetection(ped, DetectionType.bicycle);
             
             var vehicleList = from car in cars
+                where CheckVisible(car)
                 select new GTADetection(car);
             ret.Detections = new List<GTADetection>();
             ret.Detections.AddRange(pedList);
