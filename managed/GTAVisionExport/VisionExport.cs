@@ -297,21 +297,26 @@ namespace GTAVisionExport
                 Script.Wait(100);
                 var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
                 GTAData dat;
+                bool success;
                 if (multipleWeathers)
                 {
                     dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeathers.ToList());
                     if (dat == null) return;
-                    saveSnapshotToFile(dat.ImageName, wantedWeathers);
+                    success = saveSnapshotToFile(dat.ImageName, wantedWeathers);
                 }
                 else
                 {
                     Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
                     dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
                     if (dat == null) return;
-                    saveSnapshotToFile(dat.ImageName, weather);
+                    success = saveSnapshotToFile(dat.ImageName, weather);
                 }
-
                 Game.Pause(false);
+                if (!success)
+                {
+//                    when getting data and saving to file failed, saving to db is skipped
+                    return;
+                }
                 PostgresExport.SaveSnapshot(dat, run.guid);
             }
             catch (Exception exception)
@@ -682,17 +687,27 @@ namespace GTAVisionExport
             }
         }
 
-        private void saveSnapshotToFile(String name, Weather[] weathers)
+        private bool saveSnapshotToFile(String name, Weather[] weathers)
         {
+//            returns true on success, and false on failure
             List<byte[]> colors = new List<byte[]>();
             Game.Pause(true);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
+            if (depth == null || stencil == null)
+            {
+                return false;
+            }
             foreach (var wea in weathers)
             {
                 World.TransitionToWeather(wea, 0.0f);
                 Script.Wait(1);
-                colors.Add(VisionNative.GetColorBuffer());
+                var color = VisionNative.GetColorBuffer();
+                if (color == null)
+                {
+                    return false;
+                }
+                colors.Add(color);
             }
 
             Game.Pause(false);
@@ -700,22 +715,29 @@ namespace GTAVisionExport
             var fileName = Path.Combine(dataPath, "info-" + name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil, false);
 //            UINotify("file saved to: " + fileName);
+            return true;
         }
 
-        private void saveSnapshotToFile(String name, Weather weather)
+        private bool saveSnapshotToFile(String name, Weather weather)
         {
+//            returns true on success, and false on failure
             Game.Pause(true);
             World.TransitionToWeather(weather, 0.0f);
             Script.Wait(1);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
             var color = VisionNative.GetColorBuffer();
+            if (depth == null || stencil == null || color == null)
+            {
+                return false;
+            }
 
             Game.Pause(false);
             var res = Game.ScreenResolution;
             var fileName = Path.Combine(dataPath, "info-" + name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, new List<byte[]>() {color}, depth, stencil, false);
 //            UINotify("file saved to: " + fileName);
+            return true;
         }
 
         private void dumpTest()

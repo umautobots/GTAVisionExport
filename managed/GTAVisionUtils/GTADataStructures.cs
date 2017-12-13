@@ -16,6 +16,7 @@ using System.Drawing;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics;
+using Color = System.Drawing.Color;
 using Vector2 = GTA.Math.Vector2;
 using Vector3 = GTA.Math.Vector3;
 using Point = System.Drawing.Point;
@@ -253,34 +254,47 @@ namespace GTAVisionUtils
                 rv.Max.Y = Math.Max(rv.Max.Y, s.Y);
             }
 
-//            int width = 1280;
-//            int height = 960;
-//            int x = (int)(rv.Min.X * width);
-//            int y = (int)(rv.Min.Y * height);
-//            int x2 = (int)(rv.Max.X * width);
-//            int y2 = (int)(rv.Max.Y * height);
-//            float w = rv.Max.X - rv.Min.X;
-//            float h = rv.Max.Y - rv.Min.Y;
+            float w = rv.Max.X - rv.Min.X;
+            float h = rv.Max.Y - rv.Min.Y;
+//            just for debug purposes, show visible and not visible entities in other color
+//            if (CheckVisible(e))
+//            {
+//                HashFunctions.DrawRect(rv.Min.X + w / 2, rv.Min.Y + h / 2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y,
+//                    Color.White, 100);
+//            }
+//            else
+//            {
+//                HashFunctions.DrawRect(rv.Min.X + w / 2, rv.Min.Y + h / 2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y,
+//                    Color.Red, 100);                
+//            }
 //            HashFunctions.DrawRect(rv.Min.X + w/2, rv.Min.Y + h/2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y, 255, 255, 255, 100);
-//            new UIRectangle(new Point((int)(rv.Min.X * 1920), (int)(rv.Min.Y * 1080)), rv.)
             return rv;
         }
         public static bool CheckVisible(Entity e) {
-            return true;
-            //var p = Game.Player.LastVehicle;
+//            return true;
 
             var ppos = GameplayCamera.Position;
             var isLOS = Function.Call<bool>((GTA.Native.Hash) 0x0267D00AF114F17A, Game.Player.Character, e);
-            return isLOS;
-            //var ppos = GameplayCamera.Position;
+            if (isLOS) return true;
+//            return isLOS;
+//            var ppos = GameplayCamera.Position;
 
-            //var res = World.Raycast(ppos, e.Position, IntersectOptions.Everything, Game.Player.Character.CurrentVehicle);
-            //HashFunctions.Draw3DLine(ppos, e.Position);
-            //UI.Notify("Camera: " + ppos.X + " Ent: " + e.Position.X);
-            //World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, p.Position, (e.Position - p.Position).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Red);
-            //return res.HitEntity == e;
-            //if (res.HitCoords == null) return false;
-            //return e.IsInRangeOf(res.HitCoords, 10);
+            var res = World.Raycast(ppos, e.Position, IntersectOptions.Everything, Game.Player.Character.CurrentVehicle);
+//            HashFunctions.Draw3DLine(ppos, e.Position);
+//            UI.Notify("Camera: " + ppos.X + " Ent: " + e.Position.X);
+//            World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, ppos, (e.Position - ppos).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Green);
+            
+//            debugging visualization for visible or invisible vehicles
+//            var p = Game.Player.LastVehicle;
+//            HashFunctions.Draw3DLine(p.Position, e.Position, System.Drawing.Color.Green);
+//            var s = HashFunctions.Convert3dTo2d(e.Position);
+//            HashFunctions.Draw2DText("Just Monika", s.X, s.Y, 255, 255, 255, 255);
+            
+//            World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, p.Position, (e.Position - p.Position).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Green);
+//            return res.HitEntity == e;
+            if (res.HitEntity == e) return true;
+            if (res.HitCoords == null) return false;
+            return e.IsInRangeOf(res.HitCoords, 10);
             //return res.HitEntity == e;
         }
 
@@ -326,13 +340,16 @@ namespace GTAVisionUtils
             ret.ViewMatrix = V as DenseMatrix;
             
             var pedList = from ped in peds
-                where ped.IsHuman && ped.IsOnFoot
+//                where ped.IsHuman && ped.IsOnFoot
+                where ped.IsHuman && ped.IsOnFoot && CheckVisible(ped)
                 select new GTADetection(ped);
             var cycles = from ped in peds
-                where ped.IsOnBike
+//                where ped.IsOnBike
+                where ped.IsOnBike && CheckVisible(ped)
                 select new GTADetection(ped, DetectionType.bicycle);
             
             var vehicleList = from car in cars
+                where CheckVisible(car)
                 select new GTADetection(car);
             ret.Detections = new List<GTADetection>();
             ret.Detections.AddRange(pedList);
