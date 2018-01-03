@@ -139,6 +139,7 @@
     <Compile Include="GameUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StereoCamera.cs" />
+    <Compile Include="TestVehicle.cs" />
     <Compile Include="VisionExport.cs" />
   </ItemGroup>
   <ItemGroup>
