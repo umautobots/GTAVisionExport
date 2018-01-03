@@ -186,6 +186,13 @@ namespace GTAVisionUtils
         public DenseMatrix ViewMatrix { get; set; }
         public DenseMatrix ProjectionMatrix { get; set; }
         public double CamFOV { get; set; }
+
+        public double CamNearClip { get; set; }
+        public double CamFarClip { get; set; }
+        public GTAVector playerPos { get; set; }
+        public int UIHeight { get; set; }
+        public int UIWidth { get; set; }
+
         public List<GTADetection> Detections { get; set; }
         public static SharpDX.Vector3 CvtVec(GTA.Math.Vector3 inp) {
             return (SharpDX.Vector3)new GTAVector(inp);
@@ -318,7 +325,11 @@ namespace GTAVisionUtils
             ret.CamFOV = GameplayCamera.FieldOfView;
             ret.ImageWidth = Game.ScreenResolution.Width;
             ret.ImageHeight = Game.ScreenResolution.Height;
-            //ret.Pos = new GTAVector(Game.Player.Character.Position);
+            ret.UIWidth = UI.WIDTH;
+            ret.UIHeight = UI.HEIGHT;
+            ret.playerPos = new GTAVector(Game.Player.Character.Position);
+            ret.CamNearClip = World.RenderingCamera.NearClip;
+            ret.CamFarClip = World.RenderingCamera.FarClip;
             
             var peds = World.GetNearbyPeds(Game.Player.Character, 150.0f);
             var cars = World.GetNearbyVehicles(Game.Player.Character, 150.0f);

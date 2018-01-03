@@ -120,7 +120,12 @@ create table snapshots
 	proj_matrix double precision[],
 	processed boolean default false not null,
 	width integer,
-	height integer
+	height integer,
+	ui_width integer,
+	ui_height integer,
+	cam_near_clip real,
+	cam_far_clip real,
+	player_pos GEOMETRY(PointZ)
 )
 ;
 

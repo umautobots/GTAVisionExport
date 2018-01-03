@@ -186,9 +186,9 @@ namespace GTAVisionUtils {
                 cmd.Connection = conn;
                 cmd.Transaction = trans;
                 cmd.CommandText =
-                    "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_direction, camera_fov, view_matrix, proj_matrix, width, height) " +
+                    "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, player_pos, cam_near_clip, cam_far_clip) " +
                     "VALUES ( (SELECT run_id FROM runs WHERE runguid=@guid), " +
-                    "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height ) " +
+                    "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height, @ui_width, @ui_height, ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip) " +
                     "RETURNING snapshot_id;";
                 cmd.Parameters.Add(new NpgsqlParameter("@version", data.Version));
                 cmd.Parameters.Add(new NpgsqlParameter("@imagepath", data.ImageName));
@@ -206,6 +206,14 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@proj_matrix", data.ProjectionMatrix.ToArray());
                 cmd.Parameters.AddWithValue("@width", data.ImageWidth);
                 cmd.Parameters.AddWithValue("@height", data.ImageHeight);
+//                @ui_width, @ui_height, @player_pos, @cam_near_clip, @cam_far_clip
+                cmd.Parameters.AddWithValue("@ui_width", data.UIWidth);
+                cmd.Parameters.AddWithValue("@ui_height", data.UIHeight);
+                cmd.Parameters.AddWithValue("@player_x", data.playerPos.X);
+                cmd.Parameters.AddWithValue("@player_y", data.playerPos.Y);
+                cmd.Parameters.AddWithValue("@player_z", data.playerPos.Z);
+                cmd.Parameters.AddWithValue("@cam_near_clip", data.CamNearClip);
+                cmd.Parameters.AddWithValue("@cam_far_clip", data.CamFarClip);
                 cmd.Parameters.Add(new NpgsqlParameter("@guid", runId));
                 int snapshotid = (int)cmd.ExecuteScalar();
                 cmd.Parameters.Clear();
