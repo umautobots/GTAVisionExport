@@ -244,6 +244,79 @@ create table system_graphics
 ;
 
 
+--
+-- Name: ngv_box3dmultipoint(box3d); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_box3dmultipoint(box3d) RETURNS geometry
+    LANGUAGE sql
+    AS $_$ select ST_Multi(ST_Collect(ST_MakePoint(ST_XMin($1), ST_YMin($1), ST_ZMin($1)), ST_MakePoint(ST_XMax($1), ST_YMax($1), ST_ZMax($1)))) $_$;
+
+
+--
+-- Name: ngv_box3dpolygon(box3d); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_box3dpolygon(box3d) RETURNS geometry
+    LANGUAGE sql
+    AS $_$
+SELECT ST_Collect(ARRAY[
+     ST_MakePoint(ST_XMin($1), ST_YMin($1), ST_ZMin($1)),
+     ST_MakePoint(ST_XMax($1), ST_YMin($1), ST_ZMin($1)),
+     ST_MakePoint(ST_XMax($1), ST_YMax($1), ST_ZMin($1)),
+     ST_MakePoint(ST_XMin($1), ST_YMax($1), ST_ZMin($1)),
+     ST_MakePoint(ST_XMin($1), ST_YMin($1), ST_ZMax($1)),
+     ST_MakePoint(ST_XMax($1), ST_YMin($1), ST_ZMax($1)),
+     ST_MakePoint(ST_XMax($1), ST_YMax($1), ST_ZMax($1)),
+     ST_MakePoint(ST_XMin($1), ST_YMax($1), ST_ZMax($1))])
+$_$;
+
+
+--
+-- Name: ngv_contract(box, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_contract(bbox box, width integer, height integer) RETURNS box
+    LANGUAGE sql
+    AS $$
+    select box(point((bbox[0])[0] / width, (bbox[0])[1] / height), point((bbox[1])[0] / width, (bbox[1])[1] / height));
+$$;
+
+
+--
+-- Name: ngv_expand(box, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_expand(bbox box, width integer, height integer) RETURNS box
+    LANGUAGE sql
+    AS $$
+    select box(point((bbox[0])[0] * width, (bbox[0])[1] * height), point((bbox[1])[0] * width, (bbox[1])[1] * height));
+$$;
+
+
+--
+-- Name: ngv_get_bytes(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_get_bytes(id integer) RETURNS bytea
+    LANGUAGE sql
+    AS $$
+SELECT ngv_get_bytes(localpath, imagepath) FROM snapshots JOIN runs USING(run_id) where snapshot_id=id
+$$;
+
+
+--
+-- Name: ngv_get_raster(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_get_raster(archive text, image text) RETURNS raster
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	RETURN ST_FromGDALRaster(ngv_get_bytes(archive, image));
+END;
+$$;
+
 ```
 
 ## Copying compiled files to GTA V
