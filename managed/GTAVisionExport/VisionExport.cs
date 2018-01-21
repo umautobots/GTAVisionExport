@@ -67,14 +67,12 @@ namespace GTAVisionExport
 
         private KeyHandling kh = new KeyHandling();
 
-//        private ZipArchive archive;
-//        private Stream outStream;
         private Task postgresTask;
 
         private Task runTask;
         private int curSessionId = -1;
         private speedAndTime lowSpeedTime = new speedAndTime();
-        private bool IsGamePaused = false;
+        private bool isGamePaused = false;    // this is for external pause, not for internal pause inside the script
         private bool notificationsAllowed = true;
         private StereoCamera cams;
         private bool timeIntervalEnabled = false;
@@ -221,6 +219,16 @@ namespace GTAVisionExport
                     this.timeTo = new TimeSpan(hoursTo, minutesTo, 0);
                     UINotify("Time Interval Set");
                     break;
+                case "PAUSE":
+                    UINotify("game paused");
+                    isGamePaused = true;
+                    Game.Pause(true);
+                    break;
+                case "UNPAUSE":
+                    UINotify("game unpaused");
+                    isGamePaused = false;
+                    Game.Pause(false);
+                    break;
 //                    uncomment when resolving, how the hell should I get image by socket correctly
 //                case "GET_SCREEN":
 //                    var last = ImageUtils.getLastCapturedFrame();
@@ -293,7 +301,7 @@ namespace GTAVisionExport
 
             try
             {
-                Game.Pause(true);
+                GamePause(true);
                 Script.Wait(100);
                 var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
                 GTAData dat;
@@ -311,7 +319,7 @@ namespace GTAVisionExport
                     if (dat == null) return;
                     success = saveSnapshotToFile(dat.ImageName, weather);
                 }
-                Game.Pause(false);
+                GamePause(false);
                 if (!success)
                 {
 //                    when getting data and saving to file failed, saving to db is skipped
@@ -442,6 +450,15 @@ namespace GTAVisionExport
             if (notificationsAllowed)
             {
                 UI.Notify(message);
+            }
+        }
+
+        public void GamePause(bool value)
+        {
+            //wraper for pausing and unpausing game, because if its paused, I don't want to pause it again and unpause it. 
+            if (!isGamePaused)
+            {
+                Game.Pause(value);
             }
         }
 
@@ -655,7 +672,7 @@ namespace GTAVisionExport
                 UINotify("starting screenshots");
                 for (int i = 0; i < 5; i++)
                 {
-                    Game.Pause(true);
+                    GamePause(true);
                     Script.Wait(200);
 
                     GTAData dat;
@@ -672,7 +689,7 @@ namespace GTAVisionExport
                     }
 
                     PostgresExport.SaveSnapshot(dat, run.guid);
-                    Game.Pause(false);
+                    GamePause(false);
                     Script.Wait(200); // hoping game will go on during this wait
                 }
                 StopRun();
@@ -691,7 +708,7 @@ namespace GTAVisionExport
         {
 //            returns true on success, and false on failure
             List<byte[]> colors = new List<byte[]>();
-            Game.Pause(true);
+            GamePause(true);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
             if (depth == null || stencil == null)
@@ -710,9 +727,9 @@ namespace GTAVisionExport
                 colors.Add(color);
             }
 
-            Game.Pause(false);
+            GamePause(false);
             var res = Game.ScreenResolution;
-            var fileName = Path.Combine(dataPath, "info-" + name);
+            var fileName = Path.Combine(dataPath, name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil, false);
 //            UINotify("file saved to: " + fileName);
             return true;
@@ -721,7 +738,7 @@ namespace GTAVisionExport
         private bool saveSnapshotToFile(String name, Weather weather)
         {
 //            returns true on success, and false on failure
-            Game.Pause(true);
+            GamePause(true);
             World.TransitionToWeather(weather, 0.0f);
             Script.Wait(1);
             var depth = VisionNative.GetDepthBuffer();
@@ -732,9 +749,9 @@ namespace GTAVisionExport
                 return false;
             }
 
-            Game.Pause(false);
+            GamePause(false);
             var res = Game.ScreenResolution;
-            var fileName = Path.Combine(dataPath, "info-" + name);
+            var fileName = Path.Combine(dataPath, name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, new List<byte[]>() {color}, depth, stencil, false);
 //            UINotify("file saved to: " + fileName);
             return true;
