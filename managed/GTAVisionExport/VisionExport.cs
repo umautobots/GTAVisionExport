@@ -47,7 +47,8 @@ namespace GTAVisionExport {
 #endif
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
-        private readonly string dataPath = @"Z:\archives\";
+        private readonly string dataPath;
+        private readonly string logFilePath;
         private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
         private Player player;
         private string outputPath;
@@ -68,6 +69,16 @@ namespace GTAVisionExport {
         private StereoCamera cams;
         public VisionExport()
         {
+            // loading ini file
+            var parser = new FileIniDataParser();
+            var location = AppDomain.CurrentDomain.BaseDirectory;
+            var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
+
+            //UINotify(ConfigurationManager.AppSettings["database_connection"]);
+            dataPath = data["Snapshots"]["OutputDir"];
+            logFilePath = data["Snapshots"]["LogFile"];
+
+            System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
             PostgresExport.InitSQLTypes();
             player = Game.Player;
@@ -75,12 +86,6 @@ namespace GTAVisionExport {
             server.Bind(new IPEndPoint(IPAddress.Loopback, 5555));
             server.Listen(5);
             //server = new UdpClient(5555);
-            var parser = new FileIniDataParser();
-            var location = AppDomain.CurrentDomain.BaseDirectory;
-            var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
-            var access_key = data["aws"]["access_key"];
-            var secret_key = data["aws"]["secret_key"];
-            //client = new AmazonS3Client(new BasicAWSCredentials(access_key, secret_key), RegionEndpoint.USEast1);
             //outputPath = @"D:\Datasets\GTA\";
             //outputPath = Path.Combine(outputPath, "testData.yaml");
             //outStream = File.CreateText(outputPath);
@@ -99,7 +104,10 @@ namespace GTAVisionExport {
 
         private void handlePipeInput()
         {
-            //UI.Notify(server.Available.ToString());
+            System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
+            UI.Notify("handlePipeInput called");
+            UI.Notify("server connected:" + server.Connected.ToString());
+            UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
             if (connection == null) return;
             
             byte[] inBuffer = new byte[1024];
@@ -490,6 +498,7 @@ namespace GTAVisionExport {
 
         public void OnKeyDown(object o, KeyEventArgs k)
         {
+            System.IO.File.AppendAllText(logFilePath, "VisionExport OnKeyDown called.\n");
             if (k.KeyCode == Keys.PageUp)
             {
                 postgresTask?.Wait();
