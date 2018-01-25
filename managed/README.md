@@ -60,7 +60,8 @@ create table detections
 	bbox3d box3d,
 	rot geometry,
 	coverage real default 0.0,
-    created timestamp without time zone default (now() at time zone 'utc')
+    created timestamp without time zone default (now() at time zone 'utc'),
+	velocity GEOMETRY(PointZ)
 )
 ;
 
@@ -125,7 +126,8 @@ create table snapshots
 	ui_height integer,
 	cam_near_clip real,
 	cam_far_clip real,
-	player_pos GEOMETRY(PointZ)
+	player_pos GEOMETRY(PointZ),
+	velocity GEOMETRY(PointZ)
 )
 ;
 
