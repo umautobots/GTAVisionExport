@@ -102,6 +102,7 @@ namespace GTAVisionUtils
         public GTABoundingBox2 BBox { get; set; }
         public BoundingBox BBox3D { get; set; }
         public int Handle { get; set; }
+        public GTAVector velocity { get; set; }
         public GTADetection(Entity e, DetectionType type)
         {
             Type = type;
@@ -111,6 +112,7 @@ namespace GTAVisionUtils
             Handle = e.Handle;
             
             Rot = new GTAVector(e.Rotation);
+            velocity = new GTAVector(e.Velocity);
             cls = DetectionClass.Unknown;
             Vector3 gmin;
             Vector3 gmax;
@@ -190,6 +192,7 @@ namespace GTAVisionUtils
         public double CamNearClip { get; set; }
         public double CamFarClip { get; set; }
         public GTAVector playerPos { get; set; }
+        public GTAVector velocity { get; set; }
         public int UIHeight { get; set; }
         public int UIWidth { get; set; }
 
@@ -328,6 +331,7 @@ namespace GTAVisionUtils
             ret.UIWidth = UI.WIDTH;
             ret.UIHeight = UI.HEIGHT;
             ret.playerPos = new GTAVector(Game.Player.Character.Position);
+            ret.velocity = new GTAVector(Game.Player.Character.Velocity);
             ret.CamNearClip = World.RenderingCamera.NearClip;
             ret.CamFarClip = World.RenderingCamera.FarClip;
             

@@ -186,9 +186,13 @@ namespace GTAVisionUtils {
                 cmd.Connection = conn;
                 cmd.Transaction = trans;
                 cmd.CommandText =
-                    "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, player_pos, cam_near_clip, cam_far_clip) " +
+                    "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, " +
+                    "camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, player_pos, " +
+                    "cam_near_clip, cam_far_clip, velocity) " +
                     "VALUES ( (SELECT run_id FROM runs WHERE runguid=@guid), " +
-                    "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height, @ui_width, @ui_height, ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip) " +
+                    "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), " +
+                    "ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height, @ui_width, @ui_height, " +
+                    "ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z)) " +
                     "RETURNING snapshot_id;";
                 cmd.Parameters.Add(new NpgsqlParameter("@version", data.Version));
                 cmd.Parameters.Add(new NpgsqlParameter("@imagepath", data.ImageName));
@@ -212,6 +216,9 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@player_x", data.playerPos.X);
                 cmd.Parameters.AddWithValue("@player_y", data.playerPos.Y);
                 cmd.Parameters.AddWithValue("@player_z", data.playerPos.Z);
+                cmd.Parameters.AddWithValue("@vel_x", data.velocity.X);
+                cmd.Parameters.AddWithValue("@vel_y", data.velocity.Y);
+                cmd.Parameters.AddWithValue("@vel_z", data.velocity.Z);
                 cmd.Parameters.AddWithValue("@cam_near_clip", data.CamNearClip);
                 cmd.Parameters.AddWithValue("@cam_far_clip", data.CamFarClip);
                 cmd.Parameters.Add(new NpgsqlParameter("@guid", runId));
@@ -249,9 +256,9 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@class", NpgsqlDbType.Enum, DetectionClass.Unknown);
                 cmd.Parameters.Add("@handle", NpgsqlDbType.Integer);
                 cmd.CommandText =
-                    "INSERT INTO detections (snapshot_id, type, pos, rot, bbox, class, handle, bbox3d) VALUES " +
+                    "INSERT INTO detections (snapshot_id, type, pos, rot, bbox, class, handle, bbox3d, velocity) VALUES " +
                     "(@snapshot, @type, ST_MakePoint(@x,@y,@z), ST_MakePoint(@xrot, @yrot, @zrot), @bbox, @class, @handle," +
-                    "ST_3DMakeBox(ST_MakePoint(@minx,@miny,@minz), ST_MakePoint(@maxx, @maxy, @maxz)));";
+                    "ST_3DMakeBox(ST_MakePoint(@minx,@miny,@minz), ST_MakePoint(@maxx, @maxy, @maxz), ST_MakePoint(@vel_x, @vel_y, @vel_z)));";
                 cmd.Prepare();
                 
                 
@@ -276,6 +283,10 @@ namespace GTAVisionUtils {
                     cmd.Parameters["@maxx"].Value = detection.BBox3D.Maximum.X;
                     cmd.Parameters["@maxy"].Value = detection.BBox3D.Maximum.Y;
                     cmd.Parameters["@maxz"].Value = detection.BBox3D.Maximum.Z;
+
+                    cmd.Parameters["@vel_x"].Value = detection.velocity.X;
+                    cmd.Parameters["@vel_y"].Value = detection.velocity.Y;
+                    cmd.Parameters["@vel_z"].Value = detection.velocity.Z;
 
                     cmd.ExecuteNonQuery();
                 }
