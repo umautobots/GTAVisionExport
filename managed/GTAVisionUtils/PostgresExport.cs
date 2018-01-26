@@ -256,6 +256,9 @@ namespace GTAVisionUtils {
                 cmd.Parameters.Add("@maxx", NpgsqlDbType.Real);
                 cmd.Parameters.Add("@maxy", NpgsqlDbType.Real);
                 cmd.Parameters.Add("@maxz", NpgsqlDbType.Real);
+                cmd.Parameters.Add("@vel_x", NpgsqlDbType.Real);
+                cmd.Parameters.Add("@vel_y", NpgsqlDbType.Real);
+                cmd.Parameters.Add("@vel_z", NpgsqlDbType.Real);
                 cmd.Parameters.AddWithValue("@class", NpgsqlDbType.Enum, DetectionClass.Unknown);
                 cmd.Parameters.Add("@handle", NpgsqlDbType.Integer);
                 cmd.CommandText =
