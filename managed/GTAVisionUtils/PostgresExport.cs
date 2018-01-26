@@ -261,7 +261,7 @@ namespace GTAVisionUtils {
                 cmd.CommandText =
                     "INSERT INTO detections (snapshot_id, type, pos, rot, bbox, class, handle, bbox3d, velocity) VALUES " +
                     "(@snapshot, @type, ST_MakePoint(@x,@y,@z), ST_MakePoint(@xrot, @yrot, @zrot), @bbox, @class, @handle," +
-                    "ST_3DMakeBox(ST_MakePoint(@minx,@miny,@minz), ST_MakePoint(@maxx, @maxy, @maxz), ST_MakePoint(@vel_x, @vel_y, @vel_z)));";
+                    "ST_3DMakeBox(ST_MakePoint(@minx,@miny,@minz), ST_MakePoint(@maxx, @maxy, @maxz)), ST_MakePoint(@vel_x, @vel_y, @vel_z))";
                 cmd.Prepare();
                 
                 
