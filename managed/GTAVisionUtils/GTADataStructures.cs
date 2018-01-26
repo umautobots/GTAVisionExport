@@ -180,7 +180,8 @@ namespace GTAVisionUtils
         public TimeSpan LocalTime { get; set; }
         public Weather CurrentWeather { get; set; }
         public List<Weather> CapturedWeathers;
-        public GTAVector Pos { get; set; }
+        public GTAVector CamPos { get; set; }
+        public GTAVector CamRot { get; set; }
         public GTAVector CamDirection { get; set; }
         //mathnet's matrices are in heap storage, which is super annoying, 
         //but we want to use double matrices to avoid numerical issues as we
@@ -283,7 +284,7 @@ namespace GTAVisionUtils
         public static bool CheckVisible(Entity e) {
 //            return true;
 
-            var ppos = GameplayCamera.Position;
+            var ppos = World.RenderingCamera.Position;
             var isLOS = Function.Call<bool>((GTA.Native.Hash) 0x0267D00AF114F17A, Game.Player.Character, e);
             if (isLOS) return true;
 //            return isLOS;
@@ -323,9 +324,10 @@ namespace GTAVisionUtils
             
             ret.Timestamp = DateTime.UtcNow;
             ret.LocalTime = World.CurrentDayTime;
-            ret.Pos = new GTAVector(GameplayCamera.Position);
-            ret.CamDirection = new GTAVector(GameplayCamera.Direction);
-            ret.CamFOV = GameplayCamera.FieldOfView;
+            ret.CamPos = new GTAVector(World.RenderingCamera.Position);
+            ret.CamRot = new GTAVector(World.RenderingCamera.Rotation);
+            ret.CamDirection = new GTAVector(World.RenderingCamera.Direction);
+            ret.CamFOV = World.RenderingCamera.FieldOfView;
             ret.ImageWidth = Game.ScreenResolution.Width;
             ret.ImageHeight = Game.ScreenResolution.Height;
             ret.UIWidth = UI.WIDTH;

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -105,7 +105,7 @@ namespace GTAVisionExport
             this.Tick += new EventHandler(this.OnTick);
             this.KeyDown += OnKeyDown;
 
-            Interval = 100;
+            Interval = 50;
             if (enabled)
             {
                 postgresTask?.Wait();
@@ -627,19 +627,19 @@ namespace GTAVisionExport
                     {
                         file.WriteLine("cam direction file");
                         file.WriteLine("direction:");
-                        file.WriteLine(GameplayCamera.Direction.X.ToString() + ' ' +
-                                       GameplayCamera.Direction.Y.ToString() + ' ' +
-                                       GameplayCamera.Direction.Z.ToString());
+                        file.WriteLine(World.RenderingCamera.Direction.X.ToString() + ' ' +
+                                       World.RenderingCamera.Direction.Y.ToString() + ' ' +
+                                       World.RenderingCamera.Direction.Z.ToString());
                         file.WriteLine("Dot Product:");
-                        file.WriteLine(Vector3.Dot(GameplayCamera.Direction, GameplayCamera.Rotation));
+                        file.WriteLine(Vector3.Dot(World.RenderingCamera.Direction, World.RenderingCamera.Rotation));
                         file.WriteLine("position:");
-                        file.WriteLine(GameplayCamera.Position.X.ToString() + ' ' +
-                                       GameplayCamera.Position.Y.ToString() + ' ' +
-                                       GameplayCamera.Position.Z.ToString());
+                        file.WriteLine(World.RenderingCamera.Position.X.ToString() + ' ' +
+                                       World.RenderingCamera.Position.Y.ToString() + ' ' +
+                                       World.RenderingCamera.Position.Z.ToString());
                         file.WriteLine("rotation:");
-                        file.WriteLine(GameplayCamera.Rotation.X.ToString() + ' ' +
-                                       GameplayCamera.Rotation.Y.ToString() + ' ' +
-                                       GameplayCamera.Rotation.Z.ToString());
+                        file.WriteLine(World.RenderingCamera.Rotation.X.ToString() + ' ' +
+                                       World.RenderingCamera.Rotation.Y.ToString() + ' ' +
+                                       World.RenderingCamera.Rotation.Z.ToString());
                         file.WriteLine("relative heading:");
                         file.WriteLine(GameplayCamera.RelativeHeading.ToString());
                         file.WriteLine("relative pitch:");
@@ -775,7 +775,7 @@ namespace GTAVisionExport
             {
                 var res = Game.ScreenResolution;
                 ImageUtils.WriteToTiff(Path.Combine(dataPath, "test"), res.Width, res.Height, colors, depth, stencil);
-                UINotify(GameplayCamera.FieldOfView.ToString());
+                UINotify(World.RenderingCamera.FieldOfView.ToString());
             }
             else
             {

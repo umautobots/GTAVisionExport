@@ -115,6 +115,7 @@ create table snapshots
 	timeofday time,
 	currentweather weather,
 	camera_pos geometry(PointZ),
+	camera_rot geometry(PointZ),
 	camera_direction geometry,
 	camera_fov real,
 	view_matrix double precision[],

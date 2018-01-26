@@ -186,11 +186,11 @@ namespace GTAVisionUtils {
                 cmd.Connection = conn;
                 cmd.Transaction = trans;
                 cmd.CommandText =
-                    "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, " +
+                    "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_rot, " +
                     "camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, player_pos, " +
                     "cam_near_clip, cam_far_clip, velocity) " +
                     "VALUES ( (SELECT run_id FROM runs WHERE runguid=@guid), " +
-                    "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), " +
+                    "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), ST_MakePoint(@rotx, @roty, @rotz), " +
                     "ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height, @ui_width, @ui_height, " +
                     "ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z)) " +
                     "RETURNING snapshot_id;";
@@ -199,9 +199,12 @@ namespace GTAVisionUtils {
                 cmd.Parameters.Add(new NpgsqlParameter("@timestamp", data.Timestamp));
                 cmd.Parameters.Add(new NpgsqlParameter("@timeofday", data.LocalTime));
                 cmd.Parameters.Add(new NpgsqlParameter("@currentweather", data.CurrentWeather));
-                cmd.Parameters.Add(new NpgsqlParameter("@x", data.Pos.X));
-                cmd.Parameters.Add(new NpgsqlParameter("@y", data.Pos.Y));
-                cmd.Parameters.Add(new NpgsqlParameter("@z", data.Pos.Z));
+                cmd.Parameters.Add(new NpgsqlParameter("@x", data.CamPos.X));
+                cmd.Parameters.Add(new NpgsqlParameter("@y", data.CamPos.Y));
+                cmd.Parameters.Add(new NpgsqlParameter("@z", data.CamPos.Z));
+                cmd.Parameters.Add(new NpgsqlParameter("@rotx", data.CamRot.X));
+                cmd.Parameters.Add(new NpgsqlParameter("@roty", data.CamRot.Y));
+                cmd.Parameters.Add(new NpgsqlParameter("@rotz", data.CamRot.Z));
                 cmd.Parameters.AddWithValue("@dirx", data.CamDirection.X);
                 cmd.Parameters.AddWithValue("@diry", data.CamDirection.Y);
                 cmd.Parameters.AddWithValue("@dirz", data.CamDirection.Z);
