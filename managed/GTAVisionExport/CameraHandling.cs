@@ -13,12 +13,12 @@ namespace GTAVisionExport
 // P - mounts rendering camera on vehicle 
 // O - restores the rendering camera to original control
 
-    public class TestVehicle : Script
+    public class CameraHandling : Script
     {
         // camera used on the vehicle
         Camera camera = null;
 
-        public TestVehicle()
+        public CameraHandling()
         {
             UI.Notify("Loaded TestVehicle.cs");
 

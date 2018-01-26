@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -49,7 +49,6 @@ namespace GTAVisionExport
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
         private readonly string dataPath;
-<<<<<<< HEAD
         public static string logFilePath;
 
         private readonly Weather[] wantedWeathers = new Weather[]
@@ -58,10 +57,6 @@ namespace GTAVisionExport
         private readonly Weather wantedWeather = Weather.Clear;
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private readonly bool currentWeather = true;
-=======
-        private readonly string logFilePath;
-        private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
->>>>>>> origin/master
         private Player player;
         private string outputPath;
         private GTARun run;
@@ -94,10 +89,7 @@ namespace GTAVisionExport
             //UINotify(ConfigurationManager.AppSettings["database_connection"]);
             dataPath = data["Snapshots"]["OutputDir"];
             logFilePath = data["Snapshots"]["LogFile"];
-<<<<<<< HEAD
             Logger.setLogFilePath(logFilePath);
-=======
->>>>>>> origin/master
 
             System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
@@ -113,7 +105,7 @@ namespace GTAVisionExport
             this.Tick += new EventHandler(this.OnTick);
             this.KeyDown += OnKeyDown;
 
-            Interval = 100;
+            Interval = 50;
             if (enabled)
             {
                 postgresTask?.Wait();
@@ -125,17 +117,10 @@ namespace GTAVisionExport
 
         private void handlePipeInput()
         {
-<<<<<<< HEAD
             Logger.writeLine("VisionExport handlePipeInput called.");
             UINotify("handlePipeInput called");
             UINotify("server connected:" + server.Connected.ToString());
             UINotify(connection == null ? "connection is null" : "connection:" + connection.ToString());
-=======
-            System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
-            UI.Notify("handlePipeInput called");
-            UI.Notify("server connected:" + server.Connected.ToString());
-            UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
->>>>>>> origin/master
             if (connection == null) return;
 
             byte[] inBuffer = new byte[1024];
@@ -564,11 +549,7 @@ namespace GTAVisionExport
 
         public void OnKeyDown(object o, KeyEventArgs k)
         {
-<<<<<<< HEAD
             Logger.writeLine("VisionExport OnKeyDown called.");
-=======
-            System.IO.File.AppendAllText(logFilePath, "VisionExport OnKeyDown called.\n");
->>>>>>> origin/master
             if (k.KeyCode == Keys.PageUp)
             {
                 postgresTask?.Wait();
@@ -646,19 +627,19 @@ namespace GTAVisionExport
                     {
                         file.WriteLine("cam direction file");
                         file.WriteLine("direction:");
-                        file.WriteLine(GameplayCamera.Direction.X.ToString() + ' ' +
-                                       GameplayCamera.Direction.Y.ToString() + ' ' +
-                                       GameplayCamera.Direction.Z.ToString());
+                        file.WriteLine(World.RenderingCamera.Direction.X.ToString() + ' ' +
+                                       World.RenderingCamera.Direction.Y.ToString() + ' ' +
+                                       World.RenderingCamera.Direction.Z.ToString());
                         file.WriteLine("Dot Product:");
-                        file.WriteLine(Vector3.Dot(GameplayCamera.Direction, GameplayCamera.Rotation));
+                        file.WriteLine(Vector3.Dot(World.RenderingCamera.Direction, World.RenderingCamera.Rotation));
                         file.WriteLine("position:");
-                        file.WriteLine(GameplayCamera.Position.X.ToString() + ' ' +
-                                       GameplayCamera.Position.Y.ToString() + ' ' +
-                                       GameplayCamera.Position.Z.ToString());
+                        file.WriteLine(World.RenderingCamera.Position.X.ToString() + ' ' +
+                                       World.RenderingCamera.Position.Y.ToString() + ' ' +
+                                       World.RenderingCamera.Position.Z.ToString());
                         file.WriteLine("rotation:");
-                        file.WriteLine(GameplayCamera.Rotation.X.ToString() + ' ' +
-                                       GameplayCamera.Rotation.Y.ToString() + ' ' +
-                                       GameplayCamera.Rotation.Z.ToString());
+                        file.WriteLine(World.RenderingCamera.Rotation.X.ToString() + ' ' +
+                                       World.RenderingCamera.Rotation.Y.ToString() + ' ' +
+                                       World.RenderingCamera.Rotation.Z.ToString());
                         file.WriteLine("relative heading:");
                         file.WriteLine(GameplayCamera.RelativeHeading.ToString());
                         file.WriteLine("relative pitch:");
@@ -794,7 +775,7 @@ namespace GTAVisionExport
             {
                 var res = Game.ScreenResolution;
                 ImageUtils.WriteToTiff(Path.Combine(dataPath, "test"), res.Width, res.Height, colors, depth, stencil);
-                UINotify(GameplayCamera.FieldOfView.ToString());
+                UINotify(World.RenderingCamera.FieldOfView.ToString());
             }
             else
             {
