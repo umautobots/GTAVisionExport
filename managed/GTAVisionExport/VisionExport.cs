@@ -49,6 +49,7 @@ namespace GTAVisionExport
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
         private readonly string dataPath;
+<<<<<<< HEAD
         public static string logFilePath;
 
         private readonly Weather[] wantedWeathers = new Weather[]
@@ -57,6 +58,10 @@ namespace GTAVisionExport
         private readonly Weather wantedWeather = Weather.Clear;
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private readonly bool currentWeather = true;
+=======
+        private readonly string logFilePath;
+        private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
+>>>>>>> origin/master
         private Player player;
         private string outputPath;
         private GTARun run;
@@ -89,7 +94,10 @@ namespace GTAVisionExport
             //UINotify(ConfigurationManager.AppSettings["database_connection"]);
             dataPath = data["Snapshots"]["OutputDir"];
             logFilePath = data["Snapshots"]["LogFile"];
+<<<<<<< HEAD
             Logger.setLogFilePath(logFilePath);
+=======
+>>>>>>> origin/master
 
             System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
@@ -117,10 +125,17 @@ namespace GTAVisionExport
 
         private void handlePipeInput()
         {
+<<<<<<< HEAD
             Logger.writeLine("VisionExport handlePipeInput called.");
             UINotify("handlePipeInput called");
             UINotify("server connected:" + server.Connected.ToString());
             UINotify(connection == null ? "connection is null" : "connection:" + connection.ToString());
+=======
+            System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
+            UI.Notify("handlePipeInput called");
+            UI.Notify("server connected:" + server.Connected.ToString());
+            UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
+>>>>>>> origin/master
             if (connection == null) return;
 
             byte[] inBuffer = new byte[1024];
@@ -549,7 +564,11 @@ namespace GTAVisionExport
 
         public void OnKeyDown(object o, KeyEventArgs k)
         {
+<<<<<<< HEAD
             Logger.writeLine("VisionExport OnKeyDown called.");
+=======
+            System.IO.File.AppendAllText(logFilePath, "VisionExport OnKeyDown called.\n");
+>>>>>>> origin/master
             if (k.KeyCode == Keys.PageUp)
             {
                 postgresTask?.Wait();
