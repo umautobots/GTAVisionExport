@@ -337,8 +337,8 @@ namespace GTAVisionUtils
             ret.CamNearClip = World.RenderingCamera.NearClip;
             ret.CamFarClip = World.RenderingCamera.FarClip;
             
-            var peds = World.GetNearbyPeds(Game.Player.Character, 150.0f);
-            var cars = World.GetNearbyVehicles(Game.Player.Character, 150.0f);
+            var peds = World.GetNearbyPeds(Game.Player.Character, 500.0f);
+            var cars = World.GetNearbyVehicles(Game.Player.Character, 500.0f);
             //var props = World.GetNearbyProps(Game.Player.Character.Position, 300.0f);
             
             var constants = VisionNative.GetConstants();
@@ -357,16 +357,16 @@ namespace GTAVisionUtils
             ret.ViewMatrix = V as DenseMatrix;
             
             var pedList = from ped in peds
-//                where ped.IsHuman && ped.IsOnFoot
-                where ped.IsHuman && ped.IsOnFoot && CheckVisible(ped)
+                where ped.IsHuman && ped.IsOnFoot
+//                where ped.IsHuman && ped.IsOnFoot && CheckVisible(ped)
                 select new GTADetection(ped);
             var cycles = from ped in peds
-//                where ped.IsOnBike
-                where ped.IsOnBike && CheckVisible(ped)
+                where ped.IsOnBike
+//                where ped.IsOnBike && CheckVisible(ped)
                 select new GTADetection(ped, DetectionType.bicycle);
             
             var vehicleList = from car in cars
-                where CheckVisible(car)
+//                where CheckVisible(car)
                 select new GTADetection(car);
             ret.Detections = new List<GTADetection>();
             ret.Detections.AddRange(pedList);
