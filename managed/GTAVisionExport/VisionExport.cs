@@ -57,6 +57,7 @@ namespace GTAVisionExport
         private readonly Weather wantedWeather = Weather.Clear;
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private readonly bool currentWeather = true;
+        private readonly bool clearEverything = false;
         private Player player;
         private string outputPath;
         private GTARun run;
@@ -303,6 +304,10 @@ namespace GTAVisionExport
             {
                 GamePause(true);
                 Script.Wait(100);
+                if (clearEverything)
+                {
+                    ClearSurroundingEverything(Game.Player.Character.Position, 1000f);
+                }
                 var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
                 GTAData dat;
                 bool success;
@@ -505,9 +510,19 @@ namespace GTAVisionExport
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
 
+        private void ClearSurroundingVehicles(Vector3 pos, float radius)
+        {
+            ClearSurroundingVehicles(pos.X, pos.Y, pos.Z, radius);
+        }
+        
         private void ClearSurroundingVehicles(float x, float y, float z, float radius)
         {
             Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, x, y, z, radius, false, false, false, false);            
+        }
+
+        private void ClearSurroundingEverything(Vector3 pos, float radius)
+        {
+            ClearSurroundingEverything(pos.X, pos.Y, pos.Z, radius);
         }
         
         private void ClearSurroundingEverything(float x, float y, float z, float radius)
@@ -532,13 +547,13 @@ namespace GTAVisionExport
             //UINotify("x = " + player.Position.X + "y = " + player.Position.Y + "z = " + player.Position.Z);
             // no need to release the autodrive here
             // delete all surrounding vehicles & the driver's car
-            ClearSurroundingVehicles(player.Position.X, player.Position.Y, player.Position.Z, 1000f);
+            ClearSurroundingVehicles(player.Position, 1000f);
             Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y,
                 player.Position.Z, 1000f, false, false, false, false);
             player.LastVehicle.Delete();
             // teleport to the spawning position, defined in GameUtils.cs, subject to changes
             player.Position = GTAConst.StartPos;
-            ClearSurroundingVehicles(player.Position.X, player.Position.Y, player.Position.Z, 100f);
+            ClearSurroundingVehicles(player.Position, 100f);
             // start a new run
             EnterVehicle();
             //Script.Wait(2000);
