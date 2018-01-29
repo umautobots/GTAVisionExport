@@ -505,6 +505,16 @@ namespace GTAVisionExport
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
 
+        private void ClearSurroundingVehicles(float x, float y, float z, float radius)
+        {
+            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, x, y, z, radius, false, false, false, false);            
+        }
+        
+        private void ClearSurroundingEverything(float x, float y, float z, float radius)
+        {
+            Function.Call(GTA.Native.Hash.CLEAR_AREA, x, y, z, radius, false, false, false, false);            
+        }
+        
         public void ReloadGame()
         {
             /*
@@ -522,13 +532,13 @@ namespace GTAVisionExport
             //UINotify("x = " + player.Position.X + "y = " + player.Position.Y + "z = " + player.Position.Z);
             // no need to release the autodrive here
             // delete all surrounding vehicles & the driver's car
+            ClearSurroundingVehicles(player.Position.X, player.Position.Y, player.Position.Z, 1000f);
             Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y,
                 player.Position.Z, 1000f, false, false, false, false);
             player.LastVehicle.Delete();
             // teleport to the spawning position, defined in GameUtils.cs, subject to changes
             player.Position = GTAConst.StartPos;
-            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y,
-                player.Position.Z, 100f, false, false, false, false);
+            ClearSurroundingVehicles(player.Position.X, player.Position.Y, player.Position.Z, 100f);
             // start a new run
             EnterVehicle();
             //Script.Wait(2000);
@@ -557,6 +567,8 @@ namespace GTAVisionExport
                 runTask?.Wait();
                 runTask = StartRun();
                 UINotify("GTA Vision Enabled");
+//                there is set weather, just for testing
+                World.Weather = wantedWeather;
             }
             if (k.KeyCode == Keys.PageDown)
             {
@@ -739,7 +751,7 @@ namespace GTAVisionExport
         {
 //            returns true on success, and false on failure
             GamePause(true);
-            World.TransitionToWeather(weather, 0.0f);
+//            World.TransitionToWeather(weather, 0.0f);        //trying to set weather only in the beginning, because of depth =/= RGB
             Script.Wait(1);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
