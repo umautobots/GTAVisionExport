@@ -47,7 +47,8 @@ namespace GTAVisionExport {
 #endif
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
-        private readonly string dataPath = @"Z:\archives\";
+        private readonly string dataPath;
+        private readonly string logFilePath;
         private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
         private Player player;
         private string outputPath;
@@ -66,8 +67,22 @@ namespace GTAVisionExport {
         private speedAndTime lowSpeedTime = new speedAndTime();
         private bool IsGamePaused = false;
         private StereoCamera cams;
-        public VisionExport()
+		private bool notificationsOn = true;
+		private bool vAutodriveEnabled = true;
+
+		public VisionExport()
         {
+            // loading ini file
+            var parser = new FileIniDataParser();
+            var location = AppDomain.CurrentDomain.BaseDirectory;
+            var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
+
+            //UINotify(ConfigurationManager.AppSettings["database_connection"]);
+            dataPath = data["Snapshots"]["OutputDir"];
+            logFilePath = data["Snapshots"]["LogFile"];
+			//System.IO.File.WriteAllText("d:/Snapshots/data.txt", data.ToString());
+
+			System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
             PostgresExport.InitSQLTypes();
             player = Game.Player;
@@ -75,12 +90,6 @@ namespace GTAVisionExport {
             server.Bind(new IPEndPoint(IPAddress.Loopback, 5555));
             server.Listen(5);
             //server = new UdpClient(5555);
-            var parser = new FileIniDataParser();
-            var location = AppDomain.CurrentDomain.BaseDirectory;
-            var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
-            var access_key = data["aws"]["access_key"];
-            var secret_key = data["aws"]["secret_key"];
-            //client = new AmazonS3Client(new BasicAWSCredentials(access_key, secret_key), RegionEndpoint.USEast1);
             //outputPath = @"D:\Datasets\GTA\";
             //outputPath = Path.Combine(outputPath, "testData.yaml");
             //outStream = File.CreateText(outputPath);
@@ -99,7 +108,10 @@ namespace GTAVisionExport {
 
         private void handlePipeInput()
         {
-            //UI.Notify(server.Available.ToString());
+            System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
+			if (notificationsOn) UI.Notify("handlePipeInput called");
+			if (notificationsOn) UI.Notify("server connected:" + server.Connected.ToString());
+			if (notificationsOn) UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
             if (connection == null) return;
             
             byte[] inBuffer = new byte[1024];
@@ -125,7 +137,7 @@ namespace GTAVisionExport {
                 connection = null;
                 return;
             }
-            UI.Notify(str.Length.ToString());
+			if (notificationsOn) UI.Notify(str.Length.ToString());
             switch (str)
             {
                 case "START_SESSION":
@@ -142,7 +154,7 @@ namespace GTAVisionExport {
                     ToggleNavigation();
                     break;
                 case "ENTER_VEHICLE":
-                    UI.Notify("Trying to enter vehicle");
+					if (notificationsOn) UI.Notify("Trying to enter vehicle");
                     EnterVehicle();
                     break;
                 case "AUTOSTART":
@@ -211,7 +223,7 @@ namespace GTAVisionExport {
             if (server.Poll(10, SelectMode.SelectRead) && connection == null)
             {
                 connection = server.Accept();
-                UI.Notify("CONNECTED");
+				if (notificationsOn) UI.Notify("CONNECTED");
                 connection.Blocking = false;
             }
             handlePipeInput();
@@ -226,9 +238,9 @@ namespace GTAVisionExport {
                     StopRun();
                     runTask?.Wait();
                     runTask = StartRun();
-                    //StopSession();
-                    //Autostart();
-                    UI.Notify("need reload game");
+					//StopSession();
+					//Autostart();
+					if (notificationsOn) UI.Notify("need reload game");
                     Script.Wait(100);
                     ReloadGame();
                     break;
@@ -276,8 +288,8 @@ namespace GTAVisionExport {
             var colorframe = VisionNative.GetLastColorTime();
             var depthframe = VisionNative.GetLastConstantTime();
             var constantframe = VisionNative.GetLastConstantTime();
-            //UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
-            UI.Notify(colors[0].Length.ToString());
+			//UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
+			if (notificationsOn) UI.Notify(colors[0].Length.ToString());
             if (depth == null || stencil == null)
             {
                 UI.Notify("No DEPTH");
@@ -442,9 +454,12 @@ namespace GTAVisionExport {
 
         public void ToggleNavigation()
         {
-            //YOLO
-            MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
-            inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
+			//YOLO
+			if (vAutodriveEnabled)
+			{
+				MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
+				inf.Invoke(kh, new object[] { new KeyEventArgs(Keys.J) });
+			}
         }
 
         public void ReloadGame()
@@ -490,24 +505,52 @@ namespace GTAVisionExport {
 
         public void OnKeyDown(object o, KeyEventArgs k)
         {
-            if (k.KeyCode == Keys.PageUp)
+            System.IO.File.AppendAllText(logFilePath, "VisionExport OnKeyDown called.\n");
+			if(k.KeyCode == Keys.Z)
+			{
+				if(notificationsOn == true)
+				{
+					notificationsOn = false;
+					UI.Notify("Notifications Disabled");
+				}
+				else
+				{
+					notificationsOn = true;
+					UI.Notify("Notifications Enabled");
+				}
+			}
+			if (k.KeyCode == Keys.A)
+			{
+				if (vAutodriveEnabled == true)
+				{
+					vAutodriveEnabled = false;
+					UI.Notify("VAutodrive Disabled");
+				}
+				else
+				{
+					vAutodriveEnabled = true;
+					UI.Notify("VAutodrive Enabled");
+				}
+			}
+			if (k.KeyCode == Keys.PageUp)
             {
                 postgresTask?.Wait();
                 postgresTask = StartSession();
                 runTask?.Wait();
                 runTask = StartRun();
-                UI.Notify("GTA Vision Enabled");
+				if (notificationsOn) UI.Notify("GTA Vision Enabled");
+
             }
             if (k.KeyCode == Keys.PageDown)
             {
                 StopRun();
                 StopSession();
-                UI.Notify("GTA Vision Disabled");
+				if (notificationsOn) UI.Notify("GTA Vision Disabled");
             }
             if (k.KeyCode == Keys.H) // temp modification
             {
                 EnterVehicle();
-                UI.Notify("Trying to enter vehicle");
+				if (notificationsOn) UI.Notify("Trying to enter vehicle");
                 ToggleNavigation();
             }
             if (k.KeyCode == Keys.Y) // temp modification
@@ -521,7 +564,7 @@ namespace GTAVisionExport {
 
                 //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
                 var str = settings.GetValue("", "ConnectionString");
-                UI.Notify(loc);
+				if (notificationsOn) UI.Notify(loc);
 
             }
             if (k.KeyCode == Keys.G) // temp modification
@@ -537,15 +580,15 @@ namespace GTAVisionExport {
                 */
                 var data = GTAData.DumpData(Game.GameTime + ".tiff", new List<Weather>(wantedWeather));
 
-                string path = @"C:\Users\NGV-02\Documents\Data\trymatrix.txt";
-                // This text is added only once to the file.
-                if (!File.Exists(path))
+				//string path = @"C:\Users\NGV-02\Documents\Data\trymatrix.txt";
+				string path = @"D:\Snapshots\trymatrix.txt";
+				// This text is added only once to the file.
+				if (!File.Exists(path))
                 {
                     // Create a file to write to.
                     using (StreamWriter file = File.CreateText(path))
                     {
-                        
-                        
+
                         file.WriteLine("cam direction file");
                         file.WriteLine("direction:");
                         file.WriteLine(GameplayCamera.Direction.X.ToString() + ' ' + GameplayCamera.Direction.Y.ToString() + ' ' + GameplayCamera.Direction.Z.ToString());
@@ -571,7 +614,7 @@ namespace GTAVisionExport {
                 /* set it between 0 = stop, 1 = heavy rain. set it too high will lead to sloppy ground */
                 Function.Call(GTA.Native.Hash._SET_RAIN_FX_INTENSITY, 0.5f);
                 var test = Function.Call<float>(GTA.Native.Hash.GET_RAIN_LEVEL);
-                UI.Notify("" + test);
+				if (notificationsOn) UI.Notify("" + test);
                 World.CurrentDayTime = new TimeSpan(12, 0, 0);
                 //Script.Wait(5000);
             }
@@ -625,15 +668,16 @@ namespace GTAVisionExport {
                     var t = Tiff.Open(Path.Combine(dataPath, "info" + i.ToString() + ".tiff"), "w");
                     ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
                     t.Close();
-                    UI.Notify(GameplayCamera.FieldOfView.ToString());
+					if (notificationsOn) UI.Notify(GameplayCamera.FieldOfView.ToString());
                     //UI.Notify((connection != null && connection.Connected).ToString());
 
 
                     var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
 
-                    string path = @"C:\Users\NGV-02\Documents\Data\info.txt";
-                    // This text is added only once to the file.
-                    if (!File.Exists(path))
+                    //string path = @"C:\Users\NGV-02\Documents\Data\info.txt";
+					string path = @"D:\Snapshots\info.txt";
+					// This text is added only once to the file.
+					if (!File.Exists(path))
                     {
                         // Create a file to write to.
                         using (StreamWriter file = File.CreateText(path))
@@ -672,8 +716,8 @@ namespace GTAVisionExport {
             if (k.KeyCode == Keys.I)
             {
                 var info = new GTAVisionUtils.InstanceData();
-                UI.Notify(info.type);
-                UI.Notify(info.publichostname);
+				if (notificationsOn) UI.Notify(info.type);
+				if (notificationsOn) UI.Notify(info.publichostname);
             }
         }
     }
