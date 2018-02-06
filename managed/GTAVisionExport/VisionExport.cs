@@ -151,6 +151,7 @@ namespace GTAVisionExport {
             }
 
             UINotify("str: " + str.ToString());
+            Logger.writeLine("obtained json: " + str.ToString());
             dynamic parameters = JsonConvert.DeserializeObject(str);
             string commandName = parameters.name;
             switch (commandName) {
