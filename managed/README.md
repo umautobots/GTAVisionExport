@@ -417,3 +417,21 @@ There is either manual or automatic way.
     It connects to the socket server inside the managed plugin. 
     When the main script starts, you can click the "START_SESSION" button and then it creates new car and starts 
     driving autonomously and grabbing screenshots automatically.
+    
+    
+### Downgrading the GTA V Steam version
+Your version of GTA V can be higher than your shvdn can manage, and in that case, this error pops up and game crashes:
+Here is tutorial for it:
+https://www.youtube.com/watch?v=7HWOGLtV7Ig
+Link for files needed to download is: 
+https://mega.nz/#!Z7RVUDzb!jtWcn0sQxM7Er4pR83mDG3jFDJ49QkA_7SO9aFckawY
+if the link is dead, just write me and I'll upload files somewhere and share them with you.
+
+Basically:
+setup the update frequency in steam to updating before launch (all other options are automatic updates, which you don't want)
+The only files being changed during updates are:
+GTA5.exe
+GTAVLauncher.exe
+update/update.rpf
+
+So simply backup these files, just to be sure, and replace them by their older versions.

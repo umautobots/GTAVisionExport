@@ -27,10 +27,9 @@ namespace GTAVisionExport
             UI.Notify("Loaded TestVehicle.cs");
 
             // create a new camera 
-            World.DestroyAllCameras();
+//            World.DestroyAllCameras();
             mainCamera = World.CreateCamera(new Vector3(), new Vector3(), 50);
-            mainCamera.IsActive = true;
-            World.RenderingCamera = mainCamera;
+            mainCamera.IsActive = false;
 
             // attach time methods 
             Tick += OnTick;
@@ -112,19 +111,19 @@ namespace GTAVisionExport
 
             if (e.KeyCode == Keys.NumPad1)
             {
-                activeCameraIndex = 0;
+                activeCameraIndex = 1;
                 mountCameraOnVehicle();
             }
 
             if (e.KeyCode == Keys.NumPad2)
             {
-                activeCameraIndex = 0;
+                activeCameraIndex = 2;
                 mountCameraOnVehicle();
             }
 
             if (e.KeyCode == Keys.NumPad3)
             {
-                activeCameraIndex = 0;
+                activeCameraIndex = 3;
                 mountCameraOnVehicle();
             }
 
