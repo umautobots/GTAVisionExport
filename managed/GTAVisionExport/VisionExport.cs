@@ -58,6 +58,7 @@ namespace GTAVisionExport
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private readonly bool currentWeather = true;
         private readonly bool clearEverything = false;
+        private readonly bool useMultipleCameras = true;
         private Player player;
         private string outputPath;
         private GTARun run;
@@ -114,6 +115,14 @@ namespace GTAVisionExport
                 runTask?.Wait();
                 runTask = StartRun();
             }
+            
+//            cameras initialization:
+            float r = 5f;    //radius of circle with 4 cameras
+            CamerasList.mainCamera = new Vector3(0f, 2f, 0.4f);
+            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f));
+            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f));
+            CamerasList.addCamera(new Vector3(2*r, 2f, 0.4f), new Vector3(0f, 0f, 180f));
+            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f));
         }
 
         private void handlePipeInput()
@@ -766,8 +775,8 @@ namespace GTAVisionExport
         {
 //            returns true on success, and false on failure
             GamePause(true);
-//            World.TransitionToWeather(weather, 0.0f);        //trying to set weather only in the beginning, because of depth =/= RGB
-            Script.Wait(1);
+            World.TransitionToWeather(weather, 0.0f);        //trying to set weather only in the beginning, because of depth =/= RGB
+            Script.Wait(10);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
             var color = VisionNative.GetColorBuffer();
