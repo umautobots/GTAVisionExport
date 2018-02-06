@@ -19,12 +19,14 @@ namespace GTAVisionExport
         // camera used on the vehicle
         Camera mainCamera = null;
         Camera[] cameras = null;
+        private Camera gameCam;
         private bool enabled = false;
         private int activeCameraIndex = -1;
 
         public CameraHandling()
         {
             UI.Notify("Loaded TestVehicle.cs");
+            gameCam = World.RenderingCamera;
 
             // create a new camera 
 //            World.DestroyAllCameras();
@@ -63,7 +65,7 @@ namespace GTAVisionExport
         {
             UI.Notify("Relinquishing control");
             mainCamera.IsActive = false;
-            World.RenderingCamera = mainCamera;
+            World.RenderingCamera = gameCam;
         }
 
         // Function used to keep camera on vehicle and facing forward on each tick step.
@@ -76,14 +78,6 @@ namespace GTAVisionExport
 
                 // rotate the camera to face the same direction as the car 
                 mainCamera.Rotation = Game.Player.Character.CurrentVehicle.Rotation;
-            }
-
-            if (Game.Player.Character.IsInVehicle() && enabled)
-            {
-                for (int i = 0; i < cameras.Length; i++)
-                {
-                    CamerasList.ActivateCamera(i);
-                }
             }
         }
 
@@ -105,30 +99,35 @@ namespace GTAVisionExport
 
             if (e.KeyCode == Keys.NumPad0)
             {
+                UI.Notify("Pressed numpad 0");
                 activeCameraIndex = 0;
                 mountCameraOnVehicle();
             }
 
             if (e.KeyCode == Keys.NumPad1)
             {
+                UI.Notify("Pressed numpad 1");
                 activeCameraIndex = 1;
                 mountCameraOnVehicle();
             }
 
             if (e.KeyCode == Keys.NumPad2)
             {
+                UI.Notify("Pressed numpad 2");
                 activeCameraIndex = 2;
                 mountCameraOnVehicle();
             }
 
             if (e.KeyCode == Keys.NumPad3)
             {
+                UI.Notify("Pressed numpad 3");
                 activeCameraIndex = 3;
                 mountCameraOnVehicle();
             }
 
             if (e.KeyCode == Keys.Decimal)
             {
+                UI.Notify("Pressed numpad ,");
                 activeCameraIndex = -1;
                 mountCameraOnVehicle();
             }
