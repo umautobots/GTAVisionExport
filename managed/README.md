@@ -110,6 +110,7 @@ create table snapshots
 		constraint snapshots_run_fkey
 			references runs,
 	version integer,
+	scene_id uuid,
 	imagepath text,
 	timestamp timestamp with time zone,
 	timeofday time,
