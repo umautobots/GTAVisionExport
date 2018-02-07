@@ -15,7 +15,6 @@ namespace GTAVisionExport {
 
     public class CameraHandling : Script {
         // camera used on the vehicle
-        Camera mainCamera = null;
         private Camera gameCam;
         private Camera activeCamera;
         private bool enabled = false;
@@ -28,9 +27,8 @@ namespace GTAVisionExport {
 
             // create a new camera 
 //            World.DestroyAllCameras();
-            mainCamera = World.CreateCamera(new Vector3(), new Vector3(), 50);
-            mainCamera.IsActive = false;
-
+            CamerasList.initialize();
+            
             // attach time methods 
             Tick += OnTick;
             KeyUp += onKeyUp;
@@ -41,15 +39,13 @@ namespace GTAVisionExport {
             UI.Notify("Mounting camera to the vehicle.");
             if (Game.Player.Character.IsInVehicle()) {
                 if (activeCameraIndex == -1) {
-                    mainCamera.IsActive = true;
-                    activeCamera = mainCamera;
-                    World.RenderingCamera = mainCamera;
-                    mainCamera.AttachTo(Game.Player.Character.CurrentVehicle, CamerasList.mainCamera.Value);
-                    mainCamera.Rotation = Game.Player.Character.CurrentVehicle.Rotation;
+                    UI.Notify("Mounting main camera");
+                    CamerasList.ActivateMainCamera();
                 }
                 else {
-                    UI.Notify("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation.ToString());
-                    Logger.writeLine("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation.ToString());
+                    UI.Notify("Mounting camera from list");
+                    UI.Notify("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation);
+                    Logger.writeLine("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation);
                     activeCamera = CamerasList.ActivateCamera(activeCameraIndex);
                 }
             }
@@ -74,10 +70,10 @@ namespace GTAVisionExport {
         public void keepCameraOnVehicle() {
             if (Game.Player.Character.IsInVehicle() && enabled) {
                 // keep the camera in the same position relative to the car
-                mainCamera.AttachTo(Game.Player.Character.CurrentVehicle, CamerasList.mainCamera.Value);
+                CamerasList.mainCamera.AttachTo(Game.Player.Character.CurrentVehicle, CamerasList.mainCameraPosition);
 
                 // rotate the camera to face the same direction as the car 
-                mainCamera.Rotation = Game.Player.Character.CurrentVehicle.Rotation;
+                CamerasList.mainCamera.Rotation = Game.Player.Character.CurrentVehicle.Rotation;
             }
         }
 
