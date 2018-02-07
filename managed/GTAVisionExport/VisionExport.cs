@@ -355,6 +355,8 @@ namespace GTAVisionExport {
                 dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
             }
 
+            dat.sceneGuid = guid;
+
             if (dat == null) {
                 return;
             }
