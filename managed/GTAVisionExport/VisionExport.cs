@@ -332,10 +332,12 @@ namespace GTAVisionExport {
             
             if (useMultipleCameras) {
                 for (int i = 0; i < CamerasList.cameras.Count; i++) {
+                    Logger.writeLine("activating camera " + i.ToString());
                     CamerasList.ActivateCamera(i);
                     gatherDatForOneCamera(dateTimeFormat, guid);
                     Script.Wait(5);
                 }
+                CamerasList.Deactivate();
             }
             else {
                 gatherDatForOneCamera(dateTimeFormat, guid);
