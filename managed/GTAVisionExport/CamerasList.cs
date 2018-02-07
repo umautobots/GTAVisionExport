@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,15 +16,26 @@ namespace GTAVisionExport {
         public static List<Vector3> camerasPositions { get; set; } = new List<Vector3>();
         public static List<Vector3> camerasRotations { get; set; } = new List<Vector3>();
         public static Camera gameCam;
+        private static bool initialized = false;
         
         static CamerasList()
         {
-            World.DestroyAllCameras();
-            gameCam = World.RenderingCamera;
         }
 
+        public static void initialize() {
+            World.DestroyAllCameras();
+            Logger.writeLine("destroying all cameras at the beginning, to be clear");
+            gameCam = World.RenderingCamera;
+            initialized = true;
+        }
+        
         public static void addCamera(Vector3 position, Vector3 rotation, float? fov = null)
         {
+            if (!initialized) {
+                throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
+            }
+
+            Logger.writeLine("adding new camera");
             if (!fov.HasValue)
             {
                 fov = GameplayCamera.FieldOfView;
@@ -37,6 +49,14 @@ namespace GTAVisionExport {
         
         public static void ActivateCamera(int i)
         {
+            if (!initialized) {
+                throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
+            }
+
+            if (i >= cameras.Count) {
+                throw new Exception("there is no camera with index " + i);
+            }
+
             cameras[i].IsActive = true;
             World.RenderingCamera = cameras[i];
             cameras[i].AttachTo(Game.Player.Character.CurrentVehicle, camerasPositions[i]);
@@ -52,6 +72,10 @@ namespace GTAVisionExport {
 
         public static void Deactivate()
         {
+            if (!initialized) {
+                throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
+            }
+
             foreach (var camera in cameras)
             {
                 camera.IsActive = false;

@@ -112,15 +112,20 @@ namespace GTAVisionExport {
                 runTask = StartRun();
             }
 
+            CamerasList.in
+            initialize4cameras();
+        }
+
+        private void initialize4cameras() {
 //            cameras initialization:
             float r = 8f; //radius of circle with 4 cameras
             CamerasList.mainCamera = new Vector3(0f, 2f, 0.4f);
             CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f));
             CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f));
             CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f));
-            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f));
+            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f));            
         }
-
+        
         private void handlePipeInput() {
 //            Logger.writeLine("VisionExport handlePipeInput called.");
             UINotify("handlePipeInput called");
@@ -308,7 +313,9 @@ namespace GTAVisionExport {
             catch (Exception exception) {
                 GamePause(false);
                 Logger.writeLine("exception occured, logging and continuing");
-                Logger.writeLine(exception);
+                Logger.writeLine(exception.Message);
+                Logger.writeLine(exception.Source);
+                Logger.writeLine(exception.StackTrace);
             }
 
 //            if time interval is enabled, checkes game time and sets it to timeFrom, it current time is after timeTo
