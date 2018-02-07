@@ -329,6 +329,7 @@ namespace GTAVisionExport {
 
             var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
             var guid = Guid.NewGuid();
+            Logger.writeLine("generated scene guid: " + guid.ToString());
             
             if (useMultipleCameras) {
                 for (int i = 0; i < CamerasList.cameras.Count; i++) {
