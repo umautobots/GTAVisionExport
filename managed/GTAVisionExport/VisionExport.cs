@@ -90,7 +90,7 @@ namespace GTAVisionExport {
             logFilePath = data["Snapshots"]["LogFile"];
             Logger.setLogFilePath(logFilePath);
 
-            System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\n");
+            System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\r\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
             PostgresExport.InitSQLTypes();
             player = Game.Player;
@@ -711,12 +711,12 @@ namespace GTAVisionExport {
                     GTAData dat;
                     if (multipleWeathers) {
                         dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeathers.ToList());
-                        saveSnapshotToFile(dat.ImageName, wantedWeathers);
+                        saveSnapshotToFile(dat.ImageName, wantedWeathers, false);
                     }
                     else {
                         Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
                         dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
-                        saveSnapshotToFile(dat.ImageName, weather);
+                        saveSnapshotToFile(dat.ImageName, weather, false);
                     }
 
                     PostgresExport.SaveSnapshot(dat, run.guid);
@@ -735,10 +735,14 @@ namespace GTAVisionExport {
             }
         }
 
-        private bool saveSnapshotToFile(String name, Weather[] weathers) {
+        private bool saveSnapshotToFile(String name, Weather[] weathers, bool manageGamePauses = true) {
 //            returns true on success, and false on failure
             List<byte[]> colors = new List<byte[]>();
-            GamePause(true);
+
+            if (manageGamePauses) {
+                GamePause(true);                
+            }
+            
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
             if (depth == null || stencil == null) {
@@ -756,7 +760,10 @@ namespace GTAVisionExport {
                 colors.Add(color);
             }
 
-            GamePause(false);
+            if (manageGamePauses) {
+                GamePause(false);
+            }
+
             var res = Game.ScreenResolution;
             var fileName = Path.Combine(dataPath, name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil, false);
@@ -764,11 +771,14 @@ namespace GTAVisionExport {
             return true;
         }
 
-        private bool saveSnapshotToFile(String name, Weather weather) {
+        private bool saveSnapshotToFile(String name, Weather weather, bool manageGamePauses = true) {
 //            returns true on success, and false on failure
-            GamePause(true);
+            if (manageGamePauses) {
+                GamePause(true);                
+            }
+
             World.TransitionToWeather(weather,
-                0.0f); //trying to set weather only in the beginning, because of depth =/= RGB
+                0.0f);
             Script.Wait(10);
             var depth = VisionNative.GetDepthBuffer();
             var stencil = VisionNative.GetStencilBuffer();
@@ -777,7 +787,11 @@ namespace GTAVisionExport {
                 return false;
             }
 
-            GamePause(false);
+
+            if (manageGamePauses) {
+                GamePause(false);
+            }
+
             var res = Game.ScreenResolution;
             var fileName = Path.Combine(dataPath, name);
             ImageUtils.WriteToTiff(fileName, res.Width, res.Height, new List<byte[]>() {color}, depth, stencil, false);
