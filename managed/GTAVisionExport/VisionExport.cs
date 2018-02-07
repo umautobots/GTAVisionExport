@@ -701,24 +701,10 @@ namespace GTAVisionExport {
                 startRunAndSessionManual();
                 postgresTask?.Wait();
                 runTask?.Wait();
-                var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
                 UINotify("starting screenshots");
                 for (int i = 0; i < 5; i++) {
                     GamePause(true);
-                    Script.Wait(200);
-
-                    GTAData dat;
-                    if (multipleWeathers) {
-                        dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeathers.ToList());
-                        saveSnapshotToFile(dat.ImageName, wantedWeathers, false);
-                    }
-                    else {
-                        Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
-                        dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
-                        saveSnapshotToFile(dat.ImageName, weather, false);
-                    }
-
-                    PostgresExport.SaveSnapshot(dat, run.guid);
+                    gatherData();
                     GamePause(false);
                     Script.Wait(200); // hoping game will go on during this wait
                 }
