@@ -6,27 +6,23 @@ using System.Linq;
 using GTA;
 using GTA.Native;
 using GTA.Math;
+using GTAVisionUtils;
 
-namespace GTAVisionExport
-{
-    
+namespace GTAVisionExport {
 // Controls: 
 // P - mounts rendering camera on vehicle 
 // O - restores the rendering camera to original control
 
-    public class CameraHandling : Script
-    {
+    public class CameraHandling : Script {
         // camera used on the vehicle
         Camera mainCamera = null;
-        Camera[] cameras = null;
         private Camera gameCam;
         private bool enabled = false;
         private int activeCameraIndex = -1;
 
-        public CameraHandling()
-        {
+        public CameraHandling() {
             UI.Notify("Loaded TestVehicle.cs");
-            gameCam = World.RenderingCamera;
+            gameCam = CamerasList.gameCam;
 
             // create a new camera 
 //            World.DestroyAllCameras();
@@ -39,40 +35,32 @@ namespace GTAVisionExport
         }
 
         // Function used to take control of the world rendering camera.
-        public void mountCameraOnVehicle()
-        {
-            if (Game.Player.Character.IsInVehicle())
-            {
-//                void RENDER_SCRIPT_CAMS(BOOL render, BOOL ease, int easeTime, BOOL p3,
-//                    BOOL p4) // 0x07E5B515DB0636FC 0x74337969
-                if (activeCameraIndex == -1)
-                {
-                    World.RenderingCamera = mainCamera;                    
+        public void mountCameraOnVehicle() {
+            if (Game.Player.Character.IsInVehicle()) {
+                if (activeCameraIndex == -1) {
+                    World.RenderingCamera = mainCamera;
                 }
-                else
-                {
-                    World.RenderingCamera = cameras[activeCameraIndex];
+                else {
+                    UI.Notify("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation.ToString());
+                    Logger.writeLine("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation.ToString());
+                    CamerasList.ActivateCamera(activeCameraIndex);
                 }
             }
-            else
-            {
+            else {
                 UI.Notify("Please enter a vehicle.");
             }
         }
 
         // Function used to allows the user original control of the camera.
-        public void restoreCamera()
-        {
+        public void restoreCamera() {
             UI.Notify("Relinquishing control");
             mainCamera.IsActive = false;
             World.RenderingCamera = gameCam;
         }
 
         // Function used to keep camera on vehicle and facing forward on each tick step.
-        public void keepCameraOnVehicle()
-        {
-            if (Game.Player.Character.IsInVehicle() && enabled)
-            {
+        public void keepCameraOnVehicle() {
+            if (Game.Player.Character.IsInVehicle() && enabled) {
                 // keep the camera in the same position relative to the car
                 mainCamera.AttachTo(Game.Player.Character.CurrentVehicle, CamerasList.mainCamera.Value);
 
@@ -82,60 +70,50 @@ namespace GTAVisionExport
         }
 
         // Test vehicle controls 
-        private void onKeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.P)
-            {
+        private void onKeyUp(object sender, KeyEventArgs e) {
+            if (e.KeyCode == Keys.P) {
                 activeCameraIndex = -1;
                 mountCameraOnVehicle();
                 enabled = true;
             }
 
-            if (e.KeyCode == Keys.O)
-            {
+            if (e.KeyCode == Keys.O) {
                 restoreCamera();
                 enabled = false;
             }
 
-            if (e.KeyCode == Keys.NumPad0)
-            {
+            if (e.KeyCode == Keys.NumPad0) {
                 UI.Notify("Pressed numpad 0");
                 activeCameraIndex = 0;
                 mountCameraOnVehicle();
             }
 
-            if (e.KeyCode == Keys.NumPad1)
-            {
+            if (e.KeyCode == Keys.NumPad1) {
                 UI.Notify("Pressed numpad 1");
                 activeCameraIndex = 1;
                 mountCameraOnVehicle();
             }
 
-            if (e.KeyCode == Keys.NumPad2)
-            {
+            if (e.KeyCode == Keys.NumPad2) {
                 UI.Notify("Pressed numpad 2");
                 activeCameraIndex = 2;
                 mountCameraOnVehicle();
             }
 
-            if (e.KeyCode == Keys.NumPad3)
-            {
+            if (e.KeyCode == Keys.NumPad3) {
                 UI.Notify("Pressed numpad 3");
                 activeCameraIndex = 3;
                 mountCameraOnVehicle();
             }
 
-            if (e.KeyCode == Keys.Decimal)
-            {
+            if (e.KeyCode == Keys.Decimal) {
                 UI.Notify("Pressed numpad ,");
                 activeCameraIndex = -1;
                 mountCameraOnVehicle();
             }
-
         }
 
-        void OnTick(object sender, EventArgs e)
-        {
+        void OnTick(object sender, EventArgs e) {
             keepCameraOnVehicle();
         }
     }

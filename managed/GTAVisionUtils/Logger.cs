@@ -24,7 +24,7 @@ namespace GTAVisionUtils
             var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss";
             try
             {
-                System.IO.File.AppendAllText(logFilePath, DateTime.UtcNow.ToString(dateTimeFormat) + ":  " + line + "\n");            
+                System.IO.File.AppendAllText(logFilePath, DateTime.UtcNow.ToString(dateTimeFormat) + ":  " + line + "\r\n");            
             }
             catch (System.IO.IOException e)
             {
