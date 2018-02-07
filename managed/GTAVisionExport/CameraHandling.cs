@@ -55,7 +55,7 @@ namespace GTAVisionExport {
         public void restoreCamera() {
             UI.Notify("Relinquishing control");
             mainCamera.IsActive = false;
-            World.RenderingCamera = gameCam;
+            World.RenderingCamera = mainCamera;
         }
 
         // Function used to keep camera on vehicle and facing forward on each tick step.
