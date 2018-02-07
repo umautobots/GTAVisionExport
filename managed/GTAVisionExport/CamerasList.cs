@@ -60,7 +60,7 @@ namespace GTAVisionExport {
 //            rotation.Z %= 360;
             cameras[i].Rotation = rotation;
 //            UI.Notify("new camera rotation is: " + rotation.ToString());
-            Script.Wait(4);
+            Script.Wait(10);
             Logger.writeLine("new camera position is: " + World.RenderingCamera.Position.ToString());
             Logger.writeLine("new camera rotation is: " + World.RenderingCamera.Rotation.ToString());
             Logger.writeLine("new camera position offset is: " + camerasPositions[i].ToString());

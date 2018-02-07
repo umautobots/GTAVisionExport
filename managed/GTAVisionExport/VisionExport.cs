@@ -58,7 +58,6 @@ namespace GTAVisionExport {
         private readonly bool clearEverything = false;
         private readonly bool useMultipleCameras = true;
         private Player player;
-        private string outputPath;
         private GTARun run;
         private bool enabled = false;
         private Socket server;
