@@ -369,11 +369,11 @@ namespace GTAVisionExport {
             }
 
             if (multipleWeathers) {
-                success = saveSnapshotToFile(dat.ImageName, wantedWeathers);
+                success = saveSnapshotToFile(dat.ImageName, wantedWeathers, false);
             }
             else {
                 Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
-                success = saveSnapshotToFile(dat.ImageName, weather);
+                success = saveSnapshotToFile(dat.ImageName, weather, false);
             }
 
             if (!success) {
