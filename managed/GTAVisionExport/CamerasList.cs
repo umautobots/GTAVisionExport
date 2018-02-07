@@ -43,7 +43,7 @@ namespace GTAVisionExport {
             camerasRotations.Add(rotation);
         }
         
-        public static void ActivateCamera(int i)
+        public static Camera ActivateCamera(int i)
         {
             if (!initialized) {
                 throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
@@ -65,6 +65,7 @@ namespace GTAVisionExport {
             Logger.writeLine("new camera rotation is: " + World.RenderingCamera.Rotation.ToString());
             Logger.writeLine("new camera position offset is: " + camerasPositions[i].ToString());
             Logger.writeLine("new camera rotation offset is: " + camerasRotations[i].ToString());
+            return cameras[i];
         }
 
         public static void Deactivate()

@@ -17,12 +17,14 @@ namespace GTAVisionExport {
         // camera used on the vehicle
         Camera mainCamera = null;
         private Camera gameCam;
+        private Camera activeCamera;
         private bool enabled = false;
         private int activeCameraIndex = -1;
 
         public CameraHandling() {
             UI.Notify("Loaded TestVehicle.cs");
             gameCam = CamerasList.gameCam;
+            activeCamera = null;
 
             // create a new camera 
 //            World.DestroyAllCameras();
@@ -36,14 +38,19 @@ namespace GTAVisionExport {
 
         // Function used to take control of the world rendering camera.
         public void mountCameraOnVehicle() {
+            UI.Notify("Mounting camera to the vehicle.");
             if (Game.Player.Character.IsInVehicle()) {
                 if (activeCameraIndex == -1) {
+                    mainCamera.IsActive = true;
+                    activeCamera = mainCamera;
                     World.RenderingCamera = mainCamera;
+                    mainCamera.AttachTo(Game.Player.Character.CurrentVehicle, CamerasList.mainCamera.Value);
+                    mainCamera.Rotation = Game.Player.Character.CurrentVehicle.Rotation;
                 }
                 else {
                     UI.Notify("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation.ToString());
                     Logger.writeLine("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation.ToString());
-                    CamerasList.ActivateCamera(activeCameraIndex);
+                    activeCamera = CamerasList.ActivateCamera(activeCameraIndex);
                 }
             }
             else {
@@ -54,8 +61,13 @@ namespace GTAVisionExport {
         // Function used to allows the user original control of the camera.
         public void restoreCamera() {
             UI.Notify("Relinquishing control");
-            mainCamera.IsActive = false;
-            World.RenderingCamera = mainCamera;
+            if (activeCameraIndex == -1) {
+                activeCamera.IsActive = false;
+                World.RenderingCamera = activeCamera;
+            }
+            else {
+                CamerasList.Deactivate();
+            }
         }
 
         // Function used to keep camera on vehicle and facing forward on each tick step.
