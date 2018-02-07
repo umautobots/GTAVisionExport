@@ -112,7 +112,7 @@ namespace GTAVisionExport {
                 runTask = StartRun();
             }
 
-            CamerasList.in
+            CamerasList.initialize();
             initialize4cameras();
         }
 
