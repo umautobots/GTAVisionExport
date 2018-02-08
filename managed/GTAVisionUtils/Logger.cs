@@ -7,42 +7,32 @@ using System.Text;
 using System.Threading.Tasks;
 using BitMiracle.LibTiff.Classic;
 
-namespace GTAVisionUtils
-{
-    public class Logger
-    {
-        private static string logFilePath;
+namespace GTAVisionUtils {
+    public class Logger {
+        public static string logFilePath { private get; set; }
 
-        public static void setLogFilePath(string path)
-        {
-            logFilePath = path;
-        }
-
-        
-        public static void writeLine(string line)
-        {
+        public static void writeLine(string line) {
             var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss";
-            try
-            {
-                System.IO.File.AppendAllText(logFilePath, DateTime.UtcNow.ToString(dateTimeFormat) + ":  " + line + "\r\n");            
+            try {
+                System.IO.File.AppendAllText(logFilePath,
+                    DateTime.UtcNow.ToString(dateTimeFormat) + ":  " + line + "\r\n");
             }
-            catch (System.IO.IOException e)
-            {
-//             just silently fail, better than throwing   
+            catch (System.IO.IOException e) {
+//             just silently fail, better than throwing
             }
         }
 
-        public static void writeLine(Exception e)
-        {
+        public static void writeLine(Exception e) {
+            writeLine(e.Message);
+            writeLine(e.Source);
             writeLine(e.StackTrace);
         }
 
-        public static void writeLine(object value)
-        {
-            if (value == null)
-            {
+        public static void writeLine(object value) {
+            if (value == null) {
                 return;
             }
+
             writeLine(value.ToString());
         }
     }

@@ -87,7 +87,7 @@ namespace GTAVisionExport {
             //UINotify(ConfigurationManager.AppSettings["database_connection"]);
             dataPath = data["Snapshots"]["OutputDir"];
             logFilePath = data["Snapshots"]["LogFile"];
-            Logger.setLogFilePath(logFilePath);
+            Logger.logFilePath = logFilePath;
 
             System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\r\n");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
@@ -111,8 +111,11 @@ namespace GTAVisionExport {
                 runTask = StartRun();
             }
 
+            Logger.writeLine("Logger prepared");
+            UINotify("Logger initialized. Going to initialize cameras.");
             CamerasList.initialize();
             initialize4cameras();
+            UINotify("VisionExport plugin initialized.");
         }
 
         private void initialize4cameras() {
@@ -312,9 +315,7 @@ namespace GTAVisionExport {
             catch (Exception exception) {
                 GamePause(false);
                 Logger.writeLine("exception occured, logging and continuing");
-                Logger.writeLine(exception.Message);
-                Logger.writeLine(exception.Source);
-                Logger.writeLine(exception.StackTrace);
+                Logger.writeLine(exception);
             }
 
 //            if time interval is enabled, checkes game time and sets it to timeFrom, it current time is after timeTo

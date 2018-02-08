@@ -15,19 +15,15 @@ namespace GTAVisionExport {
 
     public class CameraHandling : Script {
         // camera used on the vehicle
-        private Camera gameCam;
         private Camera activeCamera;
         private bool enabled = false;
         private int activeCameraIndex = -1;
 
         public CameraHandling() {
             UI.Notify("Loaded TestVehicle.cs");
-            gameCam = CamerasList.gameCam;
-            activeCamera = null;
 
             // create a new camera 
 //            World.DestroyAllCameras();
-            CamerasList.initialize();
             
             // attach time methods 
             Tick += OnTick;
@@ -57,13 +53,7 @@ namespace GTAVisionExport {
         // Function used to allows the user original control of the camera.
         public void restoreCamera() {
             UI.Notify("Relinquishing control");
-            if (activeCameraIndex == -1) {
-                activeCamera.IsActive = false;
-                World.RenderingCamera = activeCamera;
-            }
-            else {
-                CamerasList.Deactivate();
-            }
+            CamerasList.Deactivate();
         }
 
         // Function used to keep camera on vehicle and facing forward on each tick step.

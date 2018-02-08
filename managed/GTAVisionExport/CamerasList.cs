@@ -8,18 +8,14 @@ using GTAVisionUtils;
 namespace GTAVisionExport {
     public static class CamerasList
     {
-        public static Camera mainCamera { get; set; }
-        public static Vector3 mainCameraPosition { get; set; }
+        public static Camera mainCamera { get; private set; }
+        public static Vector3 mainCameraPosition { get; private set; }
         
         public static List<Camera> cameras { get; } = new List<Camera>();
         public static List<Vector3> camerasPositions { get; } = new List<Vector3>();
         public static List<Vector3> camerasRotations { get; } = new List<Vector3>();
-        public static Camera gameCam;
+//        public static Camera gameCam;
         private static bool initialized = false;
-        
-        static CamerasList()
-        {
-        }
 
         public static void initialize() {
             if (initialized) {
@@ -28,11 +24,9 @@ namespace GTAVisionExport {
             
             World.DestroyAllCameras();
             Logger.writeLine("destroying all cameras at the beginning, to be clear");
-            gameCam = World.RenderingCamera;
+//            gameCam = World.RenderingCamera;
 
 //            mainCamera.IsActive = false;
-            mainCamera.IsActive = true;
-            GTA.Native.Function.Call(Hash.RENDER_SCRIPT_CAMS, false, true, mainCamera.Handle, true, true);
 
             initialized = true;
         }
@@ -50,7 +44,11 @@ namespace GTAVisionExport {
             }
 
             mainCamera = World.CreateCamera(new Vector3(), new Vector3(), fov.Value);
+//            mainCamera.IsActive = true;
             mainCameraPosition = position;
+
+            mainCamera.IsActive = false;
+            World.RenderingCamera = null;
         }
         
         public static void addCamera(Vector3 position, Vector3 rotation, float? fov = null)
@@ -77,7 +75,12 @@ namespace GTAVisionExport {
                 throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
             }
 
-            GTA.Native.Function.Call(Hash.RENDER_SCRIPT_CAMS, true, true, mainCamera.Handle, true, true);
+            if (mainCamera == null) {
+                throw new Exception("please, set main camera");
+            }
+
+            mainCamera.IsActive = true;
+            World.RenderingCamera = mainCamera;
         }
 
         public static Camera ActivateCamera(int i)
@@ -94,7 +97,6 @@ namespace GTAVisionExport {
             World.RenderingCamera = cameras[i];
             cameras[i].AttachTo(Game.Player.Character.CurrentVehicle, camerasPositions[i]);
             var rotation = Game.Player.Character.CurrentVehicle.Rotation + camerasRotations[i];
-//            rotation.Z %= 360;
             cameras[i].Rotation = rotation;
 //            UI.Notify("new camera rotation is: " + rotation.ToString());
             Script.Wait(10);
@@ -111,11 +113,12 @@ namespace GTAVisionExport {
                 throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
             }
 
+            mainCamera.IsActive = false;
             foreach (var camera in cameras)
             {
                 camera.IsActive = false;
             }
-            World.RenderingCamera = gameCam;
+            World.RenderingCamera = null;
         }
     }
 }
