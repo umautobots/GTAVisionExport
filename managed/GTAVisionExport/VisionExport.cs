@@ -327,7 +327,7 @@ namespace GTAVisionExport {
             }
         }
 
-        private void gatherData() {
+        private void gatherData(int delay = 5) {
             if (clearEverything) {
                 ClearSurroundingEverything(Game.Player.Character.Position, 1000f);
             }
@@ -343,7 +343,7 @@ namespace GTAVisionExport {
                     Logger.writeLine("activating camera " + i.ToString());
                     CamerasList.ActivateCamera(i);
                     gatherDatForOneCamera(dateTimeFormat, guid);
-                    Script.Wait(5);
+                    Script.Wait(delay);
                 }
                 CamerasList.Deactivate();
             }
@@ -705,13 +705,26 @@ namespace GTAVisionExport {
                 UINotify("starting screenshots");
                 for (int i = 0; i < 5; i++) {
                     GamePause(true);
-                    gatherData();
+                    gatherData(100);
                     GamePause(false);
                     Script.Wait(200); // hoping game will go on during this wait
                 }
 
                 StopRun();
                 StopSession();
+            }
+
+            if (k.KeyCode == Keys.OemMinus) {    //to tlačítko vlevo od pravého shiftu, -
+                UINotify("- pressed, going to rotate cameras");
+                
+                Game.Pause(true);
+                for (int i = 0; i < CamerasList.cameras.Count; i++) {
+                    Logger.writeLine("activating camera " + i.ToString());
+                    CamerasList.ActivateCamera(i);
+                    Script.Wait(1000);
+                }
+                CamerasList.Deactivate();
+                Game.Pause(false);
             }
 
             if (k.KeyCode == Keys.I) {

@@ -93,13 +93,16 @@ namespace GTAVisionExport {
                 throw new Exception("there is no camera with index " + i);
             }
 
+            Game.Pause(false);
             cameras[i].IsActive = true;
             World.RenderingCamera = cameras[i];
             cameras[i].AttachTo(Game.Player.Character.CurrentVehicle, camerasPositions[i]);
-            var rotation = Game.Player.Character.CurrentVehicle.Rotation + camerasRotations[i];
-            cameras[i].Rotation = rotation;
+            cameras[i].Rotation = Game.Player.Character.CurrentVehicle.Rotation + camerasRotations[i];
+//            WARNING: CAMERAS SETTING DO NOT WORK WHEN GAME IS PAUSED, SO WE NEED TO UNPAUSE THE GAME, SET THINGS UP, AND THEN PAUSE GAME AGAIN
+            Script.Wait(1);
+            Game.Pause(true);
 //            UI.Notify("new camera rotation is: " + rotation.ToString());
-            Script.Wait(10);
+            Script.Wait(20);
             Logger.writeLine("new camera position is: " + World.RenderingCamera.Position.ToString());
             Logger.writeLine("new camera rotation is: " + World.RenderingCamera.Rotation.ToString());
             Logger.writeLine("new camera position offset is: " + camerasPositions[i].ToString());
