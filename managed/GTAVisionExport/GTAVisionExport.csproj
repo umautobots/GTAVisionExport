@@ -62,6 +62,9 @@
     <Reference Include="INIFileParser, Version=2.4.0.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
       <HintPath>..\packages\ini-parser.2.4.0\lib\net20\INIFileParser.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics, Version=3.17.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\MathNet.Numerics.3.17.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=1.1.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.1.1.0\lib\netstandard1.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
@@ -80,9 +83,11 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="ScriptHookVDotNet">
-      <HintPath>D:\Games\SteamLibrary\steamapps\common\Grand Theft Auto V\ScriptHookVDotNet.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="ScriptHookVDotNet2">
+      <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
+    </Reference>
+    <Reference Include="ScriptHookVDotNet2, Version=2.10.3.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -129,9 +134,6 @@
       <Project>{d3c3eae5-cfdd-454a-bd26-9d6fd5d6c239}</Project>
       <Name>GTAVisionUtils</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ScriptHookVDotNet.dll" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

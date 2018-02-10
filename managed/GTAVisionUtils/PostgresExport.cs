@@ -24,6 +24,7 @@ namespace GTAVisionUtils {
             NpgsqlConnection.MapEnumGlobally<DetectionType>();
             NpgsqlConnection.MapEnumGlobally<DetectionClass>(pgName: "detection_class", nameTranslator: new NpgsqlNullNameTranslator());
         }
+        
         public static NpgsqlConnection OpenConnection()
         {
             var parser = new FileIniDataParser();
@@ -43,18 +44,21 @@ namespace GTAVisionUtils {
             var systemInfo = new WMIInformation();
             using (var cmd = new NpgsqlCommand())
             {
+                cmd.Connection = conn;
                 cmd.Parameters.AddWithValue("@system_uuid", systemInfo.system_uuid);
                 cmd.Parameters.AddWithValue("@vendor", systemInfo.vendor);
                 cmd.Parameters.AddWithValue("@dnshostname", systemInfo.dnshostname);
                 cmd.Parameters.AddWithValue("@username", systemInfo.username);
                 cmd.Parameters.AddWithValue("@systemtype", systemInfo.systemtype);
-                cmd.Parameters.AddWithValue("@totalmem", systemInfo.totalmem);
+                cmd.Parameters.AddWithValue("@totalmem", NpgsqlDbType.Bigint, systemInfo.totalmem);
                 cmd.CommandText =
                     "INSERT INTO systems (system_uuid, vendor, dnshostname, username, systemtype, totalmem) VALUES " +
-                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT DO NOTHING RETURNING system_uuid";
-                return Guid.Parse(cmd.ExecuteScalar() as string);
+                    "(@system_uuid, @vendor, @dnshostname, @username, @systemtype, @totalmem) ON CONFLICT(system_uuid) " +
+                    "DO UPDATE SET system_uuid = EXCLUDED.system_uuid RETURNING system_uuid";
+                return Guid.Parse(cmd.ExecuteScalar().ToString());
             }
         }
+        
         public static int InsertInstanceData(NpgsqlConnection conn)
         {
             
@@ -171,6 +175,7 @@ namespace GTAVisionUtils {
         {
             await Task.Run(() => SaveSnapshotImpl(data, runId));
         }
+        
         public static void SaveSnapshotImpl(GTAData data, Guid runId)
         {
             var conn = OpenConnection();
@@ -180,7 +185,6 @@ namespace GTAVisionUtils {
                 
                 cmd.Connection = conn;
                 cmd.Transaction = trans;
-                //UI.Notify(data.CurrentWeather.ToString());
                 cmd.CommandText =
                     "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_direction, camera_fov, view_matrix, proj_matrix, width, height) " +
                     "VALUES ( (SELECT run_id FROM runs WHERE runguid=@guid), " +
@@ -237,7 +241,8 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@class", NpgsqlDbType.Enum, DetectionClass.Unknown);
                 cmd.Parameters.Add("@handle", NpgsqlDbType.Integer);
                 cmd.CommandText =
-                    "INSERT INTO detections (snapshot_id, type, pos, rot, bbox, class, handle, bbox3d) VALUES (@snapshot, @type, ST_MakePoint(@x,@y,@z), ST_MakePoint(@xrot, @yrot, @zrot), @bbox, @class, @handle," +
+                    "INSERT INTO detections (snapshot_id, type, pos, rot, bbox, class, handle, bbox3d) VALUES " +
+                    "(@snapshot, @type, ST_MakePoint(@x,@y,@z), ST_MakePoint(@xrot, @yrot, @zrot), @bbox, @class, @handle," +
                     "ST_3DMakeBox(ST_MakePoint(@minx,@miny,@minz), ST_MakePoint(@maxx, @maxy, @maxz)));";
                 cmd.Prepare();
                 
