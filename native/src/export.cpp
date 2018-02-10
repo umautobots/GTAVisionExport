@@ -44,7 +44,8 @@ static time_point<high_resolution_clock> last_constant_time;
 static void unpack_depth(ID3D11Device* dev, ID3D11DeviceContext* ctx, ID3D11Resource* src, vector<unsigned char>& dst, vector<unsigned char>& stencil)
 {
 	HRESULT hr = S_OK;
-
+	int screenResX;
+	int screenResY;
 	ComPtr<ID3D11Texture2D> src_tex;
 	
 	hr = src->QueryInterface(__uuidof(ID3D11Texture2D), &src_tex);
@@ -57,17 +58,41 @@ static void unpack_depth(ID3D11Device* dev, ID3D11DeviceContext* ctx, ID3D11Reso
 	if (hr != S_OK) throw std::system_error(hr, std::system_category());
 	if (dst.size() != src_desc.Height * src_desc.Width * 4) dst = vector<unsigned char>(src_desc.Height * src_desc.Width * 4);
 	if (stencil.size() != src_desc.Height * src_desc.Width) stencil = vector<unsigned char>(src_desc.Height * src_desc.Width);
-	for (int x = 0; x < src_desc.Width; ++x)
+	
+	if (screenResX >= src_desc.Width)
 	{
-		for (int y = 0; y < src_desc.Height; ++y)
+		for (int x = 0; x < src_desc.Width; ++x)
 		{
-			const float* src_f = (const float*)((const char*)src_map.pData + src_map.RowPitch*y + (x * 8));
-			unsigned char* dst_p = &dst[src_desc.Width * 4 * y + (x * 4)];
-			unsigned char* stencil_p = &stencil[src_desc.Width * y + x];
-			memmove(dst_p, src_f, 4);
-			memmove(stencil_p, src_f + 1, 1);
+			for (int y = 0; y < src_desc.Height; ++y)
+			{
+				const float* src_f = (const float*)((const char*)src_map.pData + src_map.RowPitch*y + (x * 8));
+				unsigned char* dst_p = &dst[src_desc.Width * 4 * y + (x * 4)];
+				unsigned char* stencil_p = &stencil[src_desc.Width * y + x];
+				memmove(dst_p, src_f, 4);
+				memmove(stencil_p, src_f + 1, 1);
+			}
 		}
 	}
+	else
+	{
+		// resample, for when depth map is bigger than screen image.
+		float scale = ((float) src_desc.Width) / ((float) screenResX);
+		dst = vector<unsigned char>(screenResY * screenResX * 4);
+		for (int x = 0; x < screenResX; ++x) // screenResX
+		{
+			for (int y = 0; y < screenResY; ++y) //screenResY
+			{
+				int scaledX = int(x*scale);
+				int scaledY = int(y*scale);
+				const float* src_f = (const float*)((const char*)src_map.pData + int(src_map.RowPitch*scaledY + (scaledX * 8)));
+				unsigned char* dst_p = &dst[screenResX * 4 * y + (x * 4)];
+				unsigned char* stencil_p = &stencil[screenResX * y + x];
+				memmove(dst_p, src_f, 4);
+				memmove(stencil_p, src_f + 1, 1);
+			}
+		}
+	}
+		
 	ctx->Unmap(src, 0);
 }
 static ComPtr<ID3D11Texture2D> CreateTexHelper(ID3D11Device* dev, DXGI_FORMAT fmt, int width, int height, int samples)
