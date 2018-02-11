@@ -14,6 +14,9 @@ namespace GTAVisionExport {
         public static List<Camera> cameras { get; } = new List<Camera>();
         public static List<Vector3> camerasPositions { get; } = new List<Vector3>();
         public static List<Vector3> camerasRotations { get; } = new List<Vector3>();
+        
+        public static Vector3? activeCameraRotation { get; private set;  } = null;
+        
 //        public static Camera gameCam;
         private static bool initialized = false;
 
@@ -81,6 +84,7 @@ namespace GTAVisionExport {
 
             mainCamera.IsActive = true;
             World.RenderingCamera = mainCamera;
+            activeCameraRotation = new Vector3();
         }
 
         public static Camera ActivateCamera(int i)
@@ -107,6 +111,7 @@ namespace GTAVisionExport {
             Logger.writeLine("new camera rotation is: " + World.RenderingCamera.Rotation.ToString());
             Logger.writeLine("new camera position offset is: " + camerasPositions[i].ToString());
             Logger.writeLine("new camera rotation offset is: " + camerasRotations[i].ToString());
+            activeCameraRotation = camerasRotations[i];
             return cameras[i];
         }
 

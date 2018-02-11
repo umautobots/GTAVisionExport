@@ -197,6 +197,7 @@ namespace GTAVisionUtils
         public int UIHeight { get; set; }
         public int UIWidth { get; set; }
         public Guid sceneGuid { get; set; }
+        public GTAVector CamRelativeRot { get; set; }
 
         public List<GTADetection> Detections { get; set; }
         public static SharpDX.Vector3 CvtVec(GTA.Math.Vector3 inp) {

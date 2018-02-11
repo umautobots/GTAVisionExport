@@ -165,17 +165,25 @@ namespace GTAVisionUtils {
         public static void SaveSnapshotImpl(GTAData data, Guid runId) {
             var conn = OpenConnection();
             var trans = conn.BeginTransaction();
+
+            var camRelativeRotString = "NULL";
+            
+            if (data.CamRelativeRot != null) {
+                camRelativeRotString = "ST_MakePoint(@relative_rot_x, @relative_rot_y, @relative_rot_z)";
+            }
+            
             using (NpgsqlCommand cmd = new NpgsqlCommand()) {
                 cmd.Connection = conn;
                 cmd.Transaction = trans;
                 cmd.CommandText =
                     "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_rot, " +
                     "camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, player_pos, " +
-                    "cam_near_clip, cam_far_clip, velocity, scene_id) " +
+                    "cam_near_clip, cam_far_clip, velocity, scene_id, camera_relative_rotation) " +
                     "VALUES ( (SELECT run_id FROM runs WHERE runguid=@guid), " +
                     "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), ST_MakePoint(@rotx, @roty, @rotz), " +
                     "ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height, @ui_width, @ui_height, " +
-                    "ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z), @scene_id) " +
+                    "ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z), @scene_id, " +
+                    camRelativeRotString + ") " +
                     "RETURNING snapshot_id;";
                 cmd.Parameters.Add(new NpgsqlParameter("@version", data.Version));
                 cmd.Parameters.Add(new NpgsqlParameter("@imagepath", data.ImageName));
@@ -208,6 +216,13 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@cam_near_clip", data.CamNearClip);
                 cmd.Parameters.AddWithValue("@cam_far_clip", data.CamFarClip);
                 cmd.Parameters.AddWithValue("@scene_id", data.sceneGuid);
+
+                if (data.CamRelativeRot != null) {
+                    cmd.Parameters.AddWithValue("@relative_rot_x", data.velocity.X);
+                    cmd.Parameters.AddWithValue("@relative_rot_y", data.velocity.Y);
+                    cmd.Parameters.AddWithValue("@relative_rot_z", data.velocity.Z);                    
+                }
+                
                 cmd.Parameters.Add(new NpgsqlParameter("@guid", runId));
                 int snapshotid = (int) cmd.ExecuteScalar();
                 cmd.Parameters.Clear();

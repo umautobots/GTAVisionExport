@@ -34,6 +34,7 @@ using GTA.Native;
 using Color = System.Windows.Media.Color;
 using System.Configuration;
 using System.Threading;
+using Amazon.ElasticLoadBalancing.Model;
 using IniParser;
 using Newtonsoft.Json;
 
@@ -363,6 +364,13 @@ namespace GTAVisionExport {
                 dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
             }
 
+            if (CamerasList.activeCameraRotation.HasValue) {
+                dat.CamRelativeRot = new GTAVector(CamerasList.activeCameraRotation.Value);                
+            }
+            else {
+                dat.CamRelativeRot = null;
+            }
+            
             dat.sceneGuid = guid;
 
             if (dat == null) {
