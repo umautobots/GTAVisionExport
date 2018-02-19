@@ -218,9 +218,9 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@scene_id", data.sceneGuid);
 
                 if (data.CamRelativeRot != null) {
-                    cmd.Parameters.AddWithValue("@relative_rot_x", data.velocity.X);
-                    cmd.Parameters.AddWithValue("@relative_rot_y", data.velocity.Y);
-                    cmd.Parameters.AddWithValue("@relative_rot_z", data.velocity.Z);                    
+                    cmd.Parameters.AddWithValue("@relative_rot_x", data.CamRelativeRot.X);
+                    cmd.Parameters.AddWithValue("@relative_rot_y", data.CamRelativeRot.Y);
+                    cmd.Parameters.AddWithValue("@relative_rot_z", data.CamRelativeRot.Z);                    
                 }
                 
                 cmd.Parameters.Add(new NpgsqlParameter("@guid", runId));

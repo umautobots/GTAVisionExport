@@ -569,12 +569,11 @@ namespace GTAVisionExport {
             // no need to release the autodrive here
             // delete all surrounding vehicles & the driver's car
             ClearSurroundingVehicles(player.Position, 1000f);
-            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y,
-                player.Position.Z, 1000f, false, false, false, false);
             player.LastVehicle.Delete();
             // teleport to the spawning position, defined in GameUtils.cs, subject to changes
             player.Position = GTAConst.StartPos;
-            ClearSurroundingVehicles(player.Position, 100f);
+//            ClearSurroundingVehicles(player.Position, 100f);
+            ClearSurroundingVehicles(player.Position, 50f);
             // start a new run
             EnterVehicle();
             //Script.Wait(2000);
