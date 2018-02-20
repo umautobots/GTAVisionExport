@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTAVisionUtils;
+using IniParser;
 
 namespace GTAVisionExport {
     public static class CamerasList
@@ -17,6 +19,7 @@ namespace GTAVisionExport {
         
         public static Vector3? activeCameraRotation { get; private set;  } = null;
         
+        private static int? gameplayInterval = null;
 //        public static Camera gameCam;
         private static bool initialized = false;
 
@@ -27,6 +30,9 @@ namespace GTAVisionExport {
             
             World.DestroyAllCameras();
             Logger.writeLine("destroying all cameras at the beginning, to be clear");
+            var parser = new FileIniDataParser();
+            var data = parser.ReadFile(Path.Combine(VisionExport.location, "GTAVision.ini"));
+            gameplayInterval =  Convert.ToInt32(data["MultiCamera"]["GameplayTimeAfterSwitch"]);
 //            gameCam = World.RenderingCamera;
 
 //            mainCamera.IsActive = false;
@@ -107,7 +113,8 @@ namespace GTAVisionExport {
 // //with time 1, sometimes depth does not correspond, and bounding boxes dont correspond by 3 frames
 // //with time 2, depth does correspond, but bounding boxes dont correspond by 2 frames
 // //with time 3, sometimes depth does not correspond, but bounding boxes dont correspond by 1 frames
-            Script.Wait(4);//tried 4 milliseconds instead of one, so screenshots correspond to their data
+//            Script.Wait(4);//tried 4 milliseconds instead of one, so screenshots correspond to their data
+            Script.Wait(gameplayInterval.Value);
             Game.Pause(true);
 //            UI.Notify("new camera rotation is: " + rotation.ToString());
             Script.Wait(20);

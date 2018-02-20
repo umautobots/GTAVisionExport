@@ -78,11 +78,12 @@ namespace GTAVisionExport {
         private bool timeIntervalEnabled = false;
         private TimeSpan timeFrom;
         private TimeSpan timeTo;
+        public static string location;
 
         public VisionExport() {
             // loading ini file
             var parser = new FileIniDataParser();
-            var location = AppDomain.CurrentDomain.BaseDirectory;
+            location = AppDomain.CurrentDomain.BaseDirectory;
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
 
             //UINotify(ConfigurationManager.AppSettings["database_connection"]);
@@ -710,7 +711,7 @@ namespace GTAVisionExport {
                 postgresTask?.Wait();
                 runTask?.Wait();
                 UINotify("starting screenshots");
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < 3; i++) {
                     GamePause(true);
                     gatherData(100);
                     GamePause(false);
