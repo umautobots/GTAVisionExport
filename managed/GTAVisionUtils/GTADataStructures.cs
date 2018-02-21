@@ -186,6 +186,7 @@ namespace GTAVisionUtils
         //mathnet's matrices are in heap storage, which is super annoying, 
         //but we want to use double matrices to avoid numerical issues as we
         //decompose the MVP matrix into seperate M,V and P matrices
+        public DenseMatrix WorldMatrix { get; set; }
         public DenseMatrix ViewMatrix { get; set; }
         public DenseMatrix ProjectionMatrix { get; set; }
         public double CamFOV { get; set; }
@@ -357,6 +358,7 @@ namespace GTAVisionUtils
             var P = WVP*WV.Inverse();
             ret.ProjectionMatrix = P as DenseMatrix;
             ret.ViewMatrix = V as DenseMatrix;
+            ret.WorldMatrix = W as DenseMatrix;
             
             var pedList = from ped in peds
                 where ped.IsHuman && ped.IsOnFoot

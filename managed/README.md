@@ -120,6 +120,7 @@ create table snapshots
 	camera_relative_rotation geometry(PointZ),
 	camera_direction geometry,
 	camera_fov real,
+	world_matrix double precision[],
 	view_matrix double precision[],
 	proj_matrix double precision[],
 	processed boolean default false not null,

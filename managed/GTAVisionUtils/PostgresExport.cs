@@ -178,12 +178,12 @@ namespace GTAVisionUtils {
                 cmd.CommandText =
                     "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_rot, " +
                     "camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, player_pos, " +
-                    "cam_near_clip, cam_far_clip, velocity, scene_id, camera_relative_rotation) " +
+                    "cam_near_clip, cam_far_clip, velocity, scene_id, camera_relative_rotation, world_matrix) " +
                     "VALUES ( (SELECT run_id FROM runs WHERE runguid=@guid), " +
                     "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), ST_MakePoint(@rotx, @roty, @rotz), " +
                     "ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height, @ui_width, @ui_height, " +
                     "ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z), @scene_id, " +
-                    camRelativeRotString + ") " +
+                    camRelativeRotString + ", @world_matrix) " +
                     "RETURNING snapshot_id;";
                 cmd.Parameters.Add(new NpgsqlParameter("@version", data.Version));
                 cmd.Parameters.Add(new NpgsqlParameter("@imagepath", data.ImageName));
@@ -202,6 +202,7 @@ namespace GTAVisionUtils {
                 cmd.Parameters.AddWithValue("@fov", data.CamFOV);
                 cmd.Parameters.AddWithValue("@view_matrix", data.ViewMatrix.ToArray());
                 cmd.Parameters.AddWithValue("@proj_matrix", data.ProjectionMatrix.ToArray());
+                cmd.Parameters.AddWithValue("@world_matrix", data.WorldMatrix.ToArray());
                 cmd.Parameters.AddWithValue("@width", data.ImageWidth);
                 cmd.Parameters.AddWithValue("@height", data.ImageHeight);
 //                @ui_width, @ui_height, @player_pos, @cam_near_clip, @cam_far_clip
