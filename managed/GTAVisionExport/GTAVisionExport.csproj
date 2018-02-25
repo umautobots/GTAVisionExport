@@ -89,9 +89,6 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="ScriptHookVDotNet2">
-      <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
-    </Reference>
     <Reference Include="ScriptHookVDotNet2, Version=2.10.3.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
