@@ -399,7 +399,7 @@ Turn NativeUI notifications off by pressing "X" in the game.
 
 In settings, set up these things:
 - In Camera
-    - set First Person Velicle Hood to On
+    - set First Person Vehicle Hood to On
 - In Display
     - set Radar to Off
     - set HUD to Off
