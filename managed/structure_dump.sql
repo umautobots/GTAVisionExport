@@ -236,9 +236,7 @@ OWNED BY datasets.dataset_id;
 
 CREATE TABLE detections
 (
-  detection_id  SERIAL NOT NULL
-    CONSTRAINT detections_pkey
-    PRIMARY KEY,
+  detection_id  SERIAL NOT NULL,
   snapshot_id   INTEGER,
   type          DETECTION_TYPE,
   pos           GEOMETRY(PointZ),
@@ -437,12 +435,8 @@ OWNED BY snapshot_weathers.weather_id;
 
 CREATE TABLE snapshots
 (
-  snapshot_id              SERIAL                NOT NULL
-    CONSTRAINT snapshots_pkey
-    PRIMARY KEY,
-  run_id                   INTEGER
-    CONSTRAINT snapshots_run_fkey
-    REFERENCES runs,
+  snapshot_id              SERIAL                NOT NULL,
+  run_id                   INTEGER,
   version                  INTEGER,
   scene_id                 UUID,
   imagepath                TEXT,
