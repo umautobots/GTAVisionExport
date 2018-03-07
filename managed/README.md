@@ -328,7 +328,6 @@ $$;
 ## Copying compiled files to GTA V
 After you compile the GTAVisionExport, copy compiled files from the `path to GTAVisionExport/managed/GTAVisionExport/bin/Release` to `path to GTA V/scripts`.
 Content of `scripts` directory should be following: 
-- AWSSDK.dll
 - BitMiracle.LibTiff.NET.dll
 - BitMiracle.LibTiff.NET.xml
 - gdal_csharp.dll
@@ -379,7 +378,8 @@ If less than 10 scripts loaded, you have problem.
 
 If you have `ScriptHookVDotNet2.dll` in the scripts directory, you need to remove it.
 
-If only 1 script is loaded (NativeUI), it can be solved by
+If only 1 script is loaded (NativeUI), it can be solved by removing `YamlDotNet.pdb` from your scripts dir.
+You should not have any .pdb files except of your own dlls (`GTAVisionExport.pdb` and `GTAVisionUtils.pdb`)
 
 ## Usage
 
