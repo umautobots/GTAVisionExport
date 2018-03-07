@@ -377,6 +377,10 @@ To verify all plugins loaded, see the `ScriptHookVDotNet2.log` and search for th
 
 If less than 10 scripts loaded, you have problem.
 
+If you have `ScriptHookVDotNet2.dll` in the scripts directory, you need to remove it.
+
+If only 1 script is loaded (NativeUI), it can be solved by
+
 ## Usage
 
 ### Dependencies setup
