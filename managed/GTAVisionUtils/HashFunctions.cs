@@ -42,6 +42,21 @@ namespace GTAVisionUtils
                 (int)col_a
             });
         }
+
+        public static void Draw3DBox(Vector3 pos, Vector3 size, byte col_r = 255, byte col_g = 255, byte col_b = 255, byte col_a = 255) {
+            Function.Call(Hash.DRAW_BOX, new InputArgument[] {
+                pos.X - size.X / 2,
+                pos.Y - size.Y / 2,
+                pos.Z - size.Z / 2,
+                pos.X + size.X / 2,
+                pos.Y + size.Y / 2,
+                pos.Z + size.Z / 2,
+                (int)col_r,
+                (int)col_g,
+                (int)col_b,
+                (int)col_a
+            });
+        }
         
         public static void Draw3DLine(Vector3 iniPos, Vector3 finPos, Color color) {
             Draw3DLine(iniPos, finPos, color.R, color.G, color.B, color.A);

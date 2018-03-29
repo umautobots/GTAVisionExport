@@ -7,6 +7,8 @@ using GTA;
 using GTA.Native;
 using GTA.Math;
 using GTAVisionUtils;
+using MathNet.Spatial.Euclidean;
+using MathNet.Spatial.Units;
 
 namespace GTAVisionExport {
 // Controls: 
@@ -18,9 +20,10 @@ namespace GTAVisionExport {
         private Camera activeCamera;
         private bool enabled = false;
         private int activeCameraIndex = -1;
+        private bool showCameras = false;
 
         public CameraHandling() {
-            UI.Notify("Loaded TestVehicle.cs");
+            UI.Notify("Loaded CameraHandling.cs");
 
             // create a new camera 
 //            World.DestroyAllCameras();
@@ -80,6 +83,21 @@ namespace GTAVisionExport {
                 enabled = false;
             }
 
+//            UI.Notify("keycode is:" + e.KeyCode);
+
+            if (e.KeyCode == Keys.Add) {
+                UI.Notify("Pressed numpad +");
+                showCameras = !showCameras;
+                UI.Notify("there are " + CamerasList.camerasPositions.Count + " cameras");
+                if (showCameras) {
+                    UI.Notify("enabled cameras showing");
+                }
+                else {
+                    UI.Notify("disabled cameras showing");
+                }
+
+            }
+
             if (e.KeyCode == Keys.NumPad0) {
                 UI.Notify("Pressed numpad 0");
                 activeCameraIndex = 0;
@@ -113,6 +131,35 @@ namespace GTAVisionExport {
 
         void OnTick(object sender, EventArgs e) {
             keepCameraOnVehicle();
+            if (showCameras) {
+                drawCamerasBoxes();
+            }
+        }
+
+        void drawCamerasBoxes() {
+//            this shows white boxes where cameras are
+            foreach (var camPos in CamerasList.camerasPositions) {
+                var curVehicle = Game.Player.Character.CurrentVehicle;
+//                Logger.writeLine("rotation");
+//                Logger.writeLine(curVehicle.Rotation);
+//                Logger.writeLine("forward vector");
+//                Logger.writeLine(curVehicle.ForwardVector);
+//                Logger.writeLine("right vector");
+//                Logger.writeLine(curVehicle.RightVector);
+//                Logger.writeLine("up vector");
+//                Logger.writeLine(curVehicle.UpVector);
+//                var camPosToCar = Vector3.Modulate(curVehicle.ForwardVector, cameraPosition);
+//                camPosToCar += Vector3.Modulate(curVehicle.RightVector, cameraPosition);
+//                camPosToCar += Vector3.Modulate(curVehicle.UpVector, cameraPosition);
+                var rot = curVehicle.Rotation;
+                var rotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(rot.X));
+                var rotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(rot.Y));
+                var rotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(rot.Z));
+                var rotMat = rotX * rotY * rotZ;
+                var camPosToCar = rotMat * new Vector3D(camPos.X, camPos.Y, camPos.Z);
+                var absolutePosition = curVehicle.Position + new Vector3((float) camPosToCar[0], (float) camPosToCar[1], (float) camPosToCar[2]);
+                HashFunctions.Draw3DBox(absolutePosition, new Vector3(0.3f, 0.3f, 0.3f));
+            }
         }
     }
 }
