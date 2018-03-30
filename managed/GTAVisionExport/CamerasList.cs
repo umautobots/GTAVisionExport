@@ -17,6 +17,7 @@ namespace GTAVisionExport {
         public static List<Vector3> camerasRotations { get; } = new List<Vector3>();
 
         public static Vector3? activeCameraRotation { get; private set; } = null;
+        public static Vector3? activeCameraPosition { get; private set; } = null;
 
         private static int? gameplayInterval = null;
 
@@ -94,6 +95,7 @@ namespace GTAVisionExport {
             mainCamera.IsActive = true;
             World.RenderingCamera = mainCamera;
             activeCameraRotation = new Vector3();
+            activeCameraPosition = new Vector3();
         }
 
         public static Camera ActivateCamera(int i) {
@@ -125,6 +127,7 @@ namespace GTAVisionExport {
             Logger.writeLine("new camera position offset is: " + camerasPositions[i].ToString());
             Logger.writeLine("new camera rotation offset is: " + camerasRotations[i].ToString());
             activeCameraRotation = camerasRotations[i];
+            activeCameraPosition = camerasPositions[i];
             return cameras[i];
         }
 

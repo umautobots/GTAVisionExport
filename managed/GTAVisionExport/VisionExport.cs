@@ -136,7 +136,7 @@ namespace GTAVisionExport {
         
         private void handlePipeInput() {
 //            Logger.writeLine("VisionExport handlePipeInput called.");
-            UINotify("handlePipeInput called");
+//            UINotify("handlePipeInput called");
             UINotify("server connected:" + server.Connected.ToString());
             UINotify(connection == null ? "connection is null" : "connection:" + connection.ToString());
             if (connection == null) return;
@@ -374,6 +374,13 @@ namespace GTAVisionExport {
             }
             else {
                 dat.CamRelativeRot = null;
+            }
+
+            if (CamerasList.activeCameraPosition.HasValue) {
+                dat.CamRelativePos = new GTAVector(CamerasList.activeCameraPosition.Value);                
+            }
+            else {
+                dat.CamRelativePos = null;
             }
             
             dat.sceneGuid = guid;
