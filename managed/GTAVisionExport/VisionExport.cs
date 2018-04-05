@@ -51,7 +51,8 @@ namespace GTAVisionExport {
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private readonly bool currentWeather = true;
         private readonly bool clearEverything = false;
-        private readonly bool useMultipleCameras = true;
+        private readonly bool useMultipleCameras = false;    // when false, cameras handling script is not used at all
+        private readonly bool staticCamera = true;        // this turns off whole car spawning, teleportation and autodriving procedure
         private Player player;
         private GTARun run;
         private bool enabled = false;
@@ -111,6 +112,18 @@ namespace GTAVisionExport {
             UINotify("Logger initialized. Going to initialize cameras.");
             CamerasList.initialize();
             initialize4cameras();
+            
+//            var newCamera = World.CreateCamera(new Vector3(), new Vector3(), 50);
+//            newCamera.NearClip = 0.15f;
+//            newCamera.IsActive = true;
+//            newCamera.Position = new Vector3(-1078f, -216f, 37f);
+////            newCamera.Rotation = new Vector3(270f, 0f, 0f);  // x and y rotation seem to be switched. Can be fixed by setting the last parameter to 2
+//            newCamera.Rotation = new Vector3(0f, 270f, 0f);  // x and y rotation seem to be switched. Can be fixed by setting the last parameter to 2
+//            World.RenderingCamera = newCamera;
+
+//            {-1078,-216,37}
+//            CamerasList.setMainCamera(new Vector3(358f, -1308f, 52f), new Vector3(0f, 90f, 0f), 150, 0.15f);
+
             UINotify("VisionExport plugin initialized.");
         }
 
@@ -119,18 +132,21 @@ namespace GTAVisionExport {
             
 //            for cameras mapping area before the car
 //            float r = 8f; //radius of circle with 4 cameras
-//            CamerasList.setMainCamera(new Vector3(0f, 2f, 0.4f));
+//            CamerasList.setMainCamera(new Vector3());
 //            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
 //            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
 //            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
 //            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
 
 //            for 4 cameras of different sides of the car
-            CamerasList.setMainCamera(new Vector3(0f, 2f, 0.4f));
-            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 0.15f);
-            CamerasList.addCamera(new Vector3(-0.6f, 0f, 0.8f), new Vector3(0f, 0f, 90f), 50, 0.15f);
-            CamerasList.addCamera(new Vector3(0f, -2f, 0.6f), new Vector3(0f, 0f, 180f), 50, 0.15f);
-            CamerasList.addCamera(new Vector3(0.6f, 0f, 0.8f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+//            CamerasList.setMainCamera(new Vector3());
+//            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(-0.6f, 0f, 0.8f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, -2f, 0.6f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(0.6f, 0f, 0.8f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+
+//            set only main camera for static traffic camera
+              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
 
         }
         
@@ -354,6 +370,11 @@ namespace GTAVisionExport {
                 CamerasList.Deactivate();
             }
             else {
+//                when multiple cameras are not used, only main camera is being used. 
+//                now it checks if it is active or not, and sets it
+                if (!CamerasList.mainCamera.IsActive) {
+                    CamerasList.ActivateMainCamera();
+                }
                 gatherDatForOneCamera(dateTimeFormat, guid);
             }
         }
@@ -452,10 +473,12 @@ namespace GTAVisionExport {
         }
 
         public void Autostart() {
-            EnterVehicle();
-            Script.Wait(200);
-            ToggleNavigation();
-            Script.Wait(200);
+            if (! staticCamera) {
+                EnterVehicle();
+                Script.Wait(200);
+                ToggleNavigation();
+                Script.Wait(200);                
+            }
             postgresTask?.Wait();
             postgresTask = StartSession();
         }
@@ -565,6 +588,10 @@ namespace GTAVisionExport {
         }
 
         public void ReloadGame() {
+            if (staticCamera) {
+                return;
+            }
+            
             /*
             Process p = Process.GetProcessesByName("Grand Theft Auto V").FirstOrDefault();
             if (p != null)
@@ -615,6 +642,9 @@ namespace GTAVisionExport {
             }
 
             if (k.KeyCode == Keys.PageDown) {
+                if (staticCamera) {
+                    CamerasList.Deactivate();
+                }
                 StopRun();
                 StopSession();
                 UINotify("GTA Vision Disabled");
@@ -727,6 +757,10 @@ namespace GTAVisionExport {
                     gatherData(100);
                     GamePause(false);
                     Script.Wait(200); // hoping game will go on during this wait
+                }
+
+                if (staticCamera) {
+                    CamerasList.Deactivate();
                 }
 
                 StopRun();

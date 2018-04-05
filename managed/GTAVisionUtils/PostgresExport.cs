@@ -187,7 +187,7 @@ namespace GTAVisionUtils {
                     "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), ST_MakePoint(@rotx, @roty, @rotz), " +
                     "ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height, @ui_width, @ui_height, " +
                     "ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z), @scene_id, " +
-                    camRelativeRotString + ", " + ", @world_matrix) " +
+                    camRelativeRotString + ", " + camRelativePosString + ", @world_matrix) " +
                     "RETURNING snapshot_id;";
                 cmd.Parameters.Add(new NpgsqlParameter("@version", data.Version));
                 cmd.Parameters.Add(new NpgsqlParameter("@imagepath", data.ImageName));
