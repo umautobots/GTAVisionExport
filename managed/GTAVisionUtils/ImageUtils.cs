@@ -149,7 +149,8 @@ namespace GTAVisionUtils
                     t.SetField(TiffTag.BITSPERSAMPLE, 8);
                     t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
                     t.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
-                    t.SetField(TiffTag.COMPRESSION, Compression.JPEG);
+                    t.SetField(TiffTag.COMPRESSION, Compression.LZW);    // JPEG conversion caused ungly artifacts, making screenshots unusable for computer vision related tasks
+//                    t.SetField(TiffTag.COMPRESSION, Compression.JPEG);
                     t.SetField(TiffTag.JPEGQUALITY, 60);
                     t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
                     t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);

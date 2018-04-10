@@ -51,7 +51,8 @@ namespace GTAVisionExport {
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private readonly bool currentWeather = true;
         private readonly bool clearEverything = false;
-        private readonly bool useMultipleCameras = false;    // when false, cameras handling script is not used at all
+//        private readonly bool useMultipleCameras = false;    // when false, cameras handling script is not used at all
+        private readonly bool useMultipleCameras = true;    // when false, cameras handling script is not used at all
         private readonly bool staticCamera = true;        // this turns off whole car spawning, teleportation and autodriving procedure
         private Player player;
         private GTARun run;
@@ -139,14 +140,15 @@ namespace GTAVisionExport {
 //            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
 
 //            for 4 cameras of different sides of the car
-//            CamerasList.setMainCamera(new Vector3());
-//            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 0.15f);
-//            CamerasList.addCamera(new Vector3(-0.6f, 0f, 0.8f), new Vector3(0f, 0f, 90f), 50, 0.15f);
-//            CamerasList.addCamera(new Vector3(0f, -2f, 0.6f), new Vector3(0f, 0f, 180f), 50, 0.15f);
-//            CamerasList.addCamera(new Vector3(0.6f, 0f, 0.8f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+            CamerasList.setMainCamera();
+            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+            CamerasList.addCamera(new Vector3(-0.6f, 0f, 0.8f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+            CamerasList.addCamera(new Vector3(0f, -2f, 0.6f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+            CamerasList.addCamera(new Vector3(0.6f, 0f, 0.8f), new Vector3(0f, 0f, 270f), 50, 0.15f);
 
 //            set only main camera for static traffic camera
-              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
+//              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
+//              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(0f, 270f, 0f), 50, 0.15f);
 
         }
         

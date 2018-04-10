@@ -100,20 +100,20 @@ namespace GTAVisionUtils
             Draw2DText(text, x, y, color.R, color.G, color.B, a);
         }
 
-        public static void SetCameraRotation(Camera camera, Vector3 value) {
-            InputArgument[] inputArgumentArray = new InputArgument[5];
-            InputArgument inputArgument1 = new InputArgument(camera.Handle);
-            inputArgumentArray[0] = inputArgument1;
-            InputArgument inputArgument2 = new InputArgument(value.X);
-            inputArgumentArray[1] = inputArgument2;
-            InputArgument inputArgument3 = new InputArgument(value.Y);
-            inputArgumentArray[2] = inputArgument3;
-            InputArgument inputArgument4 = new InputArgument(value.Z);
-            inputArgumentArray[3] = inputArgument4;
-            InputArgument inputArgument5 = new InputArgument(2);
-            inputArgumentArray[4] = inputArgument5;
-            Function.Call(Hash._0x85973643155D0B07, inputArgumentArray);
-        }
+//        public static void SetCameraRotation(Camera camera, Vector3 value) {
+//            InputArgument[] inputArgumentArray = new InputArgument[5];
+//            InputArgument inputArgument1 = new InputArgument(camera.Handle);
+//            inputArgumentArray[0] = inputArgument1;
+//            InputArgument inputArgument2 = new InputArgument(value.X);
+//            inputArgumentArray[1] = inputArgument2;
+//            InputArgument inputArgument3 = new InputArgument(value.Y);
+//            inputArgumentArray[2] = inputArgument3;
+//            InputArgument inputArgument4 = new InputArgument(value.Z);
+//            inputArgumentArray[3] = inputArgument4;
+//            InputArgument inputArgument5 = new InputArgument(3);
+//            inputArgumentArray[4] = inputArgument5;
+//            Function.Call(Hash.SET_CAM_ROT, inputArgumentArray);
+//        }
 
     }
 }
