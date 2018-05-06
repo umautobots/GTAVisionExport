@@ -71,6 +71,9 @@
     <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
     </Reference>
+    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\NativeUI.dll</HintPath>
+    </Reference>
     <Reference Include="Npgsql, Version=3.2.1.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\packages\Npgsql.3.2.1\lib\net451\Npgsql.dll</HintPath>
     </Reference>
@@ -82,8 +85,8 @@
       <HintPath>..\packages\GDAL.1.11.1\lib\net40\osr_csharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ScriptHookVDotNet2, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\ScriptHookVDotNet2.2.10.3\lib\net452\ScriptHookVDotNet2.dll</HintPath>
+    <Reference Include="ScriptHookVDotNet2, Version=2.10.3.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\ScriptHookVDotNet2.2.10.4\lib\net452\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX, Version=3.1.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.3.1.1\lib\net45\SharpDX.dll</HintPath>
@@ -119,11 +122,17 @@
     <Reference Include="VAutodrive, Version=7.0.3.23292, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VAutodrive.dll</HintPath>
     </Reference>
+    <Reference Include="VAutodrive, Version=8.0.3.35407, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\376923-VAutodrive V8.0.3\Scripts\VAutodrive.dll</HintPath>
+    </Reference>
     <Reference Include="VCommonFunctions">
       <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VCommonFunctions.dll</HintPath>
     </Reference>
     <Reference Include="VCommonFunctions, Version=2.9.1.32038, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VCommonFunctions.dll</HintPath>
+    </Reference>
+    <Reference Include="VCommonFunctions, Version=3.1.0.38426, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\376923-VAutodrive V8.0.3\Scripts\VCommonFunctions.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

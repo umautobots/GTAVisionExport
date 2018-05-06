@@ -42,6 +42,21 @@ namespace GTAVisionUtils
                 (int)col_a
             });
         }
+
+        public static void Draw3DBox(Vector3 pos, Vector3 size, byte col_r = 255, byte col_g = 255, byte col_b = 255, byte col_a = 255) {
+            Function.Call(Hash.DRAW_BOX, new InputArgument[] {
+                pos.X - size.X / 2,
+                pos.Y - size.Y / 2,
+                pos.Z - size.Z / 2,
+                pos.X + size.X / 2,
+                pos.Y + size.Y / 2,
+                pos.Z + size.Z / 2,
+                (int)col_r,
+                (int)col_g,
+                (int)col_b,
+                (int)col_a
+            });
+        }
         
         public static void Draw3DLine(Vector3 iniPos, Vector3 finPos, Color color) {
             Draw3DLine(iniPos, finPos, color.R, color.G, color.B, color.A);
@@ -83,6 +98,21 @@ namespace GTAVisionUtils
 
         public static void Draw2DText(string text, float x, float y, Color color, byte a) {
             Draw2DText(text, x, y, color.R, color.G, color.B, a);
+        }
+
+        public static void SetCameraRotation(Camera camera, Vector3 value) {
+            InputArgument[] inputArgumentArray = new InputArgument[5];
+            InputArgument inputArgument1 = new InputArgument(camera.Handle);
+            inputArgumentArray[0] = inputArgument1;
+            InputArgument inputArgument2 = new InputArgument(value.X);
+            inputArgumentArray[1] = inputArgument2;
+            InputArgument inputArgument3 = new InputArgument(value.Y);
+            inputArgumentArray[2] = inputArgument3;
+            InputArgument inputArgument4 = new InputArgument(value.Z);
+            inputArgumentArray[3] = inputArgument4;
+            InputArgument inputArgument5 = new InputArgument(2);
+            inputArgumentArray[4] = inputArgument5;
+            Function.Call(Hash._0x85973643155D0B07, inputArgumentArray);
         }
 
     }

@@ -11,12 +11,14 @@ namespace GTAVisionExport {
     public static class CamerasList {
         public static Camera mainCamera { get; private set; }
         public static Vector3 mainCameraPosition { get; private set; }
+        public static Vector3 mainCameraRotation { get; private set; }
 
         public static List<Camera> cameras { get; } = new List<Camera>();
         public static List<Vector3> camerasPositions { get; } = new List<Vector3>();
         public static List<Vector3> camerasRotations { get; } = new List<Vector3>();
 
         public static Vector3? activeCameraRotation { get; private set; } = null;
+        public static Vector3? activeCameraPosition { get; private set; } = null;
 
         private static int? gameplayInterval = null;
 
@@ -40,7 +42,7 @@ namespace GTAVisionExport {
             initialized = true;
         }
 
-        public static void setMainCamera(Vector3 position, float? fov = null, float? nearClip = null) {
+        public static void setMainCamera(Vector3 position = new Vector3(), Vector3 rotation = new Vector3(), float? fov = null, float? nearClip = null) {
             if (!initialized) {
                 throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
             }
@@ -53,10 +55,12 @@ namespace GTAVisionExport {
                 nearClip = World.RenderingCamera.NearClip;
             }
 
-            mainCamera = World.CreateCamera(new Vector3(), new Vector3(), fov.Value);
+            mainCamera = World.CreateCamera(position, rotation, fov.Value);
+//            mainCamera = World.CreateCamera(new Vector3(), new Vector3(), fov.Value);
             mainCamera.NearClip = nearClip.Value;
 //            mainCamera.IsActive = true;
             mainCameraPosition = position;
+            mainCameraRotation = rotation;
 
             mainCamera.IsActive = false;
             World.RenderingCamera = null;
@@ -93,7 +97,8 @@ namespace GTAVisionExport {
 
             mainCamera.IsActive = true;
             World.RenderingCamera = mainCamera;
-            activeCameraRotation = new Vector3();
+            activeCameraRotation = mainCameraRotation;
+            activeCameraPosition = mainCameraPosition;
         }
 
         public static Camera ActivateCamera(int i) {
@@ -125,6 +130,7 @@ namespace GTAVisionExport {
             Logger.writeLine("new camera position offset is: " + camerasPositions[i].ToString());
             Logger.writeLine("new camera rotation offset is: " + camerasRotations[i].ToString());
             activeCameraRotation = camerasRotations[i];
+            activeCameraPosition = camerasPositions[i];
             return cameras[i];
         }
 

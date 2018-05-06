@@ -323,12 +323,26 @@ BEGIN
 END;
 $$;
 
+-- we often ask for all entities for single snapshot, this index makes querying like 20x faster
+CREATE INDEX snapshot_index ON detections (snapshot_id);
+
+-- so we see nicely even postgis objects
+CREATE VIEW snapshots_view AS
+  SELECT snapshot_id, run_id, version, scene_id, imagepath, timestamp, timeofday, currentweather, 
+    ARRAY[st_x(camera_pos), st_y(camera_pos), st_z(camera_pos)] AS camera_pos,
+    ARRAY[st_x(camera_rot), st_y(camera_rot), st_z(camera_rot)] AS camera_rot,
+    ARRAY[st_x(camera_relative_rotation), st_y(camera_relative_rotation), st_z(camera_relative_rotation)] AS camera_relative_rotation,
+    ARRAY[st_x(camera_relative_position), st_y(camera_relative_position), st_z(camera_relative_position)] AS camera_relative_position,
+    ARRAY[st_x(camera_direction), st_y(camera_direction), st_z(camera_direction)] AS camera_direction,
+    camera_fov, world_matrix, view_matrix, proj_matrix, processed, width, height, ui_width, ui_height, cam_near_clip, cam_far_clip,
+    ARRAY[st_x(player_pos), st_y(player_pos), st_z(player_pos)] AS player_pos,
+    ARRAY[st_x(velocity), st_y(velocity), st_z(velocity)] AS velocity
+  FROM snapshots;
 ```
 
 ## Copying compiled files to GTA V
 After you compile the GTAVisionExport, copy compiled files from the `path to GTAVisionExport/managed/GTAVisionExport/bin/Release` to `path to GTA V/scripts`.
 Content of `scripts` directory should be following: 
-- AWSSDK.dll
 - BitMiracle.LibTiff.NET.dll
 - BitMiracle.LibTiff.NET.xml
 - gdal_csharp.dll
@@ -376,6 +390,11 @@ To verify all plugins loaded, see the `ScriptHookVDotNet2.log` and search for th
 ```
 
 If less than 10 scripts loaded, you have problem.
+
+If you have `ScriptHookVDotNet2.dll` in the scripts directory, you need to remove it.
+
+If only 1 script is loaded (NativeUI), it can be solved by removing `YamlDotNet.pdb` from your scripts dir.
+You should not have any .pdb files except of your own dlls (`GTAVisionExport.pdb` and `GTAVisionUtils.pdb`)
 
 ## Usage
 
