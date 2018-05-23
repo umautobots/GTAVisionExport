@@ -67,6 +67,7 @@ namespace GTAVisionExport {
         private speedAndTime lowSpeedTime = new speedAndTime();
         private bool IsGamePaused = false;
         private StereoCamera cams;
+		private bool notificationsEnabled = true;
         public VisionExport()
         {
             // loading ini file
@@ -105,9 +106,9 @@ namespace GTAVisionExport {
         private void handlePipeInput()
         {
             System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
-            UI.Notify("handlePipeInput called");
-            UI.Notify("server connected:" + server.Connected.ToString());
-            UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
+            if(notificationsEnabled) UI.Notify("handlePipeInput called");
+			if (notificationsEnabled) UI.Notify("server connected:" + server.Connected.ToString());
+			if (notificationsEnabled) UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
             if (connection == null) return;
             
             byte[] inBuffer = new byte[1024];
@@ -133,7 +134,7 @@ namespace GTAVisionExport {
                 connection = null;
                 return;
             }
-            UI.Notify(str.Length.ToString());
+			if (notificationsEnabled) UI.Notify(str.Length.ToString());
             switch (str)
             {
                 case "START_SESSION":
@@ -150,7 +151,7 @@ namespace GTAVisionExport {
                     ToggleNavigation();
                     break;
                 case "ENTER_VEHICLE":
-                    UI.Notify("Trying to enter vehicle");
+					if (notificationsEnabled) UI.Notify("Trying to enter vehicle");
                     EnterVehicle();
                     break;
                 case "AUTOSTART":
@@ -219,7 +220,7 @@ namespace GTAVisionExport {
             if (server.Poll(10, SelectMode.SelectRead) && connection == null)
             {
                 connection = server.Accept();
-                UI.Notify("CONNECTED");
+				if (notificationsEnabled) UI.Notify("CONNECTED");
                 connection.Blocking = false;
             }
             handlePipeInput();
@@ -234,9 +235,9 @@ namespace GTAVisionExport {
                     StopRun();
                     runTask?.Wait();
                     runTask = StartRun();
-                    //StopSession();
-                    //Autostart();
-                    UI.Notify("need reload game");
+					//StopSession();
+					//Autostart();
+					if (notificationsEnabled) UI.Notify("need reload game");
                     Script.Wait(100);
                     ReloadGame();
                     break;
@@ -284,11 +285,11 @@ namespace GTAVisionExport {
             var colorframe = VisionNative.GetLastColorTime();
             var depthframe = VisionNative.GetLastConstantTime();
             var constantframe = VisionNative.GetLastConstantTime();
-            //UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
-            UI.Notify(colors[0].Length.ToString());
+			//UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
+			if (notificationsEnabled) UI.Notify(colors[0].Length.ToString());
             if (depth == null || stencil == null)
             {
-                UI.Notify("No DEPTH");
+				if (notificationsEnabled) UI.Notify("No DEPTH");
                 return;
             }
 
@@ -499,24 +500,39 @@ namespace GTAVisionExport {
         public void OnKeyDown(object o, KeyEventArgs k)
         {
             System.IO.File.AppendAllText(logFilePath, "VisionExport OnKeyDown called.\n");
+
+			if (k.KeyCode == Keys.Z)
+			{
+				if (notificationsEnabled)
+				{
+					UI.Notify("Notifications Disabled");
+					notificationsEnabled = false;
+				}
+				else
+				{
+					UI.Notify("Notifications Enabled");
+					notificationsEnabled = true;
+
+				}
+			}
             if (k.KeyCode == Keys.PageUp)
             {
                 postgresTask?.Wait();
                 postgresTask = StartSession();
                 runTask?.Wait();
                 runTask = StartRun();
-                UI.Notify("GTA Vision Enabled");
+				if (notificationsEnabled) UI.Notify("GTA Vision Enabled");
             }
             if (k.KeyCode == Keys.PageDown)
             {
                 StopRun();
                 StopSession();
-                UI.Notify("GTA Vision Disabled");
+				if (notificationsEnabled) UI.Notify("GTA Vision Disabled");
             }
             if (k.KeyCode == Keys.H) // temp modification
             {
                 EnterVehicle();
-                UI.Notify("Trying to enter vehicle");
+				if (notificationsEnabled) UI.Notify("Trying to enter vehicle");
                 ToggleNavigation();
             }
             if (k.KeyCode == Keys.Y) // temp modification
@@ -530,7 +546,7 @@ namespace GTAVisionExport {
 
                 //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
                 var str = settings.GetValue("", "ConnectionString");
-                UI.Notify(loc);
+				if (notificationsEnabled) UI.Notify(loc);
 
             }
             if (k.KeyCode == Keys.G) // temp modification
@@ -580,7 +596,7 @@ namespace GTAVisionExport {
                 /* set it between 0 = stop, 1 = heavy rain. set it too high will lead to sloppy ground */
                 Function.Call(GTA.Native.Hash._SET_RAIN_FX_INTENSITY, 0.5f);
                 var test = Function.Call<float>(GTA.Native.Hash.GET_RAIN_LEVEL);
-                UI.Notify("" + test);
+				if (notificationsEnabled) UI.Notify("" + test);
                 World.CurrentDayTime = new TimeSpan(12, 0, 0);
                 //Script.Wait(5000);
             }
@@ -634,7 +650,7 @@ namespace GTAVisionExport {
                     var t = Tiff.Open(Path.Combine(dataPath, "info" + i.ToString() + ".tiff"), "w");
                     ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
                     t.Close();
-                    UI.Notify(GameplayCamera.FieldOfView.ToString());
+					if (notificationsEnabled) UI.Notify(GameplayCamera.FieldOfView.ToString());
                     //UI.Notify((connection != null && connection.Connected).ToString());
 
 
@@ -681,8 +697,8 @@ namespace GTAVisionExport {
             if (k.KeyCode == Keys.I)
             {
                 var info = new GTAVisionUtils.InstanceData();
-                UI.Notify(info.type);
-                UI.Notify(info.publichostname);
+				if (notificationsEnabled) UI.Notify(info.type);
+				if (notificationsEnabled) UI.Notify(info.publichostname);
             }
         }
     }
