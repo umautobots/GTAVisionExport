@@ -1,4 +1,6 @@
 
+set schema 'public';
+
 create table datasets
 (
 	dataset_id serial not null
