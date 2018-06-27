@@ -1,5 +1,15 @@
+SET search_path = public, pg_catalog;
 
-set schema 'public';
+
+create type detection_class as enum ('Unknown', 'Compacts', 'Sedans', 'SUVs', 'Coupes', 'Muscle', 'SportsClassics', 'Sports', 'Super', 'Motorcycles', 'OffRoad', 'Industrial', 'Utility', 'Vans', 'Cycles', 'Boats', 'Helicopters', 'Planes', 'Service', 'Emergency', 'Military', 'Commercial', 'Trains')
+;
+
+create type detection_type as enum ('background', 'person', 'car', 'bicycle')
+;
+
+create type weather as enum ('Unknown', 'ExtraSunny', 'Clear', 'Clouds', 'Smog', 'Foggy', 'Overcast', 'Raining', 'ThunderStorm', 'Clearing', 'Neutral', 'Snowing', 'Blizzard', 'Snowlight', 'Christmas', 'Halloween')
+;
+
 
 create table datasets
 (
