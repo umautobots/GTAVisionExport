@@ -449,6 +449,7 @@ CREATE TABLE public.snapshots (
     camera_relative_rotation public.geometry(PointZ),
     camera_direction public.geometry,
     camera_fov real,
+    car_model_box box3d,
     world_matrix double precision[],
     view_matrix double precision[],
     proj_matrix double precision[],
