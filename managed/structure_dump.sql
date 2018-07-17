@@ -447,6 +447,7 @@ CREATE TABLE snapshots
   camera_rot               GEOMETRY(PointZ),
   camera_relative_rotation GEOMETRY(PointZ),
   camera_direction         GEOMETRY,
+  car_model_box            box3d,
   camera_fov               REAL,
   world_matrix             DOUBLE PRECISION [],
   view_matrix              DOUBLE PRECISION [],

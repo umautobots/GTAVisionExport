@@ -131,12 +131,12 @@ namespace GTAVisionExport {
 //            cameras initialization:
             
 //            for cameras mapping area before the car
-            float r = 8f; //radius of circle with 4 cameras
-            CamerasList.setMainCamera(new Vector3());
-            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
-            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
-            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
-            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
+//            float r = 8f; //radius of circle with 4 cameras
+//            CamerasList.setMainCamera(new Vector3());
+//            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
 
 //            for 4 cameras of different sides of the car
 //            CamerasList.setMainCamera(new Vector3());
@@ -146,8 +146,22 @@ namespace GTAVisionExport {
 //            CamerasList.addCamera(new Vector3(0.6f, 0f, 0.8f), new Vector3(0f, 0f, 270f), 50, 0.15f);
 
 //            set only main camera for static traffic camera
-              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
-
+//            CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
+            
+//            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo
+//            for cameras mapping area before the car
+            CamerasList.setMainCamera(new Vector3());
+            float r = 8f; //radius of circle with 4 cameras
+            var camOne = new Vector3(-0.06f, 0.27f, 1.65f);
+            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f);
+            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 1.5f);
+            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 1.5f);
+            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 1.5f);
+            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 1.5f);
+            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 1.5f);
+            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 1.5f);
+            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 1.5f);
+            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 1.5f);
         }
         
         private void handlePipeInput() {
