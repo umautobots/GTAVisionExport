@@ -51,8 +51,10 @@ namespace GTAVisionExport {
         private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
         private readonly bool currentWeather = true;
         private readonly bool clearEverything = false;
-        private readonly bool useMultipleCameras = false;    // when false, cameras handling script is not used at all
-        private readonly bool staticCamera = true;        // this turns off whole car spawning, teleportation and autodriving procedure
+//        private readonly bool useMultipleCameras = false;    // when false, cameras handling script is not used at all
+        private readonly bool useMultipleCameras = true;    // when false, cameras handling script is not used at all
+//        private readonly bool staticCamera = true;        // this turns off whole car spawning, teleportation and autodriving procedure
+        private readonly bool staticCamera = false;        // this turns off whole car spawning, teleportation and autodriving procedure
         private Player player;
         private GTARun run;
         private bool enabled = false;
@@ -152,16 +154,21 @@ namespace GTAVisionExport {
 //            for cameras mapping area before the car
             CamerasList.setMainCamera(new Vector3());
             float r = 8f; //radius of circle with 4 cameras
-            var camOne = new Vector3(-0.06f, 0.27f, 1.65f);
-            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f);
-            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 1.5f);
-            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 1.5f);
-            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 1.5f);
-            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 1.5f);
-            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 1.5f);
-            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 1.5f);
-            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 1.5f);
-            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 1.5f);
+            // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
+            var car_center = 0.5735f;
+            var camOne = new Vector3(-0.06f, 0.27f, 1.65f - car_center);
+            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f - car_center);
+            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+//            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
+            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+//            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+//            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+//            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+//            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
+            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
         }
         
         private void handlePipeInput() {
