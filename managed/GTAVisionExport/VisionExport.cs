@@ -773,7 +773,7 @@ namespace GTAVisionExport {
                 postgresTask?.Wait();
                 runTask?.Wait();
                 UINotify("starting screenshots");
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 2; i++) {
                     GamePause(true);
                     gatherData(100);
                     GamePause(false);
