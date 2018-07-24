@@ -53,6 +53,7 @@ namespace GTAVisionExport {
         private readonly bool clearEverything = false;
 //        private readonly bool useMultipleCameras = false;    // when false, cameras handling script is not used at all
         private readonly bool useMultipleCameras = true;    // when false, cameras handling script is not used at all
+//        private readonly bool staticCamera = true;        // this turns off whole car spawning, teleportation and autodriving procedure
         private readonly bool staticCamera = false;        // this turns off whole car spawning, teleportation and autodriving procedure
         private Player player;
         private GTARun run;
@@ -132,15 +133,15 @@ namespace GTAVisionExport {
 //            cameras initialization:
             
 //            for cameras mapping area before the car
-            float r = 8f; //radius of circle with 4 cameras
-            CamerasList.setMainCamera(new Vector3());
-            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
-            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
-            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
-            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
+//            float r = 8f; //radius of circle with 4 cameras
+//            CamerasList.setMainCamera(new Vector3());
+//            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
 
-//            for 4 cameras on different sides of the car
-//            CamerasList.setMainCamera();
+//            for 4 cameras of different sides of the car
+//            CamerasList.setMainCamera(new Vector3());
 //            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 0.15f);
 //            CamerasList.addCamera(new Vector3(-0.6f, 0f, 0.8f), new Vector3(0f, 0f, 90f), 50, 0.15f);
 //            CamerasList.addCamera(new Vector3(0f, -2f, 0.6f), new Vector3(0f, 0f, 180f), 50, 0.15f);
@@ -154,10 +155,27 @@ namespace GTAVisionExport {
 //            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 270f), 58, 0.15f);
 
 //            set only main camera for static traffic camera
-//              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 67f), new Vector3(270f, 0f, 0f), 50, 0.15f);
-//              CamerasList.setMainCamera(new Vector3(-908.5f, 238f, 100f), new Vector3(270f, 0f, 0f), 50, 0.15f);
-//              CamerasList.setMainCamera(new Vector3(-908.5f, 238f, 80f), new Vector3(270f, 0f, 0f), 100, 0.15f);      // very big field of view
-
+//            CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
+            
+//            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo
+//            for cameras mapping area before the car
+            CamerasList.setMainCamera(new Vector3());
+            float r = 8f; //radius of circle with 4 cameras
+            // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
+            var car_center = 0.5735f;
+            var camOne = new Vector3(-0.06f, 0.27f, 1.65f - car_center);
+            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f - car_center);
+            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+//            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
+            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+//            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+//            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+//            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+//            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
+            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
         }
         
         private void handlePipeInput() {
@@ -764,7 +782,7 @@ namespace GTAVisionExport {
                 postgresTask?.Wait();
                 runTask?.Wait();
                 UINotify("starting screenshots");
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 2; i++) {
                     GamePause(true);
                     gatherData(100);
                     GamePause(false);

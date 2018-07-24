@@ -117,7 +117,7 @@ namespace GTAVisionUtils
             Vector3 gmin;
             Vector3 gmax;
             e.Model.GetDimensions(out gmin, out gmax);
-            BBox3D = new SharpDX.BoundingBox((SharpDX.Vector3)new GTAVector(gmin), (SharpDX.Vector3)new GTAVector(gmax));
+            BBox3D = new BoundingBox((SharpDX.Vector3) new GTAVector(gmin), (SharpDX.Vector3)new GTAVector(gmax));
         }
 
         public GTADetection(Ped p) : this(p, DetectionType.person)
@@ -182,6 +182,7 @@ namespace GTAVisionUtils
         public List<Weather> CapturedWeathers;
         public GTAVector CamPos { get; set; }
         public GTAVector CamRot { get; set; }
+        public BoundingBox CarModelBox { get; set; }
         public GTAVector CamDirection { get; set; }
         //mathnet's matrices are in heap storage, which is super annoying, 
         //but we want to use double matrices to avoid numerical issues as we
@@ -330,6 +331,11 @@ namespace GTAVisionUtils
             ret.LocalTime = World.CurrentDayTime;
             ret.CamPos = new GTAVector(World.RenderingCamera.Position);
             ret.CamRot = new GTAVector(World.RenderingCamera.Rotation);
+            //getting information about currently driving vehicle model size
+            Vector3 gmin;
+            Vector3 gmax;
+            Game.Player.Character.CurrentVehicle.Model.GetDimensions(out gmin, out gmax);
+            ret.CarModelBox = new BoundingBox((SharpDX.Vector3) new GTAVector(gmin), (SharpDX.Vector3) new GTAVector(gmax));
             ret.CamDirection = new GTAVector(World.RenderingCamera.Direction);
             ret.CamFOV = World.RenderingCamera.FieldOfView;
             ret.ImageWidth = Game.ScreenResolution.Width;

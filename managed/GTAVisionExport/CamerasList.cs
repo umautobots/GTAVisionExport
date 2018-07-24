@@ -117,9 +117,12 @@ namespace GTAVisionExport {
             cameras[i].Rotation = Game.Player.Character.CurrentVehicle.Rotation + camerasRotations[i];
 //            WARNING: CAMERAS SETTING DO NOT WORK WHEN GAME IS PAUSED, SO WE NEED TO UNPAUSE THE GAME, SET THINGS UP, AND THEN PAUSE GAME AGAIN
 //            Script.Wait(1);
-// //with time 1, sometimes depth does not correspond, and bounding boxes dont correspond by 3 frames
+// //with time 1, sometimes depth does not correspond, and bounding boxes dont correspond by 1 frames
 // //with time 2, depth does correspond, but bounding boxes dont correspond by 2 frames
-// //with time 3, sometimes depth does not correspond, but bounding boxes dont correspond by 1 frames
+// //with time 3, depth does correspond, but bounding boxes dont correspond by 3 frames
+// //with time 4, depth does NOT correspond sometimes, but bounding boxes dont correspond by 3 frames
+// //with time 5, depth is OK
+//            todo: pair detections with scene id, not with snapshot id, and gather them once per scene, not per snapshot
 //            Script.Wait(4);//tried 4 milliseconds instead of one, so screenshots correspond to their data
             Script.Wait(gameplayInterval.Value);
             Game.Pause(true);

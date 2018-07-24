@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\export.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\export.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\enums.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\nativeCaller.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\natives.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\projekty\GTA-V-extractors\GTAVisionExport\native\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{2B7382E6-CEB9-3073-B77E-CC34D4F475C0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{5F5C3B6C-34F1-38F0-8718-BF4C7F6B0B00}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
