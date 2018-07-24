@@ -53,7 +53,7 @@ namespace GTAVisionExport {
         private readonly bool clearEverything = false;
 //        private readonly bool useMultipleCameras = false;    // when false, cameras handling script is not used at all
         private readonly bool useMultipleCameras = true;    // when false, cameras handling script is not used at all
-        private readonly bool staticCamera = true;        // this turns off whole car spawning, teleportation and autodriving procedure
+        private readonly bool staticCamera = false;        // this turns off whole car spawning, teleportation and autodriving procedure
         private Player player;
         private GTARun run;
         private bool enabled = false;
@@ -132,23 +132,31 @@ namespace GTAVisionExport {
 //            cameras initialization:
             
 //            for cameras mapping area before the car
-//            float r = 8f; //radius of circle with 4 cameras
-//            CamerasList.setMainCamera(new Vector3());
-//            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
-//            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
-//            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
-//            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
+            float r = 8f; //radius of circle with 4 cameras
+            CamerasList.setMainCamera(new Vector3());
+            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
+            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
+            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
+            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
 
-//            for 4 cameras of different sides of the car
-            CamerasList.setMainCamera();
-            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 0.15f);
-            CamerasList.addCamera(new Vector3(-0.6f, 0f, 0.8f), new Vector3(0f, 0f, 90f), 50, 0.15f);
-            CamerasList.addCamera(new Vector3(0f, -2f, 0.6f), new Vector3(0f, 0f, 180f), 50, 0.15f);
-            CamerasList.addCamera(new Vector3(0.6f, 0f, 0.8f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+//            for 4 cameras on different sides of the car
+//            CamerasList.setMainCamera();
+//            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(-0.6f, 0f, 0.8f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, -2f, 0.6f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(0.6f, 0f, 0.8f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+
+//            for 4 cameras on top of car, heading 4 directions
+//            CamerasList.setMainCamera();
+//            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 0f), 58, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 90f), 58, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 180f), 58, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 270f), 58, 0.15f);
 
 //            set only main camera for static traffic camera
-//              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
-//              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(0f, 270f, 0f), 50, 0.15f);
+//              CamerasList.setMainCamera(new Vector3(-1078f, -216f, 67f), new Vector3(270f, 0f, 0f), 50, 0.15f);
+//              CamerasList.setMainCamera(new Vector3(-908.5f, 238f, 100f), new Vector3(270f, 0f, 0f), 50, 0.15f);
+//              CamerasList.setMainCamera(new Vector3(-908.5f, 238f, 80f), new Vector3(270f, 0f, 0f), 100, 0.15f);      // very big field of view
 
         }
         
@@ -299,6 +307,7 @@ namespace GTAVisionExport {
             switch (checkStatus()) {
                 case GameStatus.NeedReload:
                     //TODO: need to get a new session and run?
+                    Logger.writeLine("Status is NeedReload");
                     StopRun();
                     runTask?.Wait();
                     runTask = StartRun();
@@ -310,6 +319,7 @@ namespace GTAVisionExport {
                     break;
                 case GameStatus.NeedStart:
                     //TODO do the autostart manually or automatically?
+                    Logger.writeLine("Status is NeedStart");
                     //Autostart();
                     // use reloading temporarily
                     StopRun();

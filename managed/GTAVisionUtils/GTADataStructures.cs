@@ -341,7 +341,6 @@ namespace GTAVisionUtils
             ret.CamNearClip = World.RenderingCamera.NearClip;
             ret.CamFarClip = World.RenderingCamera.FarClip;
             
-            Logger.writeLine(Game.Player.Character.ToString());
             var peds = World.GetNearbyPeds(Game.Player.Character, 500.0f);
             var cars = World.GetNearbyVehicles(Game.Player.Character, 500.0f);
             //var props = World.GetNearbyProps(Game.Player.Character.Position, 300.0f);

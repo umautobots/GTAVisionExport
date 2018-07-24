@@ -71,8 +71,26 @@ namespace GTAVisionExport {
             }
         }
 
+        public void doRayCasting() {
+            var result = GTA.World.Raycast(Game.Player.Character.Position,
+                Game.Player.Character.Position + (Vector3.RelativeLeft * 100), IntersectOptions.Everything);
+            UI.Notify("raycast result:");
+            Logger.writeLine("raycast result:");
+            UI.Notify(result.DitHitAnything.ToString());
+            Logger.writeLine(result.DitHitAnything.ToString());
+            if (result.DitHitAnything) {
+                UI.Notify(result.HitCoords.ToString());        
+                Logger.writeLine(result.HitCoords.ToString());
+                GTA.World.DrawMarker(MarkerType.CheckeredFlagCircle, result.HitCoords, Vector3.RelativeRight, Vector3.WorldUp, new Vector3(10, 10, 10), Color.Chartreuse);
+            }
+        }
+        
         // Test vehicle controls 
         private void onKeyUp(object sender, KeyEventArgs e) {
+            if (e.KeyCode == Keys.B) {
+                doRayCasting();
+            }
+
             if (e.KeyCode == Keys.P) {
                 activeCameraIndex = -1;
                 mountCameraOnVehicle();
