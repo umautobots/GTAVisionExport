@@ -87,68 +87,62 @@ namespace GTAVisionExport {
         
         // Test vehicle controls 
         private void onKeyUp(object sender, KeyEventArgs e) {
-            if (e.KeyCode == Keys.B) {
-                doRayCasting();
-            }
-
-            if (e.KeyCode == Keys.P) {
-                activeCameraIndex = -1;
-                mountCameraOnVehicle();
-                enabled = true;
-            }
-
-            if (e.KeyCode == Keys.O) {
-                restoreCamera();
-                enabled = false;
-            }
+            switch (e.KeyCode) {
+                case Keys.B:
+                    doRayCasting();
+                    break;
+                case Keys.P:
+                    activeCameraIndex = -1;
+                    mountCameraOnVehicle();
+                    enabled = true;
+                    break;
+                case Keys.O:
+                    restoreCamera();
+                    enabled = false;
+                    break;
 
 //            UI.Notify("keycode is:" + e.KeyCode);
+                case Keys.Add:
+                    UI.Notify("Pressed numpad +");
+                    showCameras = !showCameras;
+                    UI.Notify("there are " + CamerasList.camerasPositions.Count + " cameras");
+                    if (showCameras) {
+                        UI.Notify("enabled cameras showing");
+                    }
+                    else {
+                        UI.Notify("disabled cameras showing");
+                    }
 
-            if (e.KeyCode == Keys.Add) {
-                UI.Notify("Pressed numpad +");
-                showCameras = !showCameras;
-                UI.Notify("there are " + CamerasList.camerasPositions.Count + " cameras");
-                if (showCameras) {
-                    UI.Notify("enabled cameras showing");
-                }
-                else {
-                    UI.Notify("disabled cameras showing");
-                }
-
-            }
-
-            if (e.KeyCode == Keys.NumPad0) {
-                UI.Notify("Pressed numpad 0");
-                activeCameraIndex = 0;
-                mountCameraOnVehicle();
-            }
-
-            if (e.KeyCode == Keys.NumPad1) {
-                UI.Notify("Pressed numpad 1");
-                activeCameraIndex = 1;
-                mountCameraOnVehicle();
-            }
-
-            if (e.KeyCode == Keys.NumPad2) {
-                UI.Notify("Pressed numpad 2");
-                activeCameraIndex = 2;
-                mountCameraOnVehicle();
-            }
-
-            if (e.KeyCode == Keys.NumPad3) {
-                UI.Notify("Pressed numpad 3");
-                activeCameraIndex = 3;
-                mountCameraOnVehicle();
-            }
-
-            if (e.KeyCode == Keys.Decimal) {
-                UI.Notify("Pressed numpad ,");
-                activeCameraIndex = -1;
-                mountCameraOnVehicle();
+                    break;
+                case Keys.NumPad0:
+                    UI.Notify("Pressed numpad 0");
+                    activeCameraIndex = 0;
+                    mountCameraOnVehicle();
+                    break;
+                case Keys.NumPad1:
+                    UI.Notify("Pressed numpad 1");
+                    activeCameraIndex = 1;
+                    mountCameraOnVehicle();
+                    break;
+                case Keys.NumPad2:
+                    UI.Notify("Pressed numpad 2");
+                    activeCameraIndex = 2;
+                    mountCameraOnVehicle();
+                    break;
+                case Keys.NumPad3:
+                    UI.Notify("Pressed numpad 3");
+                    activeCameraIndex = 3;
+                    mountCameraOnVehicle();
+                    break;
+                case Keys.Decimal:
+                    UI.Notify("Pressed numpad ,");
+                    activeCameraIndex = -1;
+                    mountCameraOnVehicle();
+                    break;
             }
         }
 
-        void OnTick(object sender, EventArgs e) {
+        public void OnTick(object sender, EventArgs e) {
             keepCameraOnVehicle();
             if (showCameras) {
                 drawCamerasBoxes();
@@ -156,7 +150,7 @@ namespace GTAVisionExport {
 //            drawAxesBoxesAround(new Vector3(-1078f, -216f, 200f));
         }
 
-        void drawCamerasBoxes() {
+        public void drawCamerasBoxes() {
 //            this shows white boxes where cameras are
             foreach (var camPos in CamerasList.camerasPositions) {
                 var curVehicle = Game.Player.Character.CurrentVehicle;

@@ -159,12 +159,12 @@ namespace GTAVisionExport {
             
 //            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo
 //            for cameras mapping area before the car
-            CamerasList.setMainCamera(new Vector3());
-            float r = 8f; //radius of circle with 4 cameras
+            CamerasList.setMainCamera();
+            const float r = 8f; //radius of circle with 4 cameras
             // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
-            var car_center = 0.5735f;
-            var camOne = new Vector3(-0.06f, 0.27f, 1.65f - car_center);
-            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f - car_center);
+            var carCenter = 0.5735f;
+            var camOne = new Vector3(-0.06f, 0.27f, 1.65f - carCenter);
+            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f - carCenter);
             CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
             CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
             CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
@@ -178,16 +178,16 @@ namespace GTAVisionExport {
             CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
         }
         
-        private void handlePipeInput() {
+        private void HandlePipeInput() {
 //            Logger.writeLine("VisionExport handlePipeInput called.");
 //            UINotify("handlePipeInput called");
             UINotify("server connected:" + server.Connected.ToString());
-            UINotify(connection == null ? "connection is null" : "connection:" + connection.ToString());
+            UINotify(connection == null ? "connection is null" : "connection:" + connection);
             if (connection == null) return;
 
-            byte[] inBuffer = new byte[1024];
-            string str = "";
-            int num = 0;
+            var inBuffer = new byte[1024];
+            var str = "";
+            var num = 0;
             try {
                 num = connection.Receive(inBuffer);
                 str = encoding.GetString(inBuffer, 0, num);
@@ -207,8 +207,8 @@ namespace GTAVisionExport {
                 return;
             }
 
-            UINotify("str: " + str.ToString());
-            Logger.writeLine("obtained json: " + str.ToString());
+            UINotify("str: " + str);
+            Logger.writeLine("obtained json: " + str);
             dynamic parameters = JsonConvert.DeserializeObject(str);
             string commandName = parameters.name;
             switch (commandName) {
@@ -236,10 +236,10 @@ namespace GTAVisionExport {
                     ReloadGame();
                     break;
                 case "RELOAD":
-                    FieldInfo f = this.GetType()
+                    var f = GetType()
                         .GetField("_scriptdomain", BindingFlags.NonPublic | BindingFlags.Instance);
-                    object domain = f.GetValue(this);
-                    MethodInfo m = domain.GetType()
+                    var domain = f.GetValue(this);
+                    var m = domain.GetType()
                         .GetMethod("DoKeyboardMessage", BindingFlags.Instance | BindingFlags.Public);
                     m.Invoke(domain, new object[] {Keys.Insert, true, false, false, false});
                     break;
@@ -256,7 +256,7 @@ namespace GTAVisionExport {
                     try {
                         string weather = parameters.weather;
                         UINotify("Weather Set to " + weather.ToString());
-                        Weather weatherEnum = (Weather) Enum.Parse(typeof(Weather), weather);
+                        var weatherEnum = (Weather) Enum.Parse(typeof(Weather), weather);
                         GTA.World.Weather = weatherEnum;
                     }
                     catch (Exception e) {
@@ -316,7 +316,7 @@ namespace GTAVisionExport {
                 connection.Blocking = false;
             }
 
-            handlePipeInput();
+            HandlePipeInput();
             if (!enabled) return;
 
             //Array values = Enum.GetValues(typeof(Weather));
@@ -332,7 +332,7 @@ namespace GTAVisionExport {
                     //StopSession();
                     //Autostart();
                     UINotify("need reload game");
-                    Script.Wait(100);
+                    Wait(100);
                     ReloadGame();
                     break;
                 case GameStatus.NeedStart:
@@ -343,7 +343,7 @@ namespace GTAVisionExport {
                     StopRun();
 
                     ReloadGame();
-                    Script.Wait(100);
+                    Wait(100);
                     runTask?.Wait();
                     runTask = StartRun();
                     //Autostart();
@@ -384,18 +384,18 @@ namespace GTAVisionExport {
                 ClearSurroundingEverything(Game.Player.Character.Position, 1000f);
             }
 
-            Script.Wait(100);
+            Wait(100);
 
             var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
             var guid = Guid.NewGuid();
             Logger.writeLine("generated scene guid: " + guid.ToString());
             
             if (useMultipleCameras) {
-                for (int i = 0; i < CamerasList.cameras.Count; i++) {
+                for (var i = 0; i < CamerasList.cameras.Count; i++) {
                     Logger.writeLine("activating camera " + i.ToString());
                     CamerasList.ActivateCamera(i);
                     gatherDatForOneCamera(dateTimeFormat, guid);
-                    Script.Wait(delay);
+                    Wait(delay);
                 }
                 CamerasList.Deactivate();
             }
@@ -458,10 +458,10 @@ namespace GTAVisionExport {
         
         /* -1 = need restart, 0 = normal, 1 = need to enter vehicle */
         public GameStatus checkStatus() {
-            Ped player = Game.Player.Character;
+            var player = Game.Player.Character;
             if (player.IsDead) return GameStatus.NeedReload;
             if (player.IsInVehicle()) {
-                Vehicle vehicle = player.CurrentVehicle;
+                var vehicle = player.CurrentVehicle;
                 //UINotify("T:" + Game.GameTime.ToString() + " S: " + vehicle.Speed.ToString());
                 if (vehicle.Speed < 1.0f) //speed is in mph
                 {
@@ -566,7 +566,7 @@ namespace GTAVisionExport {
             var vehicle = World.GetClosestVehicle(player.Character.Position, 30f);
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             */
-            Model mod = new Model(GTA.Native.VehicleHash.Asea);
+            var mod = new Model(GTA.Native.VehicleHash.Asea);
             if (mod == null) {
                 UINotify("mod is null");
             }
