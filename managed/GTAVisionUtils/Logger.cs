@@ -41,15 +41,14 @@ namespace GTAVisionUtils {
             {
 
                 // Get entry to log
-                string entry = LogQueue.Dequeue();
+                var entry = LogQueue.Dequeue();
 
                 // Crete filestream
-                FileStream stream = new FileStream(logFilePath, FileMode.Append, FileAccess.Write);
+                var stream = new FileStream(logFilePath, FileMode.Append, FileAccess.Write);
                 using (var writer = new StreamWriter(stream))
                 {
                     // Log to file
                     writer.WriteLine(entry);
-                    stream.Close();
                 }
             }
         }
