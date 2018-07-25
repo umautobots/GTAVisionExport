@@ -88,7 +88,7 @@ namespace GTAVisionExport {
             logFilePath = data["Snapshots"]["LogFile"];
             Logger.logFilePath = logFilePath;
 
-            System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\r\n");
+            Logger.WriteLine("VisionExport constructor called.");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
             PostgresExport.InitSQLTypes();
             player = Game.Player;
@@ -110,7 +110,7 @@ namespace GTAVisionExport {
                 runTask = StartRun();
             }
 
-            Logger.writeLine("Logger prepared");
+            Logger.WriteLine("Logger prepared");
             UINotify("Logger initialized. Going to initialize cameras.");
             CamerasList.initialize();
             initialize4cameras();
@@ -208,7 +208,7 @@ namespace GTAVisionExport {
             }
 
             UINotify("str: " + str);
-            Logger.writeLine("obtained json: " + str);
+            Logger.WriteLine("obtained json: " + str);
             dynamic parameters = JsonConvert.DeserializeObject(str);
             string commandName = parameters.name;
             switch (commandName) {
@@ -260,7 +260,7 @@ namespace GTAVisionExport {
                         GTA.World.Weather = weatherEnum;
                     }
                     catch (Exception e) {
-                        Logger.writeLine(e);
+                        Logger.WriteLine(e);
                     }
 
                     break;
@@ -325,7 +325,7 @@ namespace GTAVisionExport {
             switch (checkStatus()) {
                 case GameStatus.NeedReload:
                     //TODO: need to get a new session and run?
-                    Logger.writeLine("Status is NeedReload");
+                    Logger.WriteLine("Status is NeedReload");
                     StopRun();
                     runTask?.Wait();
                     runTask = StartRun();
@@ -337,7 +337,7 @@ namespace GTAVisionExport {
                     break;
                 case GameStatus.NeedStart:
                     //TODO do the autostart manually or automatically?
-                    Logger.writeLine("Status is NeedStart");
+                    Logger.WriteLine("Status is NeedStart");
                     //Autostart();
                     // use reloading temporarily
                     StopRun();
@@ -366,8 +366,8 @@ namespace GTAVisionExport {
             }
             catch (Exception exception) {
                 GamePause(false);
-                Logger.writeLine("exception occured, logging and continuing");
-                Logger.writeLine(exception);
+                Logger.WriteLine("exception occured, logging and continuing");
+                Logger.WriteLine(exception);
             }
 
 //            if time interval is enabled, checkes game time and sets it to timeFrom, it current time is after timeTo
@@ -388,11 +388,11 @@ namespace GTAVisionExport {
 
             var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
             var guid = Guid.NewGuid();
-            Logger.writeLine("generated scene guid: " + guid.ToString());
+            Logger.WriteLine("generated scene guid: " + guid.ToString());
             
             if (useMultipleCameras) {
                 for (var i = 0; i < CamerasList.cameras.Count; i++) {
-                    Logger.writeLine("activating camera " + i.ToString());
+                    Logger.WriteLine("activating camera " + i.ToString());
                     CamerasList.ActivateCamera(i);
                     gatherDatForOneCamera(dateTimeFormat, guid);
                     Wait(delay);
@@ -660,7 +660,7 @@ namespace GTAVisionExport {
         }
 
         public void OnKeyDown(object o, KeyEventArgs k) {
-            Logger.writeLine("VisionExport OnKeyDown called.");
+            Logger.WriteLine("VisionExport OnKeyDown called.");
             if (k.KeyCode == Keys.PageUp) {
                 postgresTask?.Wait();
                 postgresTask = StartSession();
@@ -802,7 +802,7 @@ namespace GTAVisionExport {
                 
                 Game.Pause(true);
                 for (int i = 0; i < CamerasList.cameras.Count; i++) {
-                    Logger.writeLine("activating camera " + i.ToString());
+                    Logger.WriteLine("activating camera " + i.ToString());
                     CamerasList.ActivateCamera(i);
                     Script.Wait(1000);
                 }

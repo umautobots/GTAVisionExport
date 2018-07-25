@@ -45,7 +45,7 @@ namespace GTAVisionExport {
                 else {
                     UI.Notify("Mounting camera from list");
                     UI.Notify("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation);
-                    Logger.writeLine("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation);
+                    Logger.WriteLine("My current rotation: " + Game.Player.Character.CurrentVehicle.Rotation);
                     activeCamera = CamerasList.ActivateCamera(activeCameraIndex);
                 }
             }
@@ -75,12 +75,12 @@ namespace GTAVisionExport {
             var result = GTA.World.Raycast(Game.Player.Character.Position,
                 Game.Player.Character.Position + (Vector3.RelativeLeft * 100), IntersectOptions.Everything);
             UI.Notify("raycast result:");
-            Logger.writeLine("raycast result:");
+            Logger.WriteLine("raycast result:");
             UI.Notify(result.DitHitAnything.ToString());
-            Logger.writeLine(result.DitHitAnything.ToString());
+            Logger.WriteLine(result.DitHitAnything.ToString());
             if (result.DitHitAnything) {
                 UI.Notify(result.HitCoords.ToString());        
-                Logger.writeLine(result.HitCoords.ToString());
+                Logger.WriteLine(result.HitCoords.ToString());
                 GTA.World.DrawMarker(MarkerType.CheckeredFlagCircle, result.HitCoords, Vector3.RelativeRight, Vector3.WorldUp, new Vector3(10, 10, 10), Color.Chartreuse);
             }
         }

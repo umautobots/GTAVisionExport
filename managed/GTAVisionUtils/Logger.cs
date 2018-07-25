@@ -12,11 +12,11 @@ namespace GTAVisionUtils {
     public class Logger {
         
         //most code taken from https://github.com/dbaaron/log-writer
-        private static Queue<string> LogQueue;
+        private static Queue<string> LogQueue = new Queue<string>();
         public static string logFilePath { private get; set; }
         public static int FlushAfterSeconds = 5;
         public static int FlushAtQty = 10;
-        private static DateTime FlushedAt;
+        private static DateTime FlushedAt = DateTime.Now;
         private Logger() { }
 
         public static void ForceFlush()
@@ -26,7 +26,7 @@ namespace GTAVisionUtils {
 
         private static bool CheckTimeToFlush()
         {
-            TimeSpan time = DateTime.Now - FlushedAt;
+            var time = DateTime.Now - FlushedAt;
             if (time.TotalSeconds >= FlushAfterSeconds)
             {
                 FlushedAt = DateTime.Now;
@@ -54,17 +54,17 @@ namespace GTAVisionUtils {
             }
         }
 
-        private static string wrapLogMessage(string message) {
-            var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss";
-            return $"{DateTime.UtcNow.ToString(dateTimeFormat)}:  {message}\r\n";            
+        private static string WrapLogMessage(string message) {
+            const string dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss";
+            return $"{DateTime.UtcNow.ToString(dateTimeFormat)}:  {message}\r\n";
         }
         
-        public static void writeLine(string line) {
+        public static void WriteLine(string line) {
             lock (LogQueue)
             {
 
                 // Create log
-                LogQueue.Enqueue(wrapLogMessage(line));
+                LogQueue.Enqueue(WrapLogMessage(line));
 
                 // Check if should flush
                 if (LogQueue.Count >= FlushAtQty || CheckTimeToFlush())
@@ -75,18 +75,18 @@ namespace GTAVisionUtils {
             }
         }
 
-        public static void writeLine(Exception e) {
-            writeLine(e.Message);
-            writeLine(e.Source);
-            writeLine(e.StackTrace);
+        public static void WriteLine(Exception e) {
+            WriteLine(e.Message);
+            WriteLine(e.Source);
+            WriteLine(e.StackTrace);
         }
 
-        public static void writeLine(object value) {
+        public static void WriteLine(object value) {
             if (value == null) {
                 return;
             }
 
-            writeLine(value.ToString());
+            WriteLine(value.ToString());
         }
     }
 }

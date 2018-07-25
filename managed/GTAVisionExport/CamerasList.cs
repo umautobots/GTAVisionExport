@@ -31,7 +31,7 @@ namespace GTAVisionExport {
             }
 
             World.DestroyAllCameras();
-            Logger.writeLine("destroying all cameras at the beginning, to be clear");
+            Logger.WriteLine("destroying all cameras at the beginning, to be clear");
             var parser = new FileIniDataParser();
             var data = parser.ReadFile(Path.Combine(VisionExport.location, "GTAVision.ini"));
             gameplayInterval = Convert.ToInt32(data["MultiCamera"]["GameplayTimeAfterSwitch"]);
@@ -47,7 +47,7 @@ namespace GTAVisionExport {
                 throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
             }
 
-            Logger.writeLine("setting main camera");
+            Logger.WriteLine("setting main camera");
             if (!fov.HasValue) {
                 fov = GameplayCamera.FieldOfView;
             }
@@ -71,7 +71,7 @@ namespace GTAVisionExport {
                 throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
             }
 
-            Logger.writeLine("adding new camera");
+            Logger.WriteLine("adding new camera");
             if (!fov.HasValue) {
                 fov = GameplayCamera.FieldOfView;
             }
@@ -128,10 +128,10 @@ namespace GTAVisionExport {
             Game.Pause(true);
 //            UI.Notify("new camera rotation is: " + rotation.ToString());
             Script.Wait(20);
-            Logger.writeLine("new camera position is: " + World.RenderingCamera.Position.ToString());
-            Logger.writeLine("new camera rotation is: " + World.RenderingCamera.Rotation.ToString());
-            Logger.writeLine("new camera position offset is: " + camerasPositions[i].ToString());
-            Logger.writeLine("new camera rotation offset is: " + camerasRotations[i].ToString());
+            Logger.WriteLine("new camera position is: " + World.RenderingCamera.Position.ToString());
+            Logger.WriteLine("new camera rotation is: " + World.RenderingCamera.Rotation.ToString());
+            Logger.WriteLine("new camera position offset is: " + camerasPositions[i].ToString());
+            Logger.WriteLine("new camera rotation offset is: " + camerasRotations[i].ToString());
             activeCameraRotation = camerasRotations[i];
             activeCameraPosition = camerasPositions[i];
             return cameras[i];

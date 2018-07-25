@@ -53,30 +53,30 @@ namespace GTAVisionUtils
             {
                 try
                 {
-                    Logger.writeLine("writing to tiff");
-                    Logger.writeLine($"name: {name}");
+                    Logger.WriteLine("writing to tiff");
+                    Logger.WriteLine($"name: {name}");
                     WriteToTiffImpl(name, width, height, colors, depth, stencil, oneFile);
                 }
                 catch (Exception e)
                 {
-                    Logger.writeLine(e);
-                    Logger.writeLine($"name: {name}");
-                    Logger.writeLine($"width: {width}");
-                    Logger.writeLine($"height: {height}");
-                    Logger.writeLine($"oneFile: {oneFile}");
+                    Logger.WriteLine(e);
+                    Logger.WriteLine($"name: {name}");
+                    Logger.WriteLine($"width: {width}");
+                    Logger.WriteLine($"height: {height}");
+                    Logger.WriteLine($"oneFile: {oneFile}");
 
                     if (e is ArgumentException) {
 //                    probably some problem with tiff, logging info avout images
                         if (colors.Count == 1) {
-                            Logger.writeLine($"color size: {colors[0].Length}");
+                            Logger.WriteLine($"color size: {colors[0].Length}");
                         }
                         else {
                             for (int i = 0; i < colors.Count; i++) {
-                                Logger.writeLine($"{i}-th color size: {colors[i].Length}");
+                                Logger.WriteLine($"{i}-th color size: {colors[i].Length}");
                             }
                         }
-                        Logger.writeLine($"depth size: {depth.Length}");
-                        Logger.writeLine($"stencil size: {stencil.Length}");
+                        Logger.WriteLine($"depth size: {depth.Length}");
+                        Logger.WriteLine($"stencil size: {stencil.Length}");
                         
                     }
                     Logger.ForceFlush();
