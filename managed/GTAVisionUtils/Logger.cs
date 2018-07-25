@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -9,16 +10,68 @@ using BitMiracle.LibTiff.Classic;
 
 namespace GTAVisionUtils {
     public class Logger {
+        
+        //most code taken from https://github.com/dbaaron/log-writer
+        private static Queue<string> LogQueue;
         public static string logFilePath { private get; set; }
+        public static int FlushAfterSeconds = 5;
+        public static int FlushAtQty = 10;
+        private static DateTime FlushedAt;
+        private Logger() { }
 
-        public static void writeLine(string line) {
-            var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss";
-            try {
-                System.IO.File.AppendAllText(logFilePath,
-                    DateTime.UtcNow.ToString(dateTimeFormat) + ":  " + line + "\r\n");
+        public static void ForceFlush()
+        {
+            FlushLogToFile();
+        }
+
+        private static bool CheckTimeToFlush()
+        {
+            TimeSpan time = DateTime.Now - FlushedAt;
+            if (time.TotalSeconds >= FlushAfterSeconds)
+            {
+                FlushedAt = DateTime.Now;
+                return true;
             }
-            catch (System.IO.IOException e) {
-//             just silently fail, better than throwing
+            return false;
+        }
+
+        private static void FlushLogToFile()
+        {
+            while (LogQueue.Count > 0)
+            {
+
+                // Get entry to log
+                string entry = LogQueue.Dequeue();
+
+                // Crete filestream
+                FileStream stream = new FileStream(logFilePath, FileMode.Append, FileAccess.Write);
+                using (var writer = new StreamWriter(stream))
+                {
+                    // Log to file
+                    writer.WriteLine(entry);
+                    stream.Close();
+                }
+            }
+        }
+
+        private static string wrapLogMessage(string message) {
+            var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss";
+            return $"{DateTime.UtcNow.ToString(dateTimeFormat)}:  {message}\r\n";            
+        }
+        
+        public static void writeLine(string line) {
+            lock (LogQueue)
+            {
+
+                // Create log
+                LogQueue.Enqueue(wrapLogMessage(line));
+
+                // Check if should flush
+                if (LogQueue.Count >= FlushAtQty || CheckTimeToFlush())
+                {
+                    FlushLogToFile();
+                }
+
             }
         }
 

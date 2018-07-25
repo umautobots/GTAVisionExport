@@ -54,16 +54,32 @@ namespace GTAVisionUtils
                 try
                 {
                     Logger.writeLine("writing to tiff");
-                    Logger.writeLine("name: " + name);
+                    Logger.writeLine($"name: {name}");
                     WriteToTiffImpl(name, width, height, colors, depth, stencil, oneFile);
                 }
                 catch (Exception e)
                 {
                     Logger.writeLine(e);
-                    Logger.writeLine("name: " + name);
-                    Logger.writeLine("width: " + width.ToString());
-                    Logger.writeLine("height: " + height.ToString());
-                    Logger.writeLine("oneFile: " + oneFile.ToString());
+                    Logger.writeLine($"name: {name}");
+                    Logger.writeLine($"width: {width}");
+                    Logger.writeLine($"height: {height}");
+                    Logger.writeLine($"oneFile: {oneFile}");
+
+                    if (e is ArgumentException) {
+//                    probably some problem with tiff, logging info avout images
+                        if (colors.Count == 1) {
+                            Logger.writeLine($"color size: {colors[0].Length}");
+                        }
+                        else {
+                            for (int i = 0; i < colors.Count; i++) {
+                                Logger.writeLine($"{i}-th color size: {colors[i].Length}");
+                            }
+                        }
+                        Logger.writeLine($"depth size: {depth.Length}");
+                        Logger.writeLine($"stencil size: {stencil.Length}");
+                        
+                    }
+                    Logger.ForceFlush();
                     throw;
                 }
             });
@@ -149,9 +165,9 @@ namespace GTAVisionUtils
                     t.SetField(TiffTag.BITSPERSAMPLE, 8);
                     t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
                     t.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
-                    t.SetField(TiffTag.COMPRESSION, Compression.LZW);    // JPEG conversion caused ungly artifacts, making screenshots unusable for computer vision related tasks
-//                    t.SetField(TiffTag.COMPRESSION, Compression.JPEG);
-//                    t.SetField(TiffTag.JPEGQUALITY, 60);
+//                    t.SetField(TiffTag.COMPRESSION, Compression.LZW);    // JPEG conversion caused ungly artifacts, making screenshots unusable for computer vision related tasks
+                    t.SetField(TiffTag.COMPRESSION, Compression.JPEG);
+                    t.SetField(TiffTag.JPEGQUALITY, 95);
                     t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
                     t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
                     t.SetField(TiffTag.PAGENUMBER, page, pages);

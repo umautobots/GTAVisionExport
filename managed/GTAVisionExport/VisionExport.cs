@@ -134,18 +134,18 @@ namespace GTAVisionExport {
             
 //            for cameras mapping area before the car
 //            float r = 8f; //radius of circle with 4 cameras
-//            CamerasList.setMainCamera(new Vector3());
+//            CamerasList.setMainCamera();
 //            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
 //            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
 //            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
 //            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
 
 //            for 4 cameras of different sides of the car
-//            CamerasList.setMainCamera(new Vector3());
-//            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 0.15f);
-//            CamerasList.addCamera(new Vector3(-0.6f, 0f, 0.8f), new Vector3(0f, 0f, 90f), 50, 0.15f);
-//            CamerasList.addCamera(new Vector3(0f, -2f, 0.6f), new Vector3(0f, 0f, 180f), 50, 0.15f);
-//            CamerasList.addCamera(new Vector3(0.6f, 0f, 0.8f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+            CamerasList.setMainCamera();
+            CamerasList.addCamera(new Vector3(0f, 2f, 0.3f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+            CamerasList.addCamera(new Vector3(-0.8f, 0.8f, 0.4f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+            CamerasList.addCamera(new Vector3(0f, -2.3f, 0.3f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+            CamerasList.addCamera(new Vector3(0.8f, 0.8f, 0.4f), new Vector3(0f, 0f, 270f), 50, 0.15f);
 
 //            for 4 cameras on top of car, heading 4 directions
 //            CamerasList.setMainCamera();
@@ -157,25 +157,25 @@ namespace GTAVisionExport {
 //            set only main camera for static traffic camera
 //            CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
             
-//            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo
-//            for cameras mapping area before the car
-            CamerasList.setMainCamera();
-            const float r = 8f; //radius of circle with 4 cameras
-            // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
-            var carCenter = 0.5735f;
-            var camOne = new Vector3(-0.06f, 0.27f, 1.65f - carCenter);
-            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f - carCenter);
-            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
-//            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
-            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
-//            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
-//            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
-//            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
-//            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
-            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
+////            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo
+////            for cameras mapping area before the car
+//            CamerasList.setMainCamera();
+//            const float r = 8f; //radius of circle with 4 cameras
+//            // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
+//            var carCenter = 0.5735f;
+//            var camOne = new Vector3(-0.06f, 0.27f, 1.65f - carCenter);
+//            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f - carCenter);
+//            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+////            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
+//            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+////            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
+//            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
         }
         
         private void HandlePipeInput() {
