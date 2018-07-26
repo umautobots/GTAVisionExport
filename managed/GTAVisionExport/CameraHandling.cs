@@ -8,6 +8,8 @@ using GTA.Native;
 using GTA.Math;
 using GTA.NaturalMotion;
 using GTAVisionUtils;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Spatial.Euclidean;
 using MathNet.Spatial.Units;
 
@@ -156,28 +158,44 @@ namespace GTAVisionExport {
 
         public void drawCamerasBoxes() {
 //            this shows white boxes where cameras are
-            foreach (var camPos in CamerasList.camerasPositions) {
+            for (var i = 0; i < CamerasList.cameras.Count; i++) {
+                var camPos = CamerasList.camerasPositions[i];
+                var camRot = CamerasList.camerasRotations[i];
                 var curVehicle = Game.Player.Character.CurrentVehicle;
-//                Logger.writeLine("rotation");
-//                Logger.writeLine(curVehicle.Rotation);
-//                Logger.writeLine("forward vector");
-//                Logger.writeLine(curVehicle.ForwardVector);
-//                Logger.writeLine("right vector");
-//                Logger.writeLine(curVehicle.RightVector);
-//                Logger.writeLine("up vector");
-//                Logger.writeLine(curVehicle.UpVector);
-//                var camPosToCar = Vector3.Modulate(curVehicle.ForwardVector, cameraPosition);
-//                camPosToCar += Vector3.Modulate(curVehicle.RightVector, cameraPosition);
-//                camPosToCar += Vector3.Modulate(curVehicle.UpVector, cameraPosition);
+
                 var rot = curVehicle.Rotation;
                 var rotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(rot.X));
                 var rotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(rot.Y));
                 var rotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(rot.Z));
                 var rotMat = rotZ * rotY * rotX;
+                
+                var relRotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(camRot.X));
+                var relRotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(camRot.Y));
+                var relRotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(camRot.Z));
+                var relRotMat = relRotZ * relRotY * relRotX;
+                
                 var camPosToCar = rotMat * new Vector3D(camPos.X, camPos.Y, camPos.Z);
+//                var camDirection = new Vector3D(rotMat * relRotMat * new Vector3D(0f, 0f, -1f));
+//                var camDirection = new Vector3D(relRotMat * new Vector3D(0f, 0f, -1f));
+//                var camDirection = new Vector3D(0f, 0f, -1f);
+                var camDirection = new Vector3D(0, 0, 0);
+//                var camRotation = new Vector3D(0, 0, 0);
+                var camRotation = CamerasList.rotationMatrixToDegrees(rotMat * relRotMat);
+//                var camRotation = CamerasList.rotationMatrixToDegrees(relRotMat * rotMat);
+//                var camRotation = rotationMatrixToDegrees(Matrix3D.RotationAroundXAxis(Angle.FromDegrees(-90)) * rotMat * relRotMat);
+//                var camRotation = rotationMatrixToDegrees(Matrix3D.RotationAroundXAxis(Angle.FromDegrees(-90)));
                 var absolutePosition = curVehicle.Position + new Vector3((float) camPosToCar[0], (float) camPosToCar[1], (float) camPosToCar[2]);
-                HashFunctions.Draw3DBox(absolutePosition, new Vector3(0.3f, 0.3f, 0.3f));
+//                HashFunctions.Draw3DBox(absolutePosition, new Vector3(0.3f, 0.3f, 0.3f));
+//                Logger.WriteLine($"{i}-th cam vector rotation");
+//                Logger.WriteLine(camRotation);
+
+                World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, absolutePosition, 
+                    new Vector3((float) camDirection.X, (float) camDirection.Y, (float) camDirection.Z), 
+                    new Vector3((float) camRotation.X, (float) camRotation.Y, (float) camRotation.Z), 
+                    new Vector3(1, 1, 1), Color.White);
             }
+//            Logger.WriteLine("car vector rotation");
+//            Logger.WriteLine(Game.Player.Character.CurrentVehicle.Rotation);
         }
         
         void drawAxesBoxesAround(Vector3 position) {

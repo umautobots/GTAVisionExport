@@ -6,6 +6,9 @@ using GTA.Math;
 using GTA.Native;
 using GTAVisionUtils;
 using IniParser;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Spatial.Euclidean;
+using MathNet.Spatial.Units;
 
 namespace GTAVisionExport {
     public static class CamerasList {
@@ -116,6 +119,27 @@ namespace GTAVisionExport {
             activeCameraPosition = GameplayCamera.Position;
         }
 
+        public static Vector3 rotationMatrixToDegrees(Matrix<double> r) {
+            var sy = Math.Sqrt(r[0, 0] * r[0, 0] + r[1, 0] * r[1, 0]);
+
+            var singular = sy < 1e-6;
+
+            var x = 0d;
+            var y = 0d;
+            var z = 0d;
+            if (!singular) {                
+                x = Math.Atan2(r[2, 1], r[2, 2]);
+                y = Math.Atan2(-r[2, 0], sy);
+                z = Math.Atan2(r[1, 0], r[0, 0]);
+            } else {                
+                x = Math.Atan2(-r[1, 2], r[1, 1]);
+                y = Math.Atan2(-r[2, 0], sy);
+                z = 0;
+            }
+
+            return new Vector3((float) Angle.FromRadians(x).Degrees, (float) Angle.FromRadians(y).Degrees, (float) Angle.FromRadians(z).Degrees);
+        }
+
         public static Camera ActivateCamera(int i) {
             if (!initialized) {
                 throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
@@ -129,7 +153,20 @@ namespace GTAVisionExport {
             cameras[i].IsActive = true;
             World.RenderingCamera = cameras[i];
             cameras[i].AttachTo(Game.Player.Character.CurrentVehicle, camerasPositions[i]);
-            cameras[i].Rotation = Game.Player.Character.CurrentVehicle.Rotation + camerasRotations[i];
+//            if we want to rotate camera relatively to the car, we must do through rotation matrix multiplication, not addition
+//            cameras[i].Rotation = Game.Player.Character.CurrentVehicle.Rotation + camerasRotations[i];    // this row is wrong
+            var rot = Game.Player.Character.CurrentVehicle.Rotation;
+            var rotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(rot.X));
+            var rotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(rot.Y));
+            var rotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(rot.Z));
+            var rotMat = rotZ * rotY * rotX;
+            var relRotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(camerasRotations[i].X));
+            var relRotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(camerasRotations[i].Y));
+            var relRotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(camerasRotations[i].Z));
+            var relRotMat = relRotZ * relRotY * relRotX;
+
+//            cameras[i].Rotation = rotationMatrixToDegrees(relRotMat * rotMat);
+            cameras[i].Rotation = rotationMatrixToDegrees(rotMat * relRotMat);
 //            WARNING: CAMERAS SETTING DO NOT WORK WHEN GAME IS PAUSED, SO WE NEED TO UNPAUSE THE GAME, SET THINGS UP, AND THEN PAUSE GAME AGAIN
 //            Script.Wait(1);
 // //with time 1, sometimes depth does not correspond, and bounding boxes dont correspond by 1 frames
