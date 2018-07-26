@@ -101,6 +101,21 @@ namespace GTAVisionExport {
             activeCameraPosition = mainCameraPosition;
         }
 
+        public static void ActivateGameplayCamera() {
+            if (!initialized) {
+                throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
+            }
+
+            if (mainCamera == null) {
+                throw new Exception("please, set main camera");
+            }
+
+            mainCamera.IsActive = false;
+            World.RenderingCamera = null;
+            activeCameraRotation = GameplayCamera.Rotation;
+            activeCameraPosition = GameplayCamera.Position;
+        }
+
         public static Camera ActivateCamera(int i) {
             if (!initialized) {
                 throw new Exception("not initialized, please, call CamerasList.initialize() method before this one");
@@ -128,10 +143,10 @@ namespace GTAVisionExport {
             Game.Pause(true);
 //            UI.Notify("new camera rotation is: " + rotation.ToString());
             Script.Wait(20);
-            Logger.WriteLine("new camera position is: " + World.RenderingCamera.Position.ToString());
-            Logger.WriteLine("new camera rotation is: " + World.RenderingCamera.Rotation.ToString());
-            Logger.WriteLine("new camera position offset is: " + camerasPositions[i].ToString());
-            Logger.WriteLine("new camera rotation offset is: " + camerasRotations[i].ToString());
+            Logger.WriteLine("new camera position is: " + World.RenderingCamera.Position);
+            Logger.WriteLine("new camera rotation is: " + World.RenderingCamera.Rotation);
+            Logger.WriteLine("new camera position offset is: " + camerasPositions[i]);
+            Logger.WriteLine("new camera rotation offset is: " + camerasRotations[i]);
             activeCameraRotation = camerasRotations[i];
             activeCameraPosition = camerasPositions[i];
             return cameras[i];

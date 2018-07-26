@@ -39,8 +39,12 @@ namespace GTAVisionExport {
             UI.Notify("Mounting camera to the vehicle.");
             if (Game.Player.Character.IsInVehicle()) {
                 if (activeCameraIndex == -1) {
-                    UI.Notify("Mounting main camera");
+                    UI.Notify("Mounting free camera");
                     CamerasList.ActivateMainCamera();
+                }
+                else if (activeCameraIndex == -2) {
+                    UI.Notify("Mounting free camera");
+                    CamerasList.ActivateGameplayCamera();
                 }
                 else {
                     UI.Notify("Mounting camera from list");
@@ -72,7 +76,7 @@ namespace GTAVisionExport {
         }
 
         public void doRayCasting() {
-            var result = GTA.World.Raycast(Game.Player.Character.Position,
+            var result = World.Raycast(Game.Player.Character.Position,
                 Game.Player.Character.Position + (Vector3.RelativeLeft * 100), IntersectOptions.Everything);
             UI.Notify("raycast result:");
             Logger.WriteLine("raycast result:");
@@ -81,7 +85,7 @@ namespace GTAVisionExport {
             if (result.DitHitAnything) {
                 UI.Notify(result.HitCoords.ToString());        
                 Logger.WriteLine(result.HitCoords.ToString());
-                GTA.World.DrawMarker(MarkerType.CheckeredFlagCircle, result.HitCoords, Vector3.RelativeRight, Vector3.WorldUp, new Vector3(10, 10, 10), Color.Chartreuse);
+                World.DrawMarker(MarkerType.CheckeredFlagCircle, result.HitCoords, Vector3.RelativeRight, Vector3.WorldUp, new Vector3(10, 10, 10), Color.Chartreuse);
             }
         }
         
@@ -136,7 +140,7 @@ namespace GTAVisionExport {
                     break;
                 case Keys.Decimal:
                     UI.Notify("Pressed numpad ,");
-                    activeCameraIndex = -1;
+                    activeCameraIndex = -2;
                     mountCameraOnVehicle();
                     break;
             }
@@ -169,7 +173,7 @@ namespace GTAVisionExport {
                 var rotX = Matrix3D.RotationAroundXAxis(Angle.FromDegrees(rot.X));
                 var rotY = Matrix3D.RotationAroundYAxis(Angle.FromDegrees(rot.Y));
                 var rotZ = Matrix3D.RotationAroundZAxis(Angle.FromDegrees(rot.Z));
-                var rotMat = rotX * rotY * rotZ;
+                var rotMat = rotZ * rotY * rotX;
                 var camPosToCar = rotMat * new Vector3D(camPos.X, camPos.Y, camPos.Z);
                 var absolutePosition = curVehicle.Position + new Vector3((float) camPosToCar[0], (float) camPosToCar[1], (float) camPosToCar[2]);
                 HashFunctions.Draw3DBox(absolutePosition, new Vector3(0.3f, 0.3f, 0.3f));

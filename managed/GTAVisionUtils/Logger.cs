@@ -48,7 +48,7 @@ namespace GTAVisionUtils {
                 using (var writer = new StreamWriter(stream))
                 {
                     // Log to file
-                    writer.WriteLine(entry);
+                    writer.Write(entry);
                 }
             }
         }
