@@ -579,7 +579,7 @@ namespace GTAVisionExport {
                 UINotify("player.Character is null");
             }
 
-            UINotify("player position: " + player.Character.Position.ToString());
+            UINotify("player position: " + player.Character.Position);
             var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
             if (vehicle == null) {
                 UINotify("vehicle is null. Something is fucked up");
@@ -640,7 +640,8 @@ namespace GTAVisionExport {
             ClearSurroundingVehicles(player.Position, 1000f);
             player.LastVehicle.Delete();
             // teleport to the spawning position, defined in GameUtils.cs, subject to changes
-            player.Position = GTAConst.StartPos;
+//            player.Position = GTAConst.OriginalStartPos;
+            player.Position = GTAConst.HighwayStartPos;
 //            ClearSurroundingVehicles(player.Position, 100f);
             ClearSurroundingVehicles(player.Position, 50f);
             // start a new run
@@ -661,62 +662,58 @@ namespace GTAVisionExport {
 
         public void OnKeyDown(object o, KeyEventArgs k) {
             Logger.WriteLine("VisionExport OnKeyDown called.");
-            if (k.KeyCode == Keys.PageUp) {
-                postgresTask?.Wait();
-                postgresTask = StartSession();
-                runTask?.Wait();
-                runTask = StartRun();
-                UINotify("GTA Vision Enabled");
+            switch (k.KeyCode) {
+                case Keys.PageUp:
+                    postgresTask?.Wait();
+                    postgresTask = StartSession();
+                    runTask?.Wait();
+                    runTask = StartRun();
+                    UINotify("GTA Vision Enabled");
 //                there is set weather, just for testing
-                World.Weather = wantedWeather;
-            }
+                    World.Weather = wantedWeather;
+                    break;
+                case Keys.PageDown:
+                    if (staticCamera) {
+                        CamerasList.Deactivate();
+                    }
+                    StopRun();
+                    StopSession();
+                    UINotify("GTA Vision Disabled");
+                    break;
+                // temp modification
+                case Keys.H:
+                    EnterVehicle();
+                    UINotify("Trying to enter vehicle");
+                    ToggleNavigation();
+                    break;
+                // temp modification
+                case Keys.Y:
+                    ReloadGame();
+                    break;
+                // temp modification
+                case Keys.X:
+                    notificationsAllowed = !notificationsAllowed;
+                    if (notificationsAllowed) {
+                        UI.Notify("Notifications Enabled");
+                    }
+                    else {
+                        UI.Notify("Notifications Disabled");
+                    }
 
-            if (k.KeyCode == Keys.PageDown) {
-                if (staticCamera) {
-                    CamerasList.Deactivate();
-                }
-                StopRun();
-                StopSession();
-                UINotify("GTA Vision Disabled");
-            }
+                    break;
+                // temp modification
+                case Keys.U:
+                    var settings = ScriptSettings.Load("GTAVisionExport.xml");
+                    var loc = AppDomain.CurrentDomain.BaseDirectory;
 
-            if (k.KeyCode == Keys.H) // temp modification
-            {
-                EnterVehicle();
-                UINotify("Trying to enter vehicle");
-                ToggleNavigation();
-            }
-
-            if (k.KeyCode == Keys.Y) // temp modification
-            {
-                ReloadGame();
-            }
-
-            if (k.KeyCode == Keys.X) // temp modification
-            {
-                notificationsAllowed = !notificationsAllowed;
-                if (notificationsAllowed) {
-                    UI.Notify("Notifications Enabled");
-                }
-                else {
-                    UI.Notify("Notifications Disabled");
-                }
-            }
-
-            if (k.KeyCode == Keys.U) // temp modification
-            {
-                var settings = ScriptSettings.Load("GTAVisionExport.xml");
-                var loc = AppDomain.CurrentDomain.BaseDirectory;
-
-                //UINotify(ConfigurationManager.AppSettings["database_connection"]);
-                var str = settings.GetValue("", "ConnectionString");
-                UINotify("BaseDirectory: " + loc);
-                UINotify("ConnectionString: " + str);
-            }
-
-            if (k.KeyCode == Keys.G) // temp modification
-            {
-                /*
+                    //UINotify(ConfigurationManager.AppSettings["database_connection"]);
+                    var str = settings.GetValue("", "ConnectionString");
+                    UINotify("BaseDirectory: " + loc);
+                    UINotify("ConnectionString: " + str);
+                    break;
+                // temp modification
+                case Keys.G:
+                    /*
                 IsGamePaused = true;
                 Game.Pause(true);
                 Script.Wait(500);
@@ -725,95 +722,90 @@ namespace GTAVisionExport {
                 IsGamePaused = false;
                 Game.Pause(false);
                 */
-                GTAData data;
-                if (multipleWeathers) {
-                    data = GTAData.DumpData(Game.GameTime + ".tiff", wantedWeathers.ToList());
-                }
-                else {
-                    Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
-                    data = GTAData.DumpData(Game.GameTime + ".tiff", weather);
-                }
-
-                string path = @"D:\GTAV_extraction_output\trymatrix.txt";
-                // This text is added only once to the file.
-                if (!File.Exists(path)) {
-                    // Create a file to write to.
-                    using (StreamWriter file = File.CreateText(path)) {
-                        file.WriteLine("cam direction file");
-                        file.WriteLine("direction:");
-                        file.WriteLine(World.RenderingCamera.Direction.X.ToString() + ' ' +
-                                       World.RenderingCamera.Direction.Y.ToString() + ' ' +
-                                       World.RenderingCamera.Direction.Z.ToString());
-                        file.WriteLine("Dot Product:");
-                        file.WriteLine(Vector3.Dot(World.RenderingCamera.Direction, World.RenderingCamera.Rotation));
-                        file.WriteLine("position:");
-                        file.WriteLine(World.RenderingCamera.Position.X.ToString() + ' ' +
-                                       World.RenderingCamera.Position.Y.ToString() + ' ' +
-                                       World.RenderingCamera.Position.Z.ToString());
-                        file.WriteLine("rotation:");
-                        file.WriteLine(World.RenderingCamera.Rotation.X.ToString() + ' ' +
-                                       World.RenderingCamera.Rotation.Y.ToString() + ' ' +
-                                       World.RenderingCamera.Rotation.Z.ToString());
-                        file.WriteLine("relative heading:");
-                        file.WriteLine(GameplayCamera.RelativeHeading.ToString());
-                        file.WriteLine("relative pitch:");
-                        file.WriteLine(GameplayCamera.RelativePitch.ToString());
-                        file.WriteLine("fov:");
-                        file.WriteLine(GameplayCamera.FieldOfView.ToString());
+                    GTAData data;
+                    if (multipleWeathers) {
+                        data = GTAData.DumpData(Game.GameTime + ".tiff", wantedWeathers.ToList());
                     }
-                }
-            }
+                    else {
+                        Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
+                        data = GTAData.DumpData(Game.GameTime + ".tiff", weather);
+                    }
 
-            if (k.KeyCode == Keys.T) // temp modification
-            {
-                World.Weather = Weather.Raining;
-                /* set it between 0 = stop, 1 = heavy rain. set it too high will lead to sloppy ground */
-                Function.Call(GTA.Native.Hash._SET_RAIN_FX_INTENSITY, 0.5f);
-                var test = Function.Call<float>(GTA.Native.Hash.GET_RAIN_LEVEL);
-                UINotify("" + test);
-                World.CurrentDayTime = new TimeSpan(12, 0, 0);
-                //Script.Wait(5000);
-            }
+                    string path = @"D:\GTAV_extraction_output\trymatrix.txt";
+                    // This text is added only once to the file.
+                    if (!File.Exists(path)) {
+                        // Create a file to write to.
+                        using (StreamWriter file = File.CreateText(path)) {
+                            file.WriteLine("cam direction file");
+                            file.WriteLine("direction:");
+                            file.WriteLine(
+                                $"{World.RenderingCamera.Direction.X} {World.RenderingCamera.Direction.Y} {World.RenderingCamera.Direction.Z}");
+                            file.WriteLine("Dot Product:");
+                            file.WriteLine(Vector3.Dot(World.RenderingCamera.Direction, World.RenderingCamera.Rotation));
+                            file.WriteLine("position:");
+                            file.WriteLine(
+                                $"{World.RenderingCamera.Position.X} {World.RenderingCamera.Position.Y} {World.RenderingCamera.Position.Z}");
+                            file.WriteLine("rotation:");
+                            file.WriteLine(
+                                $"{World.RenderingCamera.Rotation.X} {World.RenderingCamera.Rotation.Y} {World.RenderingCamera.Rotation.Z}");
+                            file.WriteLine("relative heading:");
+                            file.WriteLine(GameplayCamera.RelativeHeading.ToString());
+                            file.WriteLine("relative pitch:");
+                            file.WriteLine(GameplayCamera.RelativePitch.ToString());
+                            file.WriteLine("fov:");
+                            file.WriteLine(GameplayCamera.FieldOfView.ToString());
+                        }
+                    }
 
-            if (k.KeyCode == Keys.N) {
-                UINotify("N pressed, going to take screenshots");
+                    break;
+                // temp modification
+                case Keys.T:
+                    World.Weather = Weather.Raining;
+                    /* set it between 0 = stop, 1 = heavy rain. set it too high will lead to sloppy ground */
+                    Function.Call(GTA.Native.Hash._SET_RAIN_FX_INTENSITY, 0.5f);
+                    var test = Function.Call<float>(GTA.Native.Hash.GET_RAIN_LEVEL);
+                    UINotify("" + test);
+                    World.CurrentDayTime = new TimeSpan(12, 0, 0);
+                    //Script.Wait(5000);
+                    break;
+                case Keys.N:
+                    UINotify("N pressed, going to take screenshots");
 
-                startRunAndSessionManual();
-                postgresTask?.Wait();
-                runTask?.Wait();
-                UINotify("starting screenshots");
-                for (int i = 0; i < 2; i++) {
-                    GamePause(true);
-                    gatherData(100);
-                    GamePause(false);
-                    Script.Wait(200); // hoping game will go on during this wait
-                }
+                    startRunAndSessionManual();
+                    postgresTask?.Wait();
+                    runTask?.Wait();
+                    UINotify("starting screenshots");
+                    for (int i = 0; i < 2; i++) {
+                        GamePause(true);
+                        gatherData(100);
+                        GamePause(false);
+                        Script.Wait(200); // hoping game will go on during this wait
+                    }
 
-                if (staticCamera) {
-                    CamerasList.Deactivate();
-                }
+                    if (staticCamera) {
+                        CamerasList.Deactivate();
+                    }
 
-                StopRun();
-                StopSession();
-            }
-
-            if (k.KeyCode == Keys.OemMinus) {    //to tlačítko vlevo od pravého shiftu, -
-                UINotify("- pressed, going to rotate cameras");
+                    StopRun();
+                    StopSession();
+                    break;
+                case Keys.OemMinus: //to tlačítko vlevo od pravého shiftu, -
+                    UINotify("- pressed, going to rotate cameras");
                 
-                Game.Pause(true);
-                for (int i = 0; i < CamerasList.cameras.Count; i++) {
-                    Logger.WriteLine("activating camera " + i.ToString());
-                    CamerasList.ActivateCamera(i);
-                    Script.Wait(1000);
-                }
-                CamerasList.Deactivate();
-                Game.Pause(false);
-            }
-
-            if (k.KeyCode == Keys.I) {
-                var info = new GTAVisionUtils.InstanceData();
-                UINotify(info.type);
-                UINotify(info.publichostname);
+                    Game.Pause(true);
+                    for (int i = 0; i < CamerasList.cameras.Count; i++) {
+                        Logger.WriteLine("activating camera " + i.ToString());
+                        CamerasList.ActivateCamera(i);
+                        Script.Wait(1000);
+                    }
+                    CamerasList.Deactivate();
+                    Game.Pause(false);
+                    break;
+                case Keys.I:
+                    var info = new GTAVisionUtils.InstanceData();
+                    UINotify(info.type);
+                    UINotify(info.publichostname);
+                    break;
             }
         }
 
