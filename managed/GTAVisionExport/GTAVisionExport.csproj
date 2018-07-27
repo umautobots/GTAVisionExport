@@ -143,6 +143,7 @@
   <ItemGroup>
     <Compile Include="CamerasList.cs" />
     <Compile Include="GameUtils.cs" />
+    <Compile Include="OffroadPlanning.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StereoCamera.cs" />
     <Compile Include="CameraHandling.cs" />

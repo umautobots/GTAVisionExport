@@ -82,6 +82,14 @@ namespace GTAVisionUtils
             DrawRect(x, y, w, h, color.R, color.G, color.B, a);
         }
         
+        public static void Draw2DText(string text, Vector2 pos, Color color) {
+            Draw2DText(text, pos.X, pos.Y, color.R, color.G, color.B, color.A);
+        }
+        
+        public static void Draw2DText(string text, Vector3 pos, Color color) {
+            Draw2DText(text, Convert3dTo2d(pos), color);
+        }
+        
         public static void Draw2DText(string text, float x, float y, Color color) {
             Draw2DText(text, x, y, color.R, color.G, color.B, color.A);
         }

@@ -566,7 +566,7 @@ namespace GTAVisionExport {
             var vehicle = World.GetClosestVehicle(player.Character.Position, 30f);
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             */
-            var mod = new Model(GTA.Native.VehicleHash.Asea);
+            var mod = new Model(VehicleHash.Asea);
             if (mod == null) {
                 UINotify("mod is null");
             }
