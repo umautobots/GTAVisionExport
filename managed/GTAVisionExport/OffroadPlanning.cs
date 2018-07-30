@@ -30,8 +30,33 @@ namespace GTAVisionExport {
             area1.Add(new Rect(1400, -2650, 800, 1750));
             var area2 = new List<Rect>();
             area2.Add(new Rect(1624, -418, 770, 1410));
+            area2.Add(new Rect(1750, 992, 300, 410));
+            var area3 = new List<Rect>();
+            area3.Add(new Rect(2180, 1300, 300, 1410));
+            area3.Add(new Rect(1980, 1700, 200, 770));
+            area3.Add(new Rect(2060, 1500, 120, 200));
+            area3.Add(new Rect(2060, 2470, 120, 100));
+            var area4 = new List<Rect>();
+            area4.Add(new Rect(2620, 1800, 350, 780));
+            area4.Add(new Rect(2970, 2180, 250, 400));
+            area4.Add(new Rect(2600, 2580, 750, 450));
+            area4.Add(new Rect(3350, 2850, 220, 300));
+            var area5 = new List<Rect>();
+            area5.Add(new Rect(150, 1400, 1500, 980));
+            area5.Add(new Rect(150, 2380, 1300, 220));
+            var area6 = new List<Rect>();
+            area6.Add(new Rect(300, 2720, 1200, 700));
+            area6.Add(new Rect(1500, 2950, 230, 470));
+            var area7 = new List<Rect>();
+//            todo: dodělat
+            area7.Add(new Rect(2300, 3100, 300, 500));
             areas.Add(area1);
             areas.Add(area2);
+            areas.Add(area3);
+            areas.Add(area4);
+            areas.Add(area5);
+            areas.Add(area6);
+            areas.Add(area7);
         }
         // Test vehicle controls 
         private void OnKeyUp(object sender, KeyEventArgs e) {
