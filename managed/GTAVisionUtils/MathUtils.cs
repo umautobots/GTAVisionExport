@@ -30,7 +30,7 @@ namespace GTAVisionUtils {
             int sum = 0;
             for (int i = 0; i < arr.Count; i++) {
                 sum += arr[i];
-                cumsumArr[i] = sum;
+                cumsumArr.Add(sum);
             }
 
             return cumsumArr;

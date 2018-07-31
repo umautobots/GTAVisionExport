@@ -160,12 +160,25 @@ namespace GTAVisionExport {
         }
         
         private static List<Rect> GetRandomArea() {
-            return areas[rnd.Next(areas.Count)];
+            var areaIdx = rnd.Next(areas.Count);
+            Logger.WriteLine($"randomly selected area index {areaIdx} from {areas.Count} areas");
+            var area = areas[areaIdx];
+            Logger.WriteLine($"selected area: {string.Join(", ", area)}, with size {area.Count}");
+            return area;
         }
 
         private static Rect GetRandomRect(List<Rect> area) {
-            var volumes = (List<int>) (from rect in area select rect.Width * rect.Height);    //calculating volumes
+            Logger.WriteLine($"selecting random rect for area with size {area.Count}");
+            Logger.ForceFlush();
+            var volumes = new List<int>(area.Count);
+            for (var i = 0; i < area.Count; i++) {
+                Logger.WriteLine($"to {i}-th index, setting volume {area[i].Width * area[i].Height}");
+                Logger.ForceFlush();
+                volumes.Add((int) (area[i].Width * area[i].Height));
+            }
             var sum = 0;
+            Logger.WriteLine($"calculated volumes");
+            Logger.ForceFlush();
             var rectIdx = MathUtils.digitize(rnd.Next(volumes.Sum()), MathUtils.cumsum(volumes));
             return area[rectIdx];
         }

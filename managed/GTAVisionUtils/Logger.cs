@@ -17,8 +17,7 @@ namespace GTAVisionUtils {
         public static int FlushAfterSeconds = 5;
         public static int FlushAtQty = 10;
         private static DateTime FlushedAt = DateTime.Now;
-        private Logger() { }
-
+        
         public static void ForceFlush()
         {
             FlushLogToFile();

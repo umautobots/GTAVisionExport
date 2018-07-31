@@ -361,7 +361,7 @@ namespace GTAVisionExport {
             if (!runTask.IsCompleted) return;
             if (!postgresTask.IsCompleted) return;
             
-            if (OffroadPlanning.offroadDrivingStarted) {
+            if (drivingOffroad && OffroadPlanning.offroadDrivingStarted) {
                 OffroadPlanning.checkDrivingToTarget();
                 OffroadPlanning.setNextTarget();
             }
@@ -596,7 +596,7 @@ namespace GTAVisionExport {
             }
 
             UINotify("player position: " + player.Character.Position);
-            var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
+            var vehicle = World.CreateVehicle(mod, player.Character.Position);
             if (vehicle == null) {
                 UINotify("vehicle is null. Something is fucked up");
             }
