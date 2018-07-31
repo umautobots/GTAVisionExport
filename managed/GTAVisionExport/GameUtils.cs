@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA;
 using GTA.Math;
+using GTA.Native;
 
 namespace GTAVisionExport
 {
@@ -61,5 +62,8 @@ namespace GTAVisionExport
     {
         public static Vector3 OriginalStartPos = new Vector3(311.7819f, -1372.574f, 31.84874f);
         public static Vector3 HighwayStartPos = new Vector3(1209.5412f,-1936.0394f,38.3709f);
+
+        public static VehicleHash OnroadVehicleHash = VehicleHash.Asea;
+        public static VehicleHash OffroadVehicleHash = OffroadPlanning.OffroadModel;
     }
 }

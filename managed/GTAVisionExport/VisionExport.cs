@@ -71,7 +71,7 @@ namespace GTAVisionExport {
         private int curSessionId = -1;
         private speedAndTime lowSpeedTime = new speedAndTime();
         private bool isGamePaused = false; // this is for external pause, not for internal pause inside the script
-        private bool notificationsAllowed = true;
+        private static bool notificationsAllowed = true;
         private StereoCamera cams;
         private bool timeIntervalEnabled = false;
         private TimeSpan timeFrom;
@@ -360,6 +360,11 @@ namespace GTAVisionExport {
 //            UINotify("postgresTask.IsCompleted: " + postgresTask.IsCompleted.ToString());
             if (!runTask.IsCompleted) return;
             if (!postgresTask.IsCompleted) return;
+            
+            if (OffroadPlanning.offroadDrivingStarted) {
+                OffroadPlanning.checkDrivingToTarget();
+                OffroadPlanning.setNextTarget();
+            }
 
 //            UINotify("going to save images and save to postgres");
 
@@ -551,7 +556,7 @@ namespace GTAVisionExport {
             Game.Player.LastVehicle.Alpha = int.MaxValue;
         }
 
-        public void UINotify(string message) {
+        public static void UINotify(string message) {
             //just wrapper for UI.Notify, but lets us disable showing notifications ar all
             if (notificationsAllowed) {
                 UI.Notify(message);
@@ -565,12 +570,19 @@ namespace GTAVisionExport {
             }
         }
 
-        public void EnterVehicle() {
+        public static void EnterVehicle() {
             /*
             var vehicle = World.GetClosestVehicle(player.Character.Position, 30f);
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             */
-            var mod = new Model(VehicleHash.Asea);
+            Model mod = null;
+            if (drivingOffroad) {
+                mod = new Model(GTAConst.OffroadVehicleHash);
+            } else {
+                mod = new Model(GTAConst.OnroadVehicleHash);  
+            }
+
+            var player = Game.Player;
             if (mod == null) {
                 UINotify("mod is null");
             }
@@ -597,11 +609,12 @@ namespace GTAVisionExport {
         }
 
         public void ToggleNavigation() {
-            //todo: probably here try to set camera, maybe by SET_FOLLOW_VEHICLE_CAM_VIEW_MODE(int viewMode), or by SET_FOLLOW_VEHICLE_CAM_ZOOM_LEVEL(int zoomLevel)
-            // or just something with the GTA.GameplayCamera
-            //YOLO
-            MethodInfo inf =
-                kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (drivingOffroad) {
+                //offroad driving script should handle that separately
+                return;
+            }
+            
+            MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
 

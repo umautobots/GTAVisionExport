@@ -11,19 +11,21 @@ using GTAVisionUtils;
 using VAutodrive;
 
 namespace GTAVisionExport {
+    // all driving and path planning related things are static and called from VisionExport script which behaves as controlling point
+    // it makes coordination and switching between onroad and offroad easier
     public class OffroadPlanning : Script {
 //        constant for tried and sufficient offroad model
         public static VehicleHash OffroadModel = VehicleHash.Contender;
         private bool showOffroadAreas;
 
-        public List<List<Rect>> areas;
-        private Random rnd;
+        public static List<List<Rect>> areas;
+        private static Random rnd;
 
-        private bool offroadDrivingStarted;
-        private bool currentlyDrivingToTarget;
-        private Vector2 currentTarget;
-        private int targetsFromSameStart = 0;
-        private List<Rect> currentArea = null;
+        public static bool offroadDrivingStarted;
+        private static bool currentlyDrivingToTarget;
+        private static Vector2 currentTarget;
+        private static int targetsFromSameStart = 0;
+        private static List<Rect> currentArea = null;
         
         public OffroadPlanning() {
             UI.Notify("Loaded OffroadPlanning.cs");
@@ -100,27 +102,29 @@ namespace GTAVisionExport {
                     offroadDrivingStarted = !offroadDrivingStarted;
                     if (offroadDrivingStarted) {
                         UI.Notify("offroad driving enabled");
+                        VisionExport.drivingOffroad = true;
                     }
                     else {
                         UI.Notify("offroad driving disabled");
+                        VisionExport.drivingOffroad = false;
                     }
 
                     break;
             }
         }
 
-        public void checkDrivingToTarget() {
+        public static void checkDrivingToTarget() {
             if (Game.Player.Character.CurrentVehicle.Position.DistanceTo2D(new Vector3(currentTarget.X, currentTarget.Y, 0)) < 2) {
                 currentlyDrivingToTarget = false;
             }
         }
 
-        public void setNextTarget() {
+        public static void setNextTarget() {
             if (currentlyDrivingToTarget) {
                 return;
             }
             
-//            setting the new start in new area
+//            setting the new start in new area after some number of targets from same start
             var targetsPerArea = 10;
             if (targetsPerArea < targetsFromSameStart || currentArea == null) {
                 currentArea = GetRandomArea();
@@ -144,29 +148,29 @@ namespace GTAVisionExport {
             targetsFromSameStart += 1;
         }
 
-        private void SetTargetAsWaypoint(Vector2 target) {
+        private static void SetTargetAsWaypoint(Vector2 target) {
             HashFunctions.SetNewWaypoint(target);
         }
 
-        private void DriveToPoint(Vector2 target) {
+        private static void DriveToPoint(Vector2 target) {
             SetTargetAsWaypoint(target);
             var kh = new KeyHandling();
             var inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
         
-        private List<Rect> GetRandomArea() {
+        private static List<Rect> GetRandomArea() {
             return areas[rnd.Next(areas.Count)];
         }
 
-        private Rect GetRandomRect(List<Rect> area) {
+        private static Rect GetRandomRect(List<Rect> area) {
             var volumes = (List<int>) (from rect in area select rect.Width * rect.Height);    //calculating volumes
             var sum = 0;
             var rectIdx = MathUtils.digitize(rnd.Next(volumes.Sum()), MathUtils.cumsum(volumes));
             return area[rectIdx];
         }
 
-        private Vector2 GetRandomPoint(Rect rect) {
+        private static Vector2 GetRandomPoint(Rect rect) {
             return new Vector2(rnd.Next((int) (rect.Width)), rnd.Next((int) rect.Height));
         }
         
@@ -175,10 +179,7 @@ namespace GTAVisionExport {
                 DrawOffroadAreas();
             }
 
-            if (offroadDrivingStarted) {
-                checkDrivingToTarget();
-                setNextTarget();
-            }
+            // driving and planning related things are in VisionExport
         }
 
         public void DrawOffroadAreas() {
