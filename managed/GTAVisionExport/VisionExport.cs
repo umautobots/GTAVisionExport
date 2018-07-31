@@ -62,6 +62,7 @@ namespace GTAVisionExport {
         private Socket connection;
         private UTF8Encoding encoding = new UTF8Encoding(false);
 
+//        this is the vaustodrive keyhandling
         private KeyHandling kh = new KeyHandling();
 
         private Task postgresTask;
@@ -76,6 +77,9 @@ namespace GTAVisionExport {
         private TimeSpan timeFrom;
         private TimeSpan timeTo;
         public static string location;
+
+        //this variable, when true, should be disabling car spawning and autodrive starting here, because offroad has different settings
+        public static bool drivingOffroad;
 
         public VisionExport() {
             // loading ini file

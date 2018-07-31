@@ -143,6 +143,7 @@
     <Compile Include="ImageUtils.cs" />
     <Compile Include="InstanceData.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="MathUtils.cs" />
     <Compile Include="NativeInterop.cs" />
     <Compile Include="PostgresExport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

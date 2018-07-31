@@ -1,19 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Forms;
 using GTA;
 using GTA.Math;
 using GTA.Native;
 using GTAVisionUtils;
+using VAutodrive;
 
 namespace GTAVisionExport {
     public class OffroadPlanning : Script {
 //        constant for tried and sufficient offroad model
         public static VehicleHash OffroadModel = VehicleHash.Contender;
-        private bool showOffroadAreas = false;
+        private bool showOffroadAreas;
 
         public List<List<Rect>> areas;
+        private Random rnd;
+
+        private bool offroadDrivingStarted;
+        private bool currentlyDrivingToTarget;
+        private Vector2 currentTarget;
+        private int targetsFromSameStart = 0;
+        private List<Rect> currentArea = null;
         
         public OffroadPlanning() {
             UI.Notify("Loaded OffroadPlanning.cs");
@@ -22,10 +32,11 @@ namespace GTAVisionExport {
             Tick += OnTick;
             KeyUp += OnKeyUp;
             areas = new List<List<Rect>>();
-            createOffroadAreas();
+            rnd = new Random();
+            CreateOffroadAreas();
         }
 
-        private void createOffroadAreas() {
+        private void CreateOffroadAreas() {
             var area1 = new List<Rect>();
             area1.Add(new Rect(1400, -2650, 800, 1750));
             var area2 = new List<Rect>();
@@ -69,6 +80,7 @@ namespace GTAVisionExport {
             areas.Add(area7);
             areas.Add(area8);
         }
+        
         // Test vehicle controls 
         private void OnKeyUp(object sender, KeyEventArgs e) {
             switch (e.KeyCode) {
@@ -83,14 +95,90 @@ namespace GTAVisionExport {
                     }
 
                     break;
+                case Keys.Pause:
+                    UI.Notify("Pressed Pause/Break");
+                    offroadDrivingStarted = !offroadDrivingStarted;
+                    if (offroadDrivingStarted) {
+                        UI.Notify("offroad driving enabled");
+                    }
+                    else {
+                        UI.Notify("offroad driving disabled");
+                    }
+
+                    break;
             }
         }
 
+        public void checkDrivingToTarget() {
+            if (Game.Player.Character.CurrentVehicle.Position.DistanceTo2D(new Vector3(currentTarget.X, currentTarget.Y, 0)) < 2) {
+                currentlyDrivingToTarget = false;
+            }
+        }
+
+        public void setNextTarget() {
+            if (currentlyDrivingToTarget) {
+                return;
+            }
+            
+//            setting the new start in new area
+            var targetsPerArea = 10;
+            if (targetsPerArea < targetsFromSameStart || currentArea == null) {
+                currentArea = GetRandomArea();
+                var startRect = GetRandomRect(currentArea);
+                var start = GetRandomPoint(startRect);
+                var startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                Game.Player.Character.CurrentVehicle.Position = new Vector3(start.X, start.Y, startZ);
+                targetsFromSameStart = 0;
+            }
+            
+//                firstly, select some area and for a while, perform random walk in that area, then randomly selct other area
+//                at first, I'll randomly sample rectangle from area, then randomly sample point from that rectangle
+//                sampling rectangles is in ratio corresponsing to their sizes, so smaller rectangle is not sampled more often
+                
+            var targetRect = GetRandomRect(currentArea);
+            var target = GetRandomPoint(targetRect);
+            DriveToPoint(target);
+
+            currentlyDrivingToTarget = true;
+            currentTarget = target;
+            targetsFromSameStart += 1;
+        }
+
+        private void SetTargetAsWaypoint(Vector2 target) {
+            HashFunctions.SetNewWaypoint(target);
+        }
+
+        private void DriveToPoint(Vector2 target) {
+            SetTargetAsWaypoint(target);
+            var kh = new KeyHandling();
+            var inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
+            inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
+        }
+        
+        private List<Rect> GetRandomArea() {
+            return areas[rnd.Next(areas.Count)];
+        }
+
+        private Rect GetRandomRect(List<Rect> area) {
+            var volumes = (List<int>) (from rect in area select rect.Width * rect.Height);    //calculating volumes
+            var sum = 0;
+            var rectIdx = MathUtils.digitize(rnd.Next(volumes.Sum()), MathUtils.cumsum(volumes));
+            return area[rectIdx];
+        }
+
+        private Vector2 GetRandomPoint(Rect rect) {
+            return new Vector2(rnd.Next((int) (rect.Width)), rnd.Next((int) rect.Height));
+        }
+        
         public void OnTick(object sender, EventArgs e) {
             if (showOffroadAreas) {
                 DrawOffroadAreas();
             }
-//            drawAxesBoxesAround(new Vector3(-1078f, -216f, 200f));
+
+            if (offroadDrivingStarted) {
+                checkDrivingToTarget();
+                setNextTarget();
+            }
         }
 
         public void DrawOffroadAreas() {

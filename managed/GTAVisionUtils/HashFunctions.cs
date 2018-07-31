@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using Point = System.Windows.Markup;
 
 namespace GTAVisionUtils
 {
@@ -123,5 +124,8 @@ namespace GTAVisionUtils
 //            Function.Call(Hash.SET_CAM_ROT, inputArgumentArray);
 //        }
 
+        public static void SetNewWaypoint(Vector2 point) {
+            Function.Call(Hash.SET_NEW_WAYPOINT, point.X, point.Y);
+        }
     }
 }
