@@ -44,12 +44,22 @@ namespace GTAVisionExport {
             var area5 = new List<Rect>();
             area5.Add(new Rect(150, 1400, 1500, 980));
             area5.Add(new Rect(150, 2380, 1300, 220));
+            area5.Add(new Rect(-540, 2120, 690, 500));
             var area6 = new List<Rect>();
             area6.Add(new Rect(300, 2720, 1200, 700));
             area6.Add(new Rect(1500, 2950, 230, 470));
             var area7 = new List<Rect>();
-//            todo: dodělat
-            area7.Add(new Rect(2300, 3100, 300, 500));
+            area7.Add(new Rect(2300, 3100, 300, 700));
+            var area8 = new List<Rect>();
+            area8.Add(new Rect(-570, 4700, 410, 950));
+            area8.Add(new Rect(-820, 4700, 250, 740));
+            area8.Add(new Rect(-690, 5440, 120, 80));
+            area8.Add(new Rect(-1100, 4700, 280, 600));
+            area8.Add(new Rect(-1270, 4700, 170, 520));
+            area8.Add(new Rect(-1470, 4700, 200, 300));
+            area8.Add(new Rect(-1600, 4700, 130, 170));
+            area8.Add(new Rect(-1700, 4700, 100, 90));
+            area8.Add(new Rect(-1700, 4550, 300, 150));
             areas.Add(area1);
             areas.Add(area2);
             areas.Add(area3);
@@ -57,6 +67,7 @@ namespace GTAVisionExport {
             areas.Add(area5);
             areas.Add(area6);
             areas.Add(area7);
+            areas.Add(area8);
         }
         // Test vehicle controls 
         private void OnKeyUp(object sender, KeyEventArgs e) {
@@ -87,7 +98,7 @@ namespace GTAVisionExport {
                 foreach (var rect in area) {
                     HashFunctions.Draw3DBox(
                         new Vector3((float) (rect.X + rect.Width/2), (float) (rect.Y + rect.Height/2), 0),
-                        new Vector3((float) rect.Width, (float) rect.Height, 400), 
+                        new Vector3((float) rect.Width, (float) rect.Height, 500), 
                         255, 255, 255, 50);
                 }
             }
