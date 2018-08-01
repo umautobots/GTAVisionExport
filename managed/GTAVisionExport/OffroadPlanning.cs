@@ -15,7 +15,8 @@ namespace GTAVisionExport {
     // it makes coordination and switching between onroad and offroad easier
     public class OffroadPlanning : Script {
 //        constant for tried and sufficient offroad model
-        public static VehicleHash OffroadModel = VehicleHash.Contender;
+//        it is single player car. Some cars here are multiplayer and disappear at most few seconds after spawning 
+        public static VehicleHash OffroadModel = VehicleHash.Mesa;
         private bool showOffroadAreas;
 
         public static List<List<Rect>> areas;
