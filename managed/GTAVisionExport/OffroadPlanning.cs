@@ -119,6 +119,53 @@ namespace GTAVisionExport {
             }
         }
 
+        /// <summary>
+        /// behold, this function wraps most of fuckups that GetGroundHeight causes,
+        /// teleports player multiple times and perform waiting, call only when you know what your're doing
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public static float GetGroundHeightMagic(Vector2 position) {
+//            for distant position from player, which are not bufferent, function returns 0, so we need to teleport
+//            above that position and let player fall, in the meantime texture loads properly and getting ground height starts 
+//            working. Raycasting returns exactly same results, so it seems that it's used as an implementation of this function
+//            when the player is falling on the exact same x,y location, this returns player's position as ground
+//            that is heavy evidence for thinking raycasting from above is used in that function. That's why here is +5, +5
+//            for player position. For each position, height in which it starts working, differs, so that's why I tryit in cycle
+//            and check when it returns nonzero, and thus correct result
+            for (int i = 900; i > 100; i-= 50) {
+//                    when I use the same position, the GetGroundHeight call takes coordinates of player as ground height
+                Game.Player.Character.Position = new Vector3(position.X + 5, position.Y + 5, i);
+                //just some more waiting for textures to load
+                Script.Wait(500);
+                var startZ = World.GetGroundHeight(new Vector2(position.X, position.Y));
+                if (startZ != 0) {
+                    return startZ;
+                }
+            }
+
+            throw new Exception("height measurement is fucked up somehow, aborting");
+        }
+        
+        public static void setNextStart() {
+            Logger.WriteLine($"setting the next start");
+            currentArea = GetRandomArea();
+            var startRect = GetRandomRect(currentArea);
+            var start = GetRandomPoint(startRect);
+            var startZ = GetGroundHeightMagic(start);
+            Game.Player.Character.IsInvincible = true;
+            Logger.WriteLine($"{startZ} is ground height of {start}");
+            var newPosition = new Vector3(start.X, start.Y, startZ + 2);    // so we have some reserve, when setting to ground z coord, it falls through
+            if (Game.Player.Character.IsInVehicle()) {
+                Game.Player.Character.CurrentVehicle.Position = newPosition;
+            }
+            else {
+                Game.Player.Character.Position = newPosition;
+            }
+            targetsFromSameStart = 0;            
+            Logger.WriteLine($"setting next start in {newPosition}");
+        }
+        
         public static void setNextTarget() {
             if (currentlyDrivingToTarget) {
                 return;
@@ -127,12 +174,7 @@ namespace GTAVisionExport {
 //            setting the new start in new area after some number of targets from same start
             var targetsPerArea = 10;
             if (targetsPerArea < targetsFromSameStart || currentArea == null) {
-                currentArea = GetRandomArea();
-                var startRect = GetRandomRect(currentArea);
-                var start = GetRandomPoint(startRect);
-                var startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
-                Game.Player.Character.CurrentVehicle.Position = new Vector3(start.X, start.Y, startZ);
-                targetsFromSameStart = 0;
+                setNextStart();
             }
             
 //                firstly, select some area and for a while, perform random walk in that area, then randomly selct other area
@@ -141,6 +183,7 @@ namespace GTAVisionExport {
                 
             var targetRect = GetRandomRect(currentArea);
             var target = GetRandomPoint(targetRect);
+            Logger.WriteLine($"setting next target in {target}");
             DriveToPoint(target);
 
             currentlyDrivingToTarget = true;
@@ -159,7 +202,7 @@ namespace GTAVisionExport {
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
         
-        private static List<Rect> GetRandomArea() {
+        public static List<Rect> GetRandomArea() {
             var areaIdx = rnd.Next(areas.Count);
             Logger.WriteLine($"randomly selected area index {areaIdx} from {areas.Count} areas");
             var area = areas[areaIdx];
@@ -167,24 +210,20 @@ namespace GTAVisionExport {
             return area;
         }
 
-        private static Rect GetRandomRect(List<Rect> area) {
+        public static Rect GetRandomRect(List<Rect> area) {
             Logger.WriteLine($"selecting random rect for area with size {area.Count}");
             Logger.ForceFlush();
             var volumes = new List<int>(area.Count);
             for (var i = 0; i < area.Count; i++) {
-                Logger.WriteLine($"to {i}-th index, setting volume {area[i].Width * area[i].Height}");
-                Logger.ForceFlush();
                 volumes.Add((int) (area[i].Width * area[i].Height));
             }
             var sum = 0;
-            Logger.WriteLine($"calculated volumes");
-            Logger.ForceFlush();
             var rectIdx = MathUtils.digitize(rnd.Next(volumes.Sum()), MathUtils.cumsum(volumes));
             return area[rectIdx];
         }
 
-        private static Vector2 GetRandomPoint(Rect rect) {
-            return new Vector2(rnd.Next((int) (rect.Width)), rnd.Next((int) rect.Height));
+        public static Vector2 GetRandomPoint(Rect rect) {
+            return new Vector2((float) (rect.X + rnd.Next((int) (rect.Width))), (float) (rect.Y + rnd.Next((int) rect.Height)));
         }
         
         public void OnTick(object sender, EventArgs e) {

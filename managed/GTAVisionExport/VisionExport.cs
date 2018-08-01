@@ -77,6 +77,7 @@ namespace GTAVisionExport {
         private TimeSpan timeFrom;
         private TimeSpan timeTo;
         public static string location;
+        private static Vector2 somePos;
 
         //this variable, when true, should be disabling car spawning and autodrive starting here, because offroad has different settings
         public static bool drivingOffroad;
@@ -654,13 +655,19 @@ namespace GTAVisionExport {
             //UINotify("x = " + player.Position.X + "y = " + player.Position.Y + "z = " + player.Position.Z);
             // no need to release the autodrive here
             // delete all surrounding vehicles & the driver's car
-            ClearSurroundingVehicles(player.Position, 1000f);
+//            ClearSurroundingVehicles(player.Position, 1000f);
             player.LastVehicle.Delete();
             // teleport to the spawning position, defined in GameUtils.cs, subject to changes
 //            player.Position = GTAConst.OriginalStartPos;
-            player.Position = GTAConst.HighwayStartPos;
+            if (drivingOffroad) {
+                OffroadPlanning.setNextStart();
+            }
+            else {
+                player.Position = GTAConst.HighwayStartPos;
+            }
 //            ClearSurroundingVehicles(player.Position, 100f);
-            ClearSurroundingVehicles(player.Position, 50f);
+//            ClearSurroundingVehicles(player.Position, 50f);
+            ClearSurroundingVehicles(player.Position, 20f);
             // start a new run
             EnterVehicle();
             //Script.Wait(2000);
@@ -779,8 +786,8 @@ namespace GTAVisionExport {
                 case Keys.T:
                     World.Weather = Weather.Raining;
                     /* set it between 0 = stop, 1 = heavy rain. set it too high will lead to sloppy ground */
-                    Function.Call(GTA.Native.Hash._SET_RAIN_FX_INTENSITY, 0.5f);
-                    var test = Function.Call<float>(GTA.Native.Hash.GET_RAIN_LEVEL);
+                    Function.Call(Hash._SET_RAIN_FX_INTENSITY, 0.5f);
+                    var test = Function.Call<float>(Hash.GET_RAIN_LEVEL);
                     UINotify("" + test);
                     World.CurrentDayTime = new TimeSpan(12, 0, 0);
                     //Script.Wait(5000);
@@ -811,7 +818,7 @@ namespace GTAVisionExport {
                 
                     Game.Pause(true);
                     for (int i = 0; i < CamerasList.cameras.Count; i++) {
-                        Logger.WriteLine("activating camera " + i.ToString());
+                        Logger.WriteLine($"activating camera {i}");
                         CamerasList.ActivateCamera(i);
                         Script.Wait(1000);
                     }
@@ -822,6 +829,51 @@ namespace GTAVisionExport {
                     var info = new GTAVisionUtils.InstanceData();
                     UINotify(info.type);
                     UINotify(info.publichostname);
+                    break;
+                case Keys.Divide:
+                    Logger.WriteLine($"{World.GetGroundHeight(Game.Player.Character.Position)} is the current player ({Game.Player.Character.Position}) ground position.");
+                    var startRect = OffroadPlanning.GetRandomRect(OffroadPlanning.GetRandomArea());
+                    var start = OffroadPlanning.GetRandomPoint(startRect);
+                    var startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                    Logger.WriteLine($"{startZ} is the ground position of {start}.");
+//                    OffroadPlanning.setNextStart();
+                    startRect = OffroadPlanning.GetRandomRect(OffroadPlanning.GetRandomArea());
+                    start = OffroadPlanning.GetRandomPoint(startRect);
+                    somePos = start;
+                    startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                    Logger.WriteLine($"{startZ} is the ground position of {start}.");
+//                    when I use the same position, the GetGroundHeight call takes coordinates of player as ground height
+                    Game.Player.Character.Position = new Vector3(start.X + 5, start.Y + 5, 800);                    
+                    Logger.WriteLine($"teleporting player above teh position.");
+                    Script.Wait(50);
+                    startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                    Logger.WriteLine($"{startZ} is the ground position of {start}.");
+                    Logger.WriteLine($"{World.GetGroundHeight(Game.Player.Character.Position)} is the current player ({Game.Player.Character.Position}) ground position.");
+                    Logger.ForceFlush();
+                    break;
+                case Keys.F12:
+                    Logger.WriteLine($"{World.GetGroundHeight(Game.Player.Character.Position)} is the current player ({Game.Player.Character.Position}) ground position.");
+                    Logger.WriteLine($"{World.GetGroundHeight(somePos)} is the {somePos} ground position.");
+                    break;
+                case Keys.F11:
+                    var res = World.Raycast(new Vector3(somePos.X, somePos.Y, 800), new Vector3(somePos.X, somePos.Y, -100), IntersectOptions.Everything, Game.Player.Character);
+                    Logger.WriteLine($"{res.DitHitAnything} is raycast did hit result.");
+                    Logger.WriteLine($"{res.HitCoords.Z} is the {somePos} raycasted ground position.");
+                    break;
+                case Keys.F10:
+                    startRect = OffroadPlanning.GetRandomRect(OffroadPlanning.GetRandomArea());
+                    start = OffroadPlanning.GetRandomPoint(startRect);
+                    somePos = start;
+                    startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                    Logger.WriteLine($"{startZ} is the ground position of {start}.");
+                    for (int i = 900; i > 100; i-= 50) {
+//                    when I use the same position, the GetGroundHeight call takes coordinates of player as ground height
+                        Game.Player.Character.Position = new Vector3(start.X + 5, start.Y + 5, i);
+                        Logger.WriteLine($"teleporting player above teh position to height {i}.");
+                        Script.Wait(500);
+                        startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                        Logger.WriteLine($"{startZ} is the ground position of {start}.");                        
+                    }
                     break;
             }
         }

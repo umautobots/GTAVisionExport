@@ -127,5 +127,9 @@ namespace GTAVisionUtils
         public static void SetNewWaypoint(Vector2 point) {
             Function.Call(Hash.SET_NEW_WAYPOINT, point.X, point.Y);
         }
+
+        public static void PlaceObjectOnGroundProperly(Entity entity) {
+            Function.Call(Hash.PLACE_OBJECT_ON_GROUND_PROPERLY, entity);
+        }
     }
 }
