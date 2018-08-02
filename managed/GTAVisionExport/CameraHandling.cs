@@ -130,26 +130,26 @@ namespace GTAVisionExport {
                         UI.Notify("disabled position showing");
                     }
                     break;
-//                case Keys.NumPad0:
-//                    UI.Notify("Pressed numpad 0");
-//                    activeCameraIndex = 0;
-//                    mountCameraOnVehicle();
-//                    break;
-//                case Keys.NumPad1:
-//                    UI.Notify("Pressed numpad 1");
-//                    activeCameraIndex = 1;
-//                    mountCameraOnVehicle();
-//                    break;
-//                case Keys.NumPad2:
-//                    UI.Notify("Pressed numpad 2");
-//                    activeCameraIndex = 2;
-//                    mountCameraOnVehicle();
-//                    break;
-//                case Keys.NumPad3:
-//                    UI.Notify("Pressed numpad 3");
-//                    activeCameraIndex = 3;
-//                    mountCameraOnVehicle();
-//                    break;
+                case Keys.NumPad0:
+                    UI.Notify("Pressed numpad 0");
+                    activeCameraIndex = 0;
+                    mountCameraOnVehicle();
+                    break;
+                case Keys.NumPad1:
+                    UI.Notify("Pressed numpad 1");
+                    activeCameraIndex = 1;
+                    mountCameraOnVehicle();
+                    break;
+                case Keys.NumPad2:
+                    UI.Notify("Pressed numpad 2");
+                    activeCameraIndex = 2;
+                    mountCameraOnVehicle();
+                    break;
+                case Keys.NumPad3:
+                    UI.Notify("Pressed numpad 3");
+                    activeCameraIndex = 3;
+                    mountCameraOnVehicle();
+                    break;
                 case Keys.Decimal:
                     UI.Notify("Pressed numpad ,");
                     activeCameraIndex = -2;

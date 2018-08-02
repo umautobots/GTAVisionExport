@@ -145,7 +145,7 @@ namespace GTAVisionExport {
 //            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
 //            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
 
-////            for 4 cameras of different sides of the car
+////            for 4 cameras of different sides of the car, for šochman
 //            CamerasList.setMainCamera();
 //            CamerasList.addCamera(new Vector3(0f, 2f, 0.3f), new Vector3(0f, 0f, 0f), 50, 0.15f);
 //            CamerasList.addCamera(new Vector3(-0.8f, 0.8f, 0.4f), new Vector3(0f, 0f, 90f), 50, 0.15f);
@@ -184,18 +184,20 @@ namespace GTAVisionExport {
             
 //            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo, but for offroad car, specifically, for Mesa
 //            for cameras mapping area before the car
+//            KITTI images have ratio of 3.32, they are very large and thus have large horizontal fov. This ratio can not be obtained here
+//            so I set higher vertical fov and image may be then cropped into KITTI-like one
             CamerasList.setMainCamera();
             const float r = 8f; //radius of circle with 4 cameras
             // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
             var carCenter = 0.5735f;
             var camOne = new Vector3(-0.06f, 0.47f, 1.65f - carCenter);
             var camTwo = new Vector3(-0.06f+0.54f, 0.47f, 1.65f - carCenter);
-            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 90, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 90, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 90, 0.15f);
 //            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
-            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
 //            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
 //            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
 //            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
