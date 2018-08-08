@@ -105,7 +105,7 @@ namespace GTAVisionUtils
                     t.SetField(TiffTag.SUBFILETYPE, FileType.PAGE);
                     t.SetField(TiffTag.PHOTOMETRIC, Photometric.RGB);
                     t.SetField(TiffTag.COMPRESSION, Compression.JPEG);
-                    t.SetField(TiffTag.JPEGQUALITY, 60);
+                    t.SetField(TiffTag.JPEGQUALITY, 95);
                     t.SetField(TiffTag.PREDICTOR, Predictor.HORIZONTAL);
                     t.SetField(TiffTag.SAMPLEFORMAT, SampleFormat.UINT);
                     t.SetField(TiffTag.PAGENUMBER, page, pages);

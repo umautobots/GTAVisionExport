@@ -115,9 +115,15 @@ namespace GTAVisionExport {
         }
 
         public static void checkDrivingToTarget() {
-            if (Game.Player.Character.CurrentVehicle.Position.DistanceTo2D(new Vector3(currentTarget.X, currentTarget.Y, 0)) < 2) {
+            if (Game.Player.Character.CurrentVehicle.Position.DistanceTo2D(new Vector3(currentTarget.X, currentTarget.Y, 0)) < 3) {
                 currentlyDrivingToTarget = false;
             }
+
+            if (! Game.IsWaypointActive) {
+                currentlyDrivingToTarget = false;                
+            }
+
+            
         }
 
         /// <summary>
@@ -182,8 +188,13 @@ namespace GTAVisionExport {
 //                at first, I'll randomly sample rectangle from area, then randomly sample point from that rectangle
 //                sampling rectangles is in ratio corresponsing to their sizes, so smaller rectangle is not sampled more often
                 
-            var targetRect = GetRandomRect(currentArea);
-            var target = GetRandomPoint(targetRect);
+//                because vehicle is driving onroad for longer routes, generated target shall be max. 200 meters from start, behaving as a "waypoint" on randomly sampled route
+            Vector2 target;
+            var playerPos = Game.Player.Character.Position;
+            do {
+                var targetRect = GetRandomRect(currentArea);
+                target = GetRandomPoint(targetRect);
+            } while (target.DistanceTo(new Vector2(playerPos.X, playerPos.Y)) > 200);
             Logger.WriteLine($"setting next target in {target}");
             DriveToPoint(target);
 

@@ -69,7 +69,9 @@ namespace GTAVisionExport {
 
         private Task runTask;
         private int curSessionId = -1;
-        private speedAndTime lowSpeedTime = new speedAndTime();
+        private TimeChecker lowSpeedTime = new TimeChecker(TimeSpan.FromSeconds(200));
+        private TimeChecker notMovingTime = new TimeChecker(TimeSpan.FromSeconds(30));
+        private TimeDistanceChecker distanceFromStart = new TimeDistanceChecker(TimeSpan.FromSeconds(30), 2, new Vector3());
         private bool isGamePaused = false; // this is for external pause, not for internal pause inside the script
         private static bool notificationsAllowed = true;
         private StereoCamera cams;
@@ -81,6 +83,7 @@ namespace GTAVisionExport {
 
         //this variable, when true, should be disabling car spawning and autodrive starting here, because offroad has different settings
         public static bool drivingOffroad;
+        public static bool gatheringData = true;
 
         public VisionExport() {
             // loading ini file
@@ -182,34 +185,54 @@ namespace GTAVisionExport {
 ////            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
 //            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
             
+////            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo, but for offroad car, specifically, for Mesa
+////            for cameras mapping area before the car
+////            KITTI images have ratio of 3.32, they are very large and thus have large horizontal fov. This ratio can not be obtained here
+////            so I set higher vertical fov and image may be then cropped into KITTI-like one
+//            CamerasList.setMainCamera();
+//            const float r = 8f; //radius of circle with 4 cameras
+//            // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
+//            var carCenter = 0.5735f;
+//            var camOne = new Vector3(-0.06f, 1.5f, 1.65f - carCenter);
+//            var camTwo = new Vector3(-0.06f+0.54f, 1.5f, 1.65f - carCenter);
+//            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 90, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 90, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 90, 0.15f);
+////            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
+//            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+////            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
+//            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
+
+//            na 32 metrů průměr, výš a natočit dolů            
 //            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo, but for offroad car, specifically, for Mesa
 //            for cameras mapping area before the car
 //            KITTI images have ratio of 3.32, they are very large and thus have large horizontal fov. This ratio can not be obtained here
 //            so I set higher vertical fov and image may be then cropped into KITTI-like one
             CamerasList.setMainCamera();
-            const float r = 8f; //radius of circle with 4 cameras
+            const float r = 16f; //radius of circle with 4 cameras
             // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
             var carCenter = 0.5735f;
-            var camOne = new Vector3(-0.06f, 0.47f, 1.65f - carCenter);
-            var camTwo = new Vector3(-0.06f+0.54f, 0.47f, 1.65f - carCenter);
+            var camOne = new Vector3(-0.06f, 1.5f, 1.65f - carCenter);
+            var camTwo = new Vector3(-0.06f+0.54f, 1.5f, 1.65f - carCenter);
             CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 90, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 90, 0.15f);
-            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 90, 0.15f);
+            
+            CamerasList.addCamera(camOne + new Vector3(r, r, 5f), new Vector3(-30f, 0f, 90f), 90, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 5f), new Vector3(-30f, 0f, 180f), 90, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(-r, r, 5f), new Vector3(-30f, 0f, 270f), 90, 0.15f);
 //            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
             CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
-//            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
-//            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
-//            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
 //            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
-            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
-
+            CamerasList.addCamera(camOne + new Vector3(0, r, r + 8), new Vector3(270f, 0f, 90f), 70, 0.15f);    //to have bigger view of area in front of and behind car
         }
         
         private void HandlePipeInput() {
 //            Logger.writeLine("VisionExport handlePipeInput called.");
 //            UINotify("handlePipeInput called");
-            UINotify("server connected:" + server.Connected.ToString());
+            UINotify("server connected:" + server.Connected);
             UINotify(connection == null ? "connection is null" : "connection:" + connection);
             if (connection == null) return;
 
@@ -392,22 +415,24 @@ namespace GTAVisionExport {
 
 //            UINotify("going to save images and save to postgres");
 
-            try {
-                GamePause(true);
-                gatherData();
-                GamePause(false);
-            }
-            catch (Exception exception) {
-                GamePause(false);
-                Logger.WriteLine("exception occured, logging and continuing");
-                Logger.WriteLine(exception);
+            if (gatheringData) {
+                try {
+                    GamePause(true);
+                    gatherData();
+                    GamePause(false);
+                }
+                catch (Exception exception) {
+                    GamePause(false);
+                    Logger.WriteLine("exception occured, logging and continuing");
+                    Logger.WriteLine(exception);
+                }                
             }
 
 //            if time interval is enabled, checkes game time and sets it to timeFrom, it current time is after timeTo
             if (timeIntervalEnabled) {
-                var currentTime = GTA.World.CurrentDayTime;
+                var currentTime = World.CurrentDayTime;
                 if (currentTime > timeTo) {
-                    GTA.World.CurrentDayTime = timeFrom;
+                    World.CurrentDayTime = timeFrom;
                 }
             }
         }
@@ -495,15 +520,26 @@ namespace GTAVisionExport {
             if (player.IsDead) return GameStatus.NeedReload;
             if (player.IsInVehicle()) {
                 var vehicle = player.CurrentVehicle;
-                //UINotify("T:" + Game.GameTime.ToString() + " S: " + vehicle.Speed.ToString());
-                if (vehicle.Speed < 1.0f) //speed is in mph
-                {
-                    if (lowSpeedTime.checkTrafficJam(Game.GameTime, vehicle.Speed)) {
+//                here checking the time in low or no speed 
+                if (vehicle.Speed < 1.0f) {    //speed is in mph
+                    if (lowSpeedTime.isPassed(Game.GameTime)) {
                         return GameStatus.NeedReload;
                     }
+                } else {
+                    lowSpeedTime.clear();
                 }
-                else {
-                    lowSpeedTime.clearTime();
+
+                if (vehicle.Speed < 0.001f) {
+                    if (notMovingTime.isPassed(Game.GameTime)) {
+                        return GameStatus.NeedReload;
+                    }
+                } else {
+                    notMovingTime.clear();
+                }
+
+//                here checking the movement from previous position on some time
+                if (distanceFromStart.isPassed(Game.GameTime, vehicle.Position)) {
+                    return GameStatus.NeedReload;
                 }
 
                 return GameStatus.NoActionNeeded;
@@ -538,9 +574,9 @@ namespace GTAVisionExport {
         public void Autostart() {
             if (! staticCamera) {
                 EnterVehicle();
-                Script.Wait(200);
+                Wait(200);
                 ToggleNavigation();
-                Script.Wait(200);                
+                Wait(200);                
             }
             postgresTask?.Wait();
             postgresTask = StartSession();
@@ -628,14 +664,16 @@ namespace GTAVisionExport {
                 player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             }
 
-            //vehicle.Alpha = 0; //transparent
-            //player.Character.Alpha = 0;
+//            vehicle.Alpha = 0; //transparent
+//            player.Character.Alpha = 0;
+            vehicle.Alpha = int.MaxValue;    //back to visible, not sure what the exact value means in terms of transparency
+            player.Character.Alpha = int.MaxValue;
         }
 
         public void ToggleNavigation() {
             if (drivingOffroad) {
                 //offroad driving script should handle that separately
-                return;
+                OffroadPlanning.setNextTarget();
             }
             
             MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -647,7 +685,7 @@ namespace GTAVisionExport {
         }
 
         private void ClearSurroundingVehicles(float x, float y, float z, float radius) {
-            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, x, y, z, radius, false, false, false, false);
+            Function.Call(Hash.CLEAR_AREA_OF_VEHICLES, x, y, z, radius, false, false, false, false);
         }
 
         private void ClearSurroundingEverything(Vector3 pos, float radius) {
@@ -655,14 +693,17 @@ namespace GTAVisionExport {
         }
 
         private void ClearSurroundingEverything(float x, float y, float z, float radius) {
-            Function.Call(GTA.Native.Hash.CLEAR_AREA, x, y, z, radius, false, false, false, false);
+            Function.Call(Hash.CLEAR_AREA, x, y, z, radius, false, false, false, false);
         }
 
         public void ReloadGame() {
             if (staticCamera) {
                 return;
             }
-            
+
+            lowSpeedTime.clear();
+            notMovingTime.clear();
+            distanceFromStart.clear();
             /*
             Process p = Process.GetProcessesByName("Grand Theft Auto V").FirstOrDefault();
             if (p != null)
@@ -684,6 +725,7 @@ namespace GTAVisionExport {
 //            player.Position = GTAConst.OriginalStartPos;
             if (drivingOffroad) {
                 OffroadPlanning.setNextStart();
+                OffroadPlanning.setNextTarget();
             }
             else {
                 player.Position = GTAConst.HighwayStartPos;
@@ -696,7 +738,7 @@ namespace GTAVisionExport {
             //Script.Wait(2000);
             ToggleNavigation();
 
-            lowSpeedTime.clearTime();
+            lowSpeedTime.clear();
         }
 
         public void TraverseWeather() {
@@ -899,6 +941,18 @@ namespace GTAVisionExport {
                         Logger.WriteLine($"{startZ} is the ground position of {start}.");                        
                     }
                     break;
+                case Keys.F9:
+                    //turn on and off for datagathering during driving, mostly for testing offroad
+                    gatheringData = !gatheringData;
+                    if (gatheringData) {
+                        UI.Notify("will be gathering data");
+                    }
+                    else {
+                        UI.Notify("won't be gathering data");
+                    }
+
+                    break;
+
             }
         }
 

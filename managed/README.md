@@ -438,7 +438,9 @@ There is either manual or automatic way.
     It connects to the socket server inside the managed plugin. 
     When the main script starts, you can click the "START_SESSION" button and then it creates new car and starts 
     driving autonomously and grabbing screenshots automatically.
-    
+
+### Other notes
+Data gathering, specifically grabbing data from GPU buffers, breaks when using multiple monitors, data gathering must run only on one monitor.
     
 ### Downgrading the GTA V Steam version
 Your version of GTA V can be higher than your shvdn can manage, and in that case, this error pops up and game crashes:
