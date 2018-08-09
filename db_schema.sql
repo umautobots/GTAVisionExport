@@ -462,7 +462,8 @@ CREATE TABLE public.snapshots (
     cam_far_clip real,
     player_pos public.geometry(PointZ),
     velocity public.geometry(PointZ),
-    camera_relative_position public.geometry(PointZ)
+    camera_relative_position public.geometry(PointZ),
+    current_target public.geometry(Point)
 );
 
 
