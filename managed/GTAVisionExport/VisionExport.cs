@@ -69,9 +69,11 @@ namespace GTAVisionExport {
 
         private Task runTask;
         private int curSessionId = -1;
-        private TimeChecker lowSpeedTime = new TimeChecker(TimeSpan.FromSeconds(200));
-        private TimeChecker notMovingTime = new TimeChecker(TimeSpan.FromSeconds(30));
-        private TimeDistanceChecker distanceFromStart = new TimeDistanceChecker(TimeSpan.FromSeconds(30), 2, new Vector3());
+        public static TimeChecker lowSpeedTime = new TimeChecker(TimeSpan.FromMinutes(2));
+        public static TimeChecker notMovingTime = new TimeChecker(TimeSpan.FromSeconds(30));
+        public static TimeChecker notMovingNorDrivingTime = new TimeChecker(TimeSpan.FromSeconds(6));
+        public static TimeNearPointChecker NearPointFromStart = new TimeNearPointChecker(TimeSpan.FromSeconds(60), 10, new Vector3());
+        public static TimeNotMovingTowardsPointChecker LongFarFromTarget = new TimeNotMovingTowardsPointChecker(TimeSpan.FromSeconds(90), new Vector2());
         private bool isGamePaused = false; // this is for external pause, not for internal pause inside the script
         private static bool notificationsAllowed = true;
         private StereoCamera cams;
@@ -84,6 +86,7 @@ namespace GTAVisionExport {
         //this variable, when true, should be disabling car spawning and autodrive starting here, because offroad has different settings
         public static bool drivingOffroad;
         public static bool gatheringData = true;
+        public static bool triedRestartingAutodrive;
 
         public VisionExport() {
             // loading ini file
@@ -375,7 +378,6 @@ namespace GTAVisionExport {
 
             switch (checkStatus()) {
                 case GameStatus.NeedReload:
-                    //TODO: need to get a new session and run?
                     Logger.WriteLine("Status is NeedReload");
                     StopRun();
                     runTask?.Wait();
@@ -387,7 +389,6 @@ namespace GTAVisionExport {
                     ReloadGame();
                     break;
                 case GameStatus.NeedStart:
-                    //TODO do the autostart manually or automatically?
                     Logger.WriteLine("Status is NeedStart");
                     //Autostart();
                     // use reloading temporarily
@@ -523,22 +524,41 @@ namespace GTAVisionExport {
 //                here checking the time in low or no speed 
                 if (vehicle.Speed < 1.0f) {    //speed is in mph
                     if (lowSpeedTime.isPassed(Game.GameTime)) {
+                        Logger.WriteLine("needed reload by low speed for 2 minutes");
+                        UINotify("needed reload by low speed for 2 minutes");
                         return GameStatus.NeedReload;
                     }
                 } else {
                     lowSpeedTime.clear();
                 }
 
-                if (vehicle.Speed < 0.001f) {
+                if (vehicle.Speed < 0.01f) {
                     if (notMovingTime.isPassed(Game.GameTime)) {
+                        Logger.WriteLine("needed reload by staying in place 30 seconds");
+                        UINotify("needed reload by staying in place 30 seconds");
                         return GameStatus.NeedReload;
+                    }
+                    if (notMovingNorDrivingTime.isPassed(Game.GameTime) && !triedRestartingAutodrive) {
+                        Logger.WriteLine("starting driving from 6s inactivity");
+                        UINotify("starting driving from 6s inactivity");
+                        if (drivingOffroad) {
+                            OffroadPlanning.DriveToCurrentTarget();
+                            triedRestartingAutodrive = true;
+                        }
                     }
                 } else {
                     notMovingTime.clear();
+                    notMovingNorDrivingTime.clear();
                 }
 
 //                here checking the movement from previous position on some time
-                if (distanceFromStart.isPassed(Game.GameTime, vehicle.Position)) {
+                if (NearPointFromStart.isPassed(Game.GameTime, vehicle.Position)) {
+                    Logger.WriteLine("vehicle hasn't moved for 10 meters after 1 minute");
+                    return GameStatus.NeedReload;
+                }
+
+                if (LongFarFromTarget.isPassed(Game.GameTime, vehicle.Position)) {
+                    Logger.WriteLine("hasn't been any nearer to goal after 90 seconds");
                     return GameStatus.NeedReload;
                 }
 
@@ -668,16 +688,20 @@ namespace GTAVisionExport {
 //            player.Character.Alpha = 0;
             vehicle.Alpha = int.MaxValue;    //back to visible, not sure what the exact value means in terms of transparency
             player.Character.Alpha = int.MaxValue;
+            vehicle.IsInvincible = true;        //very important for offroad
         }
 
         public void ToggleNavigation() {
             if (drivingOffroad) {
                 //offroad driving script should handle that separately
                 OffroadPlanning.setNextTarget();
+                triedRestartingAutodrive = false;
+            }
+            else {
+                MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
+                inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});                
             }
             
-            MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
-            inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
 
         private void ClearSurroundingVehicles(Vector3 pos, float radius) {
@@ -696,14 +720,22 @@ namespace GTAVisionExport {
             Function.Call(Hash.CLEAR_AREA, x, y, z, radius, false, false, false, false);
         }
 
+        public static void clearStuckCheckers() {
+            lowSpeedTime.clear();
+            notMovingTime.clear();
+            notMovingNorDrivingTime.clear();
+            NearPointFromStart.clear();
+            LongFarFromTarget.clear();
+            triedRestartingAutodrive = false;            
+        }
+        
         public void ReloadGame() {
             if (staticCamera) {
                 return;
             }
 
-            lowSpeedTime.clear();
-            notMovingTime.clear();
-            distanceFromStart.clear();
+            clearStuckCheckers();
+            
             /*
             Process p = Process.GetProcessesByName("Grand Theft Auto V").FirstOrDefault();
             if (p != null)
@@ -750,7 +782,7 @@ namespace GTAVisionExport {
         }
 
         public void OnKeyDown(object o, KeyEventArgs k) {
-            Logger.WriteLine("VisionExport OnKeyDown called.");
+//            Logger.WriteLine("VisionExport OnKeyDown called.");
             switch (k.KeyCode) {
                 case Keys.PageUp:
                     postgresTask?.Wait();

@@ -37,12 +37,8 @@ namespace GTAVisionExport {
             return time >= startTime + interval.TotalMilliseconds;
         }
     }
-
-    /// <summary>
-    /// Use to check if vehicle is stuck in some area for some time (e.g. has not moved 1 meter or more from position in last minute)
-    /// 
-    /// </summary>
-    public class TimeDistanceChecker {
+    
+    public abstract class TimeDistanceChecker {
         public int startTime { get; set; }
         public bool initialized { get; set; }
         public TimeSpan interval { get; set; }
@@ -59,8 +55,10 @@ namespace GTAVisionExport {
         }
         
         public void clear() {
-            this.initialized = false;
+            initialized = false;
         }
+
+        public abstract bool isDistanceSatisfied(Vector3 position);
         
         public bool isPassed(int time, Vector3 position) {
             //UI.Notify("last time" + this.gameTime);
@@ -73,10 +71,86 @@ namespace GTAVisionExport {
             }
 
             if (time >= startTime + interval.TotalMilliseconds) {
-                return position.DistanceTo(center) < distance;
+                return isDistanceSatisfied(position);
             }
             return false;
         }
+    }
+
+    /// <summary>
+    /// Use to check if vehicle is stuck in some area for some time (e.g. has not moved 1 meter or more from position in last minute)
+    /// 
+    /// </summary>
+    public class TimeNearPointChecker : TimeDistanceChecker {
+
+        public TimeNearPointChecker(TimeSpan interval, int distance, Vector3 center) : base(interval, distance, center) {
+        }
+
+        public override bool isDistanceSatisfied(Vector3 position) {
+            return position.DistanceTo(center) < distance;
+        }
+    }
+
+    /// <summary>
+    /// Use to check if vehicle is stuck in some area for some time (e.g. has not come nearer to a location (not moving to a target))
+    /// </summary>
+    public class TimeDistantFromPointChecker : TimeDistanceChecker {
+        
+        public TimeDistantFromPointChecker(TimeSpan interval, int distance, Vector3 center) : base(interval, distance, center) {
+        }
+
+        public override bool isDistanceSatisfied(Vector3 position) {
+            return position.DistanceTo(center) > distance;
+        }
+        
+    }
+
+    /// <summary>
+    /// Use to check if vehicle is stuck in some area for some time (e.g. has not come nearer to a location (not moving to a target))
+    /// Updates distance, checks if min distance is changing or not after some time.
+    /// </summary>
+    public class TimeNotMovingTowardsPointChecker {
+        public int startTime { get; set; }
+        public bool initialized { get; set; }
+        public TimeSpan interval { get; set; }
+        public Vector2 center { get; set; }
+        public float distance;
+        public float minDistance;
+        
+        public TimeNotMovingTowardsPointChecker(TimeSpan interval, Vector2 center) {
+            /* Game.Gametime is in ms, so 1000000 ms = 16.6 min*/
+            startTime = 0;
+            initialized = false;
+            this.interval = interval;
+            this.center = center;
+        }
+        
+        public void clear() {
+            this.initialized = false;
+        }
+
+        public bool isPassed(int time, Vector3 position) {
+            //UI.Notify("last time" + this.gameTime);
+            //UI.Notify("time now" + time);
+            if (!initialized) {
+                startTime = time;
+                initialized = true;
+                return false;
+            }
+
+            distance = center.DistanceTo(new Vector2(position.X, position.Y));
+            if (distance < minDistance) {
+                minDistance = distance;
+                startTime = time;
+            }
+
+            if (time >= startTime + interval.TotalMilliseconds) {
+                return distance > minDistance;
+            }
+            return false;
+        }
+
+        
     }
 
     public enum GameStatus {

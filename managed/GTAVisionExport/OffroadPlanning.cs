@@ -27,6 +27,8 @@ namespace GTAVisionExport {
         private static Vector2 currentTarget;
         private static int targetsFromSameStart = 0;
         private static List<Rect> currentArea = null;
+        static KeyHandling kh = new KeyHandling();
+
         
         public OffroadPlanning() {
             UI.Notify("Loaded OffroadPlanning.cs");
@@ -155,7 +157,7 @@ namespace GTAVisionExport {
         }
         
         public static void setNextStart() {
-            Logger.WriteLine($"setting the next start");
+//            Logger.WriteLine($"setting the next start");
             currentArea = GetRandomArea();
             var startRect = GetRandomRect(currentArea);
             var start = GetRandomPoint(startRect);
@@ -171,6 +173,7 @@ namespace GTAVisionExport {
             }
             targetsFromSameStart = 0;            
             Logger.WriteLine($"setting next start in {newPosition}");
+            VisionExport.UINotify($"setting next start in {newPosition}");
         }
         
         public static void setNextTarget() {
@@ -179,7 +182,8 @@ namespace GTAVisionExport {
             }
             
 //            setting the new start in new area after some number of targets from same start
-            var targetsPerArea = 10;
+//            var targetsPerArea = 10;
+            var targetsPerArea = 5; //5 for testing purpose
             if (targetsPerArea < targetsFromSameStart || currentArea == null) {
                 setNextStart();
             }
@@ -196,34 +200,46 @@ namespace GTAVisionExport {
                 target = GetRandomPoint(targetRect);
             } while (target.DistanceTo(new Vector2(playerPos.X, playerPos.Y)) > 200);
             Logger.WriteLine($"setting next target in {target}");
+            VisionExport.UINotify($"setting next target in {target}");
             DriveToPoint(target);
 
             currentlyDrivingToTarget = true;
             currentTarget = target;
             targetsFromSameStart += 1;
+            VisionExport.clearStuckCheckers();
+            VisionExport.LongFarFromTarget.center = currentTarget;
         }
 
         private static void SetTargetAsWaypoint(Vector2 target) {
             HashFunctions.SetNewWaypoint(target);
         }
 
+        private static Autopilot getAutopilot() {
+            var field = kh.GetType().GetField("_autopilot", BindingFlags.NonPublic | BindingFlags.Instance);
+            return (Autopilot) field.GetValue(kh);
+        }
+        
         private static void DriveToPoint(Vector2 target) {
             SetTargetAsWaypoint(target);
-            var kh = new KeyHandling();
+            Wait(10);    //just wait until target is set
             var inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
             inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
         }
-        
+
+        public static void DriveToCurrentTarget() {
+            DriveToPoint(currentTarget);
+        }
+
         public static List<Rect> GetRandomArea() {
             var areaIdx = rnd.Next(areas.Count);
-            Logger.WriteLine($"randomly selected area index {areaIdx} from {areas.Count} areas");
+//            Logger.WriteLine($"randomly selected area index {areaIdx} from {areas.Count} areas");
             var area = areas[areaIdx];
-            Logger.WriteLine($"selected area: {string.Join(", ", area)}, with size {area.Count}");
+//            Logger.WriteLine($"selected area: {string.Join(", ", area)}, with size {area.Count}");
             return area;
         }
 
         public static Rect GetRandomRect(List<Rect> area) {
-            Logger.WriteLine($"selecting random rect for area with size {area.Count}");
+//            Logger.WriteLine($"selecting random rect for area with size {area.Count}");
             Logger.ForceFlush();
             var volumes = new List<int>(area.Count);
             for (var i = 0; i < area.Count; i++) {
