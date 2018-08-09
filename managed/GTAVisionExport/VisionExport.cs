@@ -726,7 +726,8 @@ namespace GTAVisionExport {
             notMovingNorDrivingTime.clear();
             NearPointFromStart.clear();
             LongFarFromTarget.clear();
-            triedRestartingAutodrive = false;            
+            triedRestartingAutodrive = false;
+            Logger.WriteLine("clearing checkers");
         }
         
         public void ReloadGame() {

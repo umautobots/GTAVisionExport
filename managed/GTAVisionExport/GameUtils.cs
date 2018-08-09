@@ -123,6 +123,7 @@ namespace GTAVisionExport {
             initialized = false;
             this.interval = interval;
             this.center = center;
+            minDistance = float.MaxValue;
         }
         
         public void clear() {
@@ -135,6 +136,7 @@ namespace GTAVisionExport {
             if (!initialized) {
                 startTime = time;
                 initialized = true;
+                minDistance = float.MaxValue;
                 return false;
             }
 

@@ -122,7 +122,7 @@ namespace GTAVisionExport {
             }
 
             if (! Game.IsWaypointActive) {
-                currentlyDrivingToTarget = false;                
+                currentlyDrivingToTarget = false;
             }
 
             
@@ -171,7 +171,8 @@ namespace GTAVisionExport {
             else {
                 Game.Player.Character.Position = newPosition;
             }
-            targetsFromSameStart = 0;            
+            targetsFromSameStart = 0;
+            currentlyDrivingToTarget = false;
             Logger.WriteLine($"setting next start in {newPosition}");
             VisionExport.UINotify($"setting next start in {newPosition}");
         }
