@@ -13,6 +13,7 @@ using SharpDX;
 using SharpDX.Mathematics;
 using NativeUI;
 using System.Drawing;
+using Amazon.KeyManagementService.Model.Internal.MarshallTransformations;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics;
@@ -153,6 +154,10 @@ namespace GTAVisionUtils
         public float X { get; set; }
         public float Y { get; set; }
 
+        public static GTAVector2 fromVector2(Vector2 vector2) {
+            return new GTAVector2(vector2.X, vector2.Y);
+        }
+        
         public GTAVector2(float x, float y)
         {
             X = x;
@@ -201,6 +206,7 @@ namespace GTAVisionUtils
         public Guid sceneGuid { get; set; }
         public GTAVector CamRelativeRot { get; set; }
         public GTAVector CamRelativePos { get; set; }
+        public GTAVector2 CurrentTarget { get; set; }
 
         public List<GTADetection> Detections { get; set; }
         public static SharpDX.Vector3 CvtVec(GTA.Math.Vector3 inp) {

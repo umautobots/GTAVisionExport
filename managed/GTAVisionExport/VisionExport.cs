@@ -73,7 +73,7 @@ namespace GTAVisionExport {
         public static TimeChecker notMovingTime = new TimeChecker(TimeSpan.FromSeconds(30));
         public static TimeChecker notMovingNorDrivingTime = new TimeChecker(TimeSpan.FromSeconds(6));
         public static TimeNearPointChecker NearPointFromStart = new TimeNearPointChecker(TimeSpan.FromSeconds(60), 10, new Vector3());
-        public static TimeNotMovingTowardsPointChecker LongFarFromTarget = new TimeNotMovingTowardsPointChecker(TimeSpan.FromSeconds(90), new Vector2());
+        public static TimeNotMovingTowardsPointChecker LongFarFromTarget = new TimeNotMovingTowardsPointChecker(TimeSpan.FromMinutes(2.5), new Vector2());
         private bool isGamePaused = false; // this is for external pause, not for internal pause inside the script
         private static bool notificationsAllowed = true;
         private StereoCamera cams;
@@ -492,6 +492,13 @@ namespace GTAVisionExport {
             else {
                 dat.CamRelativePos = null;
             }
+
+            if (drivingOffroad && OffroadPlanning.currentTarget != null) {
+                dat.CurrentTarget =GTAVector2.fromVector2(OffroadPlanning.currentTarget.Value);
+            }
+            else {
+                dat.CurrentTarget = null;
+            }
             
             dat.sceneGuid = guid;
 
@@ -503,7 +510,7 @@ namespace GTAVisionExport {
                 success = saveSnapshotToFile(dat.ImageName, wantedWeathers, false);
             }
             else {
-                Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
+                Weather weather = currentWeather ? World.Weather : wantedWeather;
                 success = saveSnapshotToFile(dat.ImageName, weather, false);
             }
 
@@ -538,7 +545,8 @@ namespace GTAVisionExport {
                         UINotify("needed reload by staying in place 30 seconds");
                         return GameStatus.NeedReload;
                     }
-                    if (notMovingNorDrivingTime.isPassed(Game.GameTime) && !triedRestartingAutodrive) {
+//                    if (notMovingNorDrivingTime.isPassed(Game.GameTime) && !triedRestartingAutodrive) {
+                    if (notMovingNorDrivingTime.isPassed(Game.GameTime)) {
                         Logger.WriteLine("starting driving from 6s inactivity");
                         UINotify("starting driving from 6s inactivity");
                         if (drivingOffroad) {

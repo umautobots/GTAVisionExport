@@ -174,7 +174,7 @@ namespace GTAVisionUtils {
                     cmd.Parameters.AddWithValue("@relative_rot_y", data.CamRelativeRot.Y);
                     cmd.Parameters.AddWithValue("@relative_rot_z", data.CamRelativeRot.Z);                    
                 }
-            
+
                 var camRelativePosString = "NULL";
                 if (data.CamRelativePos != null) {
                     camRelativePosString = "ST_MakePoint(@relative_pos_x, @relative_pos_y, @relative_pos_z)";
@@ -195,18 +195,25 @@ namespace GTAVisionUtils {
                     cmd.Parameters.AddWithValue("@cam_box_max_z", data.CarModelBox.Maximum.Z);
                 }
 
+                var currentTarget = "NULL";
+                if (data.CurrentTarget != null) {
+                    carModelBoxString = "ST_MakePoint(@target_x, @target_y)";
+                    cmd.Parameters.AddWithValue("@target_x", data.CurrentTarget.X);
+                    cmd.Parameters.AddWithValue("@target_y", data.CurrentTarget.Y);
+                }
+
                 cmd.Connection = conn;
                 cmd.Transaction = trans;
                 cmd.CommandText =
-                    "INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, camera_rot, " +
-                    "camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, player_pos, " +
-                    "cam_near_clip, cam_far_clip, velocity, scene_id, camera_relative_rotation, camera_relative_position, car_model_box, world_matrix) " +
-                    "VALUES ( (SELECT run_id FROM runs WHERE runguid=@guid), " +
-                    "@Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), ST_MakePoint(@rotx, @roty, @rotz), " +
-                    "ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, @width, @height, @ui_width, @ui_height, " +
-                    "ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, @cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z), @scene_id, " +
-                    camRelativeRotString + ", " + camRelativePosString + ", " + carModelBoxString + ", @world_matrix) " +
-                    "RETURNING snapshot_id;";
+                    $"INSERT INTO snapshots (run_id, version, imagepath, timestamp, timeofday, currentweather, camera_pos, " +
+                    $"camera_rot, camera_direction, camera_fov, view_matrix, proj_matrix, width, height, ui_width, ui_height, " +
+                    $"player_pos, cam_near_clip, cam_far_clip, velocity, scene_id, camera_relative_rotation, " +
+                    $"camera_relative_position, car_model_box, world_matrix, current_target) VALUES ( (SELECT run_id FROM runs WHERE " +
+                    $"runguid=@guid), @Version, @Imagepath, @Timestamp, @Timeofday, @currentweather, ST_MakePoint(@x, @y, @z), " +
+                    $"ST_MakePoint(@rotx, @roty, @rotz), ST_MakePoint(@dirx, @diry, @dirz), @fov, @view_matrix, @proj_matrix, " +
+                    $"@width, @height, @ui_width, @ui_height, ST_MakePoint(@player_x, @player_y, @player_z), @cam_near_clip, " +
+                    $"@cam_far_clip, ST_MakePoint(@vel_x, @vel_y, @vel_z), @scene_id, {camRelativeRotString}, " +
+                    $"{camRelativePosString}, {carModelBoxString}, @world_matrix, {currentTarget}) RETURNING snapshot_id;";
                 cmd.Parameters.Add(new NpgsqlParameter("@version", data.Version));
                 cmd.Parameters.Add(new NpgsqlParameter("@imagepath", data.ImageName));
                 cmd.Parameters.Add(new NpgsqlParameter("@timestamp", data.Timestamp));

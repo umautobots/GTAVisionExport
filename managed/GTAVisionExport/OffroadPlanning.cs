@@ -24,7 +24,7 @@ namespace GTAVisionExport {
 
         public static bool offroadDrivingStarted;
         private static bool currentlyDrivingToTarget;
-        private static Vector2 currentTarget;
+        public static Vector2? currentTarget = null;
         private static int targetsFromSameStart = 0;
         private static List<Rect> currentArea = null;
         static KeyHandling kh = new KeyHandling();
@@ -117,7 +117,7 @@ namespace GTAVisionExport {
         }
 
         public static void checkDrivingToTarget() {
-            if (Game.Player.Character.CurrentVehicle.Position.DistanceTo2D(new Vector3(currentTarget.X, currentTarget.Y, 0)) < 3) {
+            if (Game.Player.Character.CurrentVehicle.Position.DistanceTo2D(new Vector3(currentTarget.Value.X, currentTarget.Value.Y, 0)) < 3) {
                 currentlyDrivingToTarget = false;
             }
 
@@ -208,7 +208,7 @@ namespace GTAVisionExport {
             currentTarget = target;
             targetsFromSameStart += 1;
             VisionExport.clearStuckCheckers();
-            VisionExport.LongFarFromTarget.center = currentTarget;
+            VisionExport.LongFarFromTarget.center = currentTarget.Value;
         }
 
         private static void SetTargetAsWaypoint(Vector2 target) {
@@ -228,7 +228,7 @@ namespace GTAVisionExport {
         }
 
         public static void DriveToCurrentTarget() {
-            DriveToPoint(currentTarget);
+            DriveToPoint(currentTarget.Value);
         }
 
         public static List<Rect> GetRandomArea() {
