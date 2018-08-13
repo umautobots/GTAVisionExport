@@ -197,7 +197,7 @@ namespace GTAVisionUtils {
 
                 var currentTarget = "NULL";
                 if (data.CurrentTarget != null) {
-                    carModelBoxString = "ST_MakePoint(@target_x, @target_y)";
+                    currentTarget = "ST_MakePoint(@target_x, @target_y)";
                     cmd.Parameters.AddWithValue("@target_x", data.CurrentTarget.X);
                     cmd.Parameters.AddWithValue("@target_y", data.CurrentTarget.Y);
                 }
