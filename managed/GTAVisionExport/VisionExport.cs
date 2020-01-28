@@ -15,12 +15,7 @@ using YamlDotNet.Serialization;
 using BitMiracle.LibTiff.Classic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using Amazon;
-using Amazon.Runtime;
 using YamlDotNet.RepresentationModel;
-using Amazon.S3;
-using Amazon.S3.IO;
-using Amazon.S3.Model;
 using System.IO.Pipes;
 using System.Net;
 using VAutodrive;
@@ -35,11 +30,10 @@ using Color = System.Windows.Media.Color;
 using System.Configuration;
 using System.Threading;
 using IniParser;
+using Newtonsoft.Json;
 
 namespace GTAVisionExport {
-    
-    class VisionExport : Script
-    {
+    class VisionExport : Script {
 #if DEBUG
         const string session_name = "NEW_DATA_CAPTURE_NATURAL_V4_3";
 #else
@@ -48,38 +42,64 @@ namespace GTAVisionExport {
         //private readonly string dataPath =
         //    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Data");
         private readonly string dataPath;
-        private readonly string logFilePath;
-        private readonly Weather[] wantedWeather = new Weather[] {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
+        public static string logFilePath;
+
+        private readonly Weather[] wantedWeathers = new Weather[]
+            {Weather.Clear, Weather.Clouds, Weather.Overcast, Weather.Raining, Weather.Christmas};
+
+        private readonly Weather wantedWeather = Weather.Clear;
+        private readonly bool multipleWeathers = false; // decides whether to use multiple weathers or just one
+        private readonly bool currentWeather = true;
+        private readonly bool clearEverything = false;
+//        private readonly bool useMultipleCameras = false;    // when false, cameras handling script is not used at all
+        private readonly bool useMultipleCameras = true;    // when false, cameras handling script is not used at all
+//        private readonly bool staticCamera = true;        // this turns off whole car spawning, teleportation and autodriving procedure
+        private readonly bool staticCamera = false;        // this turns off whole car spawning, teleportation and autodriving procedure
         private Player player;
-        private string outputPath;
         private GTARun run;
         private bool enabled = false;
         private Socket server;
         private Socket connection;
         private UTF8Encoding encoding = new UTF8Encoding(false);
+
+//        this is the vaustodrive keyhandling
         private KeyHandling kh = new KeyHandling();
-        private ZipArchive archive;
-        private Stream S3Stream;
-        private AmazonS3Client client;
+
         private Task postgresTask;
+
         private Task runTask;
         private int curSessionId = -1;
-        private speedAndTime lowSpeedTime = new speedAndTime();
-        private bool IsGamePaused = false;
+        public static TimeChecker lowSpeedTime = new TimeChecker(TimeSpan.FromMinutes(2));
+        public static TimeChecker notMovingTime = new TimeChecker(TimeSpan.FromSeconds(30));
+        public static TimeChecker notMovingNorDrivingTime = new TimeChecker(TimeSpan.FromSeconds(6));
+        public static TimeNearPointChecker NearPointFromStart = new TimeNearPointChecker(TimeSpan.FromSeconds(60), 10, new Vector3());
+        public static TimeNotMovingTowardsPointChecker LongFarFromTarget = new TimeNotMovingTowardsPointChecker(TimeSpan.FromMinutes(2.5), new Vector2());
+        private bool isGamePaused = false; // this is for external pause, not for internal pause inside the script
+        private static bool notificationsAllowed = true;
         private StereoCamera cams;
-		private bool notificationsEnabled = true;
-        public VisionExport()
-        {
+        private bool timeIntervalEnabled = false;
+        private TimeSpan timeFrom;
+        private TimeSpan timeTo;
+        public static string location;
+        private static Vector2 somePos;
+
+        //this variable, when true, should be disabling car spawning and autodrive starting here, because offroad has different settings
+        public static bool drivingOffroad;
+        public static bool gatheringData = true;
+        public static bool triedRestartingAutodrive;
+
+        public VisionExport() {
             // loading ini file
             var parser = new FileIniDataParser();
-            var location = AppDomain.CurrentDomain.BaseDirectory;
+            location = AppDomain.CurrentDomain.BaseDirectory;
             var data = parser.ReadFile(Path.Combine(location, "GTAVision.ini"));
 
             //UINotify(ConfigurationManager.AppSettings["database_connection"]);
             dataPath = data["Snapshots"]["OutputDir"];
             logFilePath = data["Snapshots"]["LogFile"];
+            Logger.logFilePath = logFilePath;
 
-            System.IO.File.WriteAllText(logFilePath, "VisionExport constructor called.\n");
+            Logger.WriteLine("VisionExport constructor called.");
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
             PostgresExport.InitSQLTypes();
             player = Game.Player;
@@ -92,51 +112,160 @@ namespace GTAVisionExport {
             //outStream = File.CreateText(outputPath);
             this.Tick += new EventHandler(this.OnTick);
             this.KeyDown += OnKeyDown;
-            
-            Interval = 1000;
-            if (enabled)
-            {
+
+            Interval = 50;
+            if (enabled) {
                 postgresTask?.Wait();
                 postgresTask = StartSession();
                 runTask?.Wait();
                 runTask = StartRun();
             }
+
+            Logger.WriteLine("Logger prepared");
+            UINotify("Logger initialized. Going to initialize cameras.");
+            CamerasList.initialize();
+            initialize4cameras();
+            
+//            var newCamera = World.CreateCamera(new Vector3(), new Vector3(), 50);
+//            newCamera.NearClip = 0.15f;
+//            newCamera.IsActive = true;
+//            newCamera.Position = new Vector3(-1078f, -216f, 37f);
+////            newCamera.Rotation = new Vector3(270f, 0f, 0f);  // x and y rotation seem to be switched. Can be fixed by setting the last parameter to 2
+//            newCamera.Rotation = new Vector3(0f, 270f, 0f);  // x and y rotation seem to be switched. Can be fixed by setting the last parameter to 2
+//            World.RenderingCamera = newCamera;
+
+//            {-1078,-216,37}
+//            CamerasList.setMainCamera(new Vector3(358f, -1308f, 52f), new Vector3(0f, 90f, 0f), 150, 0.15f);
+
+            UINotify("VisionExport plugin initialized.");
         }
 
-        private void handlePipeInput()
-        {
-            System.IO.File.AppendAllText(logFilePath, "VisionExport handlePipeInput called.\n");
-            if(notificationsEnabled) UI.Notify("handlePipeInput called");
-			if (notificationsEnabled) UI.Notify("server connected:" + server.Connected.ToString());
-			if (notificationsEnabled) UI.Notify(connection == null ? "connection is null" : "connection:" + connection.ToString());
-            if (connection == null) return;
+        private void initialize4cameras() {
+//            cameras initialization:
             
-            byte[] inBuffer = new byte[1024];
-            string str = "";
-            int num = 0;
-            try
-            {
+//            for cameras mapping area before the car
+//            float r = 8f; //radius of circle with 4 cameras
+//            CamerasList.setMainCamera();
+//            CamerasList.addCamera(new Vector3(0f, 2f, 0.4f), new Vector3(0f, 0f, 0f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(r, r + 2f, 0.4f), new Vector3(0f, 0f, 90f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(0f, 2*r + 2f, 0.4f), new Vector3(0f, 0f, 180f), 50, 1.5f);
+//            CamerasList.addCamera(new Vector3(-r, r + 2f, 0.4f), new Vector3(0f, 0f, 270f), 50, 1.5f);
+
+////            for 4 cameras of different sides of the car, for šochman
+//            CamerasList.setMainCamera();
+//            CamerasList.addCamera(new Vector3(0f, 2f, 0.3f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(-0.8f, 0.8f, 0.4f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, -2.3f, 0.3f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+//            CamerasList.addCamera(new Vector3(0.8f, 0.8f, 0.4f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+
+//            for 4 cameras on top of car, heading 4 directions
+//            CamerasList.setMainCamera();
+//            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 0f), 58, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 90f), 58, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 180f), 58, 0.15f);
+//            CamerasList.addCamera(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 270f), 58, 0.15f);
+
+//            set only main camera for static traffic camera
+//            CamerasList.setMainCamera(new Vector3(-1078f, -216f, 57f), new Vector3(270f, 0f, 0f), 50, 0.15f);
+            
+////            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo
+////            for cameras mapping area before the car
+//            CamerasList.setMainCamera();
+//            const float r = 8f; //radius of circle with 4 cameras
+//            // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
+//            var carCenter = 0.5735f;
+//            var camOne = new Vector3(-0.06f, 0.27f, 1.65f - carCenter);
+//            var camTwo = new Vector3(-0.06f+0.54f, 0.27f, 1.65f - carCenter);
+//            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+////            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
+//            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+////            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
+//            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
+            
+////            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo, but for offroad car, specifically, for Mesa
+////            for cameras mapping area before the car
+////            KITTI images have ratio of 3.32, they are very large and thus have large horizontal fov. This ratio can not be obtained here
+////            so I set higher vertical fov and image may be then cropped into KITTI-like one
+//            CamerasList.setMainCamera();
+//            const float r = 8f; //radius of circle with 4 cameras
+//            // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
+//            var carCenter = 0.5735f;
+//            var camOne = new Vector3(-0.06f, 1.5f, 1.65f - carCenter);
+//            var camTwo = new Vector3(-0.06f+0.54f, 1.5f, 1.65f - carCenter);
+//            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 90, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 90, 0.15f);
+//            CamerasList.addCamera(camOne + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 90, 0.15f);
+////            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
+//            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(r, r, 0f), new Vector3(0f, 0f, 90f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(0, 2*r, 0f), new Vector3(0f, 0f, 180f), 50, 0.15f);
+////            CamerasList.addCamera(camTwo + new Vector3(-r, r, 0f), new Vector3(0f, 0f, 270f), 50, 0.15f);
+////            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
+//            CamerasList.addCamera(camOne + new Vector3(0, r, r + 4), new Vector3(270f, 0f, 0f), 70, 0.15f);
+
+//            na 32 metrů průměr, výš a natočit dolů            
+//            two "cameras", as in KITTI dataset, so we have 4-camera setup in stereo, but for offroad car, specifically, for Mesa
+//            for cameras mapping area before the car
+//            KITTI images have ratio of 3.32, they are very large and thus have large horizontal fov. This ratio can not be obtained here
+//            so I set higher vertical fov and image may be then cropped into KITTI-like one
+            CamerasList.setMainCamera();
+            const float r = 16f; //radius of circle with 4 cameras
+            // this height is for 1.65 m above ground, as in KITTI. The car has height of model ASEA is 1.5626, its center is in 0.5735 above ground
+            var carCenter = 0.5735f;
+            var camOne = new Vector3(-0.06f, 1.5f, 1.65f - carCenter);
+            var camTwo = new Vector3(-0.06f+0.54f, 1.5f, 1.65f - carCenter);
+            CamerasList.addCamera(camOne + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
+            
+            CamerasList.addCamera(camOne + new Vector3(r, r, 5f), new Vector3(-30f, 0f, 90f), 90, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(0, 2*r, 5f), new Vector3(-30f, 0f, 180f), 90, 0.15f);
+            CamerasList.addCamera(camOne + new Vector3(-r, r, 5f), new Vector3(-30f, 0f, 270f), 90, 0.15f);
+//            4 camera layout from 1 camera should be ernough to reconstruct 3D map for both cameras
+            CamerasList.addCamera(camTwo + new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 0f), 90, 0.15f);
+//            and now, one camera from birds-eye view, with this configuration, it sees all other cameras
+            CamerasList.addCamera(camOne + new Vector3(0, r, r + 8), new Vector3(270f, 0f, 90f), 70, 0.15f);    //to have bigger view of area in front of and behind car
+        }
+        
+        private void HandlePipeInput() {
+//            Logger.writeLine("VisionExport handlePipeInput called.");
+//            UINotify("handlePipeInput called");
+            UINotify("server connected:" + server.Connected);
+            UINotify(connection == null ? "connection is null" : "connection:" + connection);
+            if (connection == null) return;
+
+            var inBuffer = new byte[1024];
+            var str = "";
+            var num = 0;
+            try {
                 num = connection.Receive(inBuffer);
                 str = encoding.GetString(inBuffer, 0, num);
             }
-            catch (SocketException e)
-            {
-                if (e.SocketErrorCode == SocketError.WouldBlock)
-                {
+            catch (SocketException e) {
+                if (e.SocketErrorCode == SocketError.WouldBlock) {
                     return;
                 }
+
                 throw;
             }
-            if (num == 0)
-            {
+
+            if (num == 0) {
                 connection.Shutdown(SocketShutdown.Both);
                 connection.Close();
                 connection = null;
                 return;
             }
-			if (notificationsEnabled) UI.Notify(str.Length.ToString());
-            switch (str)
-            {
+
+            UINotify("str: " + str);
+            Logger.WriteLine("obtained json: " + str);
+            dynamic parameters = JsonConvert.DeserializeObject(str);
+            string commandName = parameters.name;
+            switch (commandName) {
                 case "START_SESSION":
                     postgresTask?.Wait();
                     postgresTask = StartSession();
@@ -151,7 +280,7 @@ namespace GTAVisionExport {
                     ToggleNavigation();
                     break;
                 case "ENTER_VEHICLE":
-					if (notificationsEnabled) UI.Notify("Trying to enter vehicle");
+                    UINotify("Trying to enter vehicle");
                     EnterVehicle();
                     break;
                 case "AUTOSTART":
@@ -161,94 +290,112 @@ namespace GTAVisionExport {
                     ReloadGame();
                     break;
                 case "RELOAD":
-                    FieldInfo f = this.GetType().GetField("_scriptdomain", BindingFlags.NonPublic | BindingFlags.Instance);
-                    object domain = f.GetValue(this);
-                    MethodInfo m = domain.GetType()
+                    var f = GetType()
+                        .GetField("_scriptdomain", BindingFlags.NonPublic | BindingFlags.Instance);
+                    var domain = f.GetValue(this);
+                    var m = domain.GetType()
                         .GetMethod("DoKeyboardMessage", BindingFlags.Instance | BindingFlags.Public);
                     m.Invoke(domain, new object[] {Keys.Insert, true, false, false, false});
                     break;
-                case "GET_SCREEN":
-                    var last = ImageUtils.getLastCapturedFrame();
-                    Int64 size = last.Length;
-                    size = IPAddress.HostToNetworkOrder(size);
-                    connection.Send(BitConverter.GetBytes(size));
-                    connection.Send(last);
+                case "SET_TIME":
+                    string time = parameters.time;
+                    UINotify("starting set time, obtained: " + time);
+                    var hoursAndMinutes = time.Split(':');
+                    var hours = int.Parse(hoursAndMinutes[0]);
+                    var minutes = int.Parse(hoursAndMinutes[1]);
+                    GTA.World.CurrentDayTime = new TimeSpan(hours, minutes, 0);
+                    UINotify("Time Set");
                     break;
+                case "SET_WEATHER":
+                    try {
+                        string weather = parameters.weather;
+                        UINotify("Weather Set to " + weather.ToString());
+                        var weatherEnum = (Weather) Enum.Parse(typeof(Weather), weather);
+                        GTA.World.Weather = weatherEnum;
+                    }
+                    catch (Exception e) {
+                        Logger.WriteLine(e);
+                    }
 
+                    break;
+                case "SET_TIME_INTERVAL":
+                    string timeFrom = parameters.timeFrom;
+                    string timeTo = parameters.timeTo;
+                    UINotify("starting set time, obtained from: " + timeFrom + ", to: " + timeTo);
+                    var hoursAndMinutesFrom = timeFrom.Split(':');
+                    var hoursAndMinutesTo = timeTo.Split(':');
+                    var hoursFrom = int.Parse(hoursAndMinutesFrom[0]);
+                    var minutesFrom = int.Parse(hoursAndMinutesFrom[1]);
+                    var hoursTo = int.Parse(hoursAndMinutesTo[0]);
+                    var minutesTo = int.Parse(hoursAndMinutesTo[1]);
+                    this.timeIntervalEnabled = true;
+                    this.timeFrom = new TimeSpan(hoursFrom, minutesFrom, 0);
+                    this.timeTo = new TimeSpan(hoursTo, minutesTo, 0);
+                    UINotify("Time Interval Set");
+                    break;
+                case "PAUSE":
+                    UINotify("game paused");
+                    isGamePaused = true;
+                    Game.Pause(true);
+                    break;
+                case "UNPAUSE":
+                    UINotify("game unpaused");
+                    isGamePaused = false;
+                    Game.Pause(false);
+                    break;
+//                    uncomment when resolving, how the hell should I get image by socket correctly
+//                case "GET_SCREEN":
+//                    var last = ImageUtils.getLastCapturedFrame();
+//                    Int64 size = last.Length;
+//                    UINotify("last size: " + size.ToString());
+//                    size = IPAddress.HostToNetworkOrder(size);
+//                    connection.Send(BitConverter.GetBytes(size));
+//                    connection.Send(last);
+//                    break;
             }
         }
 
-        private void UploadFile()
-        {
-            
-            archive.Dispose();
-            var oldOutput = outputPath;
-            if (oldOutput != null)
-            {
-                new Thread(() =>
-                {
-                    File.Move(oldOutput, Path.Combine(dataPath, run.guid + ".zip"));
-                }).Start();
-            }
-            
-            outputPath = Path.GetTempFileName();
-            S3Stream = File.Open(outputPath, FileMode.Truncate);
-            archive = new ZipArchive(S3Stream, ZipArchiveMode.Update);
-            //File.Delete(oldOutput);
-            
-            /*
-            archive.Dispose();
-            var req = new PutObjectRequest {
-                BucketName = "gtadata",
-                Key = "images/" + run.guid + ".zip",
-                FilePath = outputPath
-            };
-            var resp = client.PutObjectAsync(req);
-            outputPath = Path.GetTempFileName();
-            S3Stream = File.Open(outputPath, FileMode.Truncate);
-            archive = new ZipArchive(S3Stream, ZipArchiveMode.Update);
-            
-            await resp;
-            File.Delete(req.FilePath);
-            */
+        public void startRunAndSessionManual() {
+//            this method does not enable mod (used for manual data gathering)
+            postgresTask?.Wait();
+            postgresTask = StartSession();
+            runTask?.Wait();
+            runTask = StartRun(false);
         }
-        public void OnTick(object o, EventArgs e)
-        {
-            
-            
 
-            if (server.Poll(10, SelectMode.SelectRead) && connection == null)
-            {
+        public void OnTick(object o, EventArgs e) {
+            if (server.Poll(10, SelectMode.SelectRead) && connection == null) {
                 connection = server.Accept();
-				if (notificationsEnabled) UI.Notify("CONNECTED");
+                UINotify("CONNECTED");
                 connection.Blocking = false;
             }
-            handlePipeInput();
+
+            HandlePipeInput();
             if (!enabled) return;
-            
+
             //Array values = Enum.GetValues(typeof(Weather));
 
 
             switch (checkStatus()) {
                 case GameStatus.NeedReload:
-                    //TODO: need to get a new session and run?
+                    Logger.WriteLine("Status is NeedReload");
                     StopRun();
                     runTask?.Wait();
                     runTask = StartRun();
-					//StopSession();
-					//Autostart();
-					if (notificationsEnabled) UI.Notify("need reload game");
-                    Script.Wait(100);
+                    //StopSession();
+                    //Autostart();
+                    UINotify("need reload game");
+                    Wait(100);
                     ReloadGame();
                     break;
                 case GameStatus.NeedStart:
-                    //TODO do the autostart manually or automatically?
+                    Logger.WriteLine("Status is NeedStart");
                     //Autostart();
                     // use reloading temporarily
                     StopRun();
-                    
+
                     ReloadGame();
-                    Script.Wait(100);
+                    Wait(100);
                     runTask?.Wait();
                     runTask = StartRun();
                     //Autostart();
@@ -256,103 +403,182 @@ namespace GTAVisionExport {
                 case GameStatus.NoActionNeeded:
                     break;
             }
+
+//            UINotify("runTask.IsCompleted: " + runTask.IsCompleted.ToString());
+//            UINotify("postgresTask.IsCompleted: " + postgresTask.IsCompleted.ToString());
             if (!runTask.IsCompleted) return;
             if (!postgresTask.IsCompleted) return;
             
-            List<byte[]> colors = new List<byte[]>();
-            Game.Pause(true);
-            Script.Wait(500);
-            GTAData dat = GTAData.DumpData(Game.GameTime + ".tiff", new List<Weather>());
-            if (dat == null) return;
-            var thisframe = VisionNative.GetCurrentTime();
-            var depth = VisionNative.GetDepthBuffer();
-            var stencil = VisionNative.GetStencilBuffer();
-            colors.Add(VisionNative.GetColorBuffer());
-            /*
-            foreach (var wea in wantedWeather) {
-                World.TransitionToWeather(wea, 0.0f);
-                Script.Wait(1);
-                colors.Add(VisionNative.GetColorBuffer());
-            }*/
-            Game.Pause(false);
-            
-            /*
-            if (World.Weather != Weather.Snowing)
-            {
-                World.TransitionToWeather(Weather.Snowing, 1);
-                
-            }*/
-            var colorframe = VisionNative.GetLastColorTime();
-            var depthframe = VisionNative.GetLastConstantTime();
-            var constantframe = VisionNative.GetLastConstantTime();
-			//UI.Notify("DIFF: " + (colorframe - depthframe) + " FRAMETIME: " + (1 / Game.FPS) * 1000);
-			if (notificationsEnabled) UI.Notify(colors[0].Length.ToString());
-            if (depth == null || stencil == null)
-            {
-				if (notificationsEnabled) UI.Notify("No DEPTH");
-                return;
+            if (drivingOffroad && OffroadPlanning.offroadDrivingStarted) {
+                OffroadPlanning.checkDrivingToTarget();
+                OffroadPlanning.setNextTarget();
             }
 
-            /*
-             * this code checks to see if there's drift
-             * it's kinda pointless because we end up "straddling" a present call,
-             * so the capture time difference can be ~1/4th of a frame but still the
-             * depth/stencil and color buffers are one frame offset from each other
-            if (Math.Abs(thisframe - colorframe) < 60 && Math.Abs(colorframe - depthframe) < 60 &&
-                Math.Abs(colorframe - constantframe) < 60)
-            {
-                
+//            UINotify("going to save images and save to postgres");
 
-
-
-                
-                PostgresExport.SaveSnapshot(dat, run.guid);
+            if (gatheringData) {
+                try {
+                    GamePause(true);
+                    gatherData();
+                    GamePause(false);
+                }
+                catch (Exception exception) {
+                    GamePause(false);
+                    Logger.WriteLine("exception occured, logging and continuing");
+                    Logger.WriteLine(exception);
+                }                
             }
-            */
-            ImageUtils.WaitForProcessing();
-            ImageUtils.StartUploadTask(archive, Game.GameTime.ToString(), Game.ScreenResolution.Width,
-                Game.ScreenResolution.Height, colors, depth, stencil);
-            
-            PostgresExport.SaveSnapshot(dat, run.guid);
-            S3Stream.Flush();
-            if ((Int64)S3Stream.Length > (Int64)2048 * (Int64)1024 * (Int64)1024) {
-                ImageUtils.WaitForProcessing();
-                StopRun();
-                runTask?.Wait();
-                runTask = StartRun();
+
+//            if time interval is enabled, checkes game time and sets it to timeFrom, it current time is after timeTo
+            if (timeIntervalEnabled) {
+                var currentTime = World.CurrentDayTime;
+                if (currentTime > timeTo) {
+                    World.CurrentDayTime = timeFrom;
+                }
             }
         }
 
+        private void gatherData(int delay = 5) {
+            if (clearEverything) {
+                ClearSurroundingEverything(Game.Player.Character.Position, 1000f);
+            }
+
+            Wait(100);
+
+            var dateTimeFormat = @"yyyy-MM-dd--HH-mm-ss--fff";
+            var guid = Guid.NewGuid();
+            Logger.WriteLine("generated scene guid: " + guid.ToString());
+            
+            if (useMultipleCameras) {
+                for (var i = 0; i < CamerasList.cameras.Count; i++) {
+                    Logger.WriteLine("activating camera " + i.ToString());
+                    CamerasList.ActivateCamera(i);
+                    gatherDatForOneCamera(dateTimeFormat, guid);
+                    Wait(delay);
+                }
+                CamerasList.Deactivate();
+            }
+            else {
+//                when multiple cameras are not used, only main camera is being used. 
+//                now it checks if it is active or not, and sets it
+                if (!CamerasList.mainCamera.IsActive) {
+                    CamerasList.ActivateMainCamera();
+                }
+                gatherDatForOneCamera(dateTimeFormat, guid);
+            }
+        }
+
+        private void gatherDatForOneCamera(string dateTimeFormat, Guid guid) {
+            GTAData dat;
+            bool success;
+            if (multipleWeathers) {
+                dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), wantedWeathers.ToList());
+            }
+            else {
+                Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
+                dat = GTAData.DumpData(DateTime.UtcNow.ToString(dateTimeFormat), weather);
+            }
+
+            if (CamerasList.activeCameraRotation.HasValue) {
+                dat.CamRelativeRot = new GTAVector(CamerasList.activeCameraRotation.Value);                
+            }
+            else {
+                dat.CamRelativeRot = null;
+            }
+
+            if (CamerasList.activeCameraPosition.HasValue) {
+                dat.CamRelativePos = new GTAVector(CamerasList.activeCameraPosition.Value);                
+            }
+            else {
+                dat.CamRelativePos = null;
+            }
+
+            if (drivingOffroad && OffroadPlanning.currentTarget != null) {
+                dat.CurrentTarget =GTAVector2.fromVector2(OffroadPlanning.currentTarget.Value);
+            }
+            else {
+                dat.CurrentTarget = null;
+            }
+            
+            dat.sceneGuid = guid;
+
+            if (dat == null) {
+                return;
+            }
+
+            if (multipleWeathers) {
+                success = saveSnapshotToFile(dat.ImageName, wantedWeathers, false);
+            }
+            else {
+                Weather weather = currentWeather ? World.Weather : wantedWeather;
+                success = saveSnapshotToFile(dat.ImageName, weather, false);
+            }
+
+            if (!success) {
+//                    when getting data and saving to file failed, saving to db is skipped
+                return;
+            }
+
+            PostgresExport.SaveSnapshot(dat, run.guid);            
+        }
+        
         /* -1 = need restart, 0 = normal, 1 = need to enter vehicle */
-        public GameStatus checkStatus()
-        {
-            Ped player = Game.Player.Character;
+        public GameStatus checkStatus() {
+            var player = Game.Player.Character;
             if (player.IsDead) return GameStatus.NeedReload;
-            if (player.IsInVehicle())
-            {
-                Vehicle vehicle = player.CurrentVehicle;
-                //UI.Notify("T:" + Game.GameTime.ToString() + " S: " + vehicle.Speed.ToString());
-                if (vehicle.Speed < 1.0f) //speed is in mph
-                {
-                    if (lowSpeedTime.checkTrafficJam(Game.GameTime, vehicle.Speed))
-                    {
+            if (player.IsInVehicle()) {
+                var vehicle = player.CurrentVehicle;
+//                here checking the time in low or no speed 
+                if (vehicle.Speed < 1.0f) {    //speed is in mph
+                    if (lowSpeedTime.isPassed(Game.GameTime)) {
+                        Logger.WriteLine("needed reload by low speed for 2 minutes");
+                        UINotify("needed reload by low speed for 2 minutes");
                         return GameStatus.NeedReload;
                     }
+                } else {
+                    lowSpeedTime.clear();
                 }
-                else
-                {
-                    lowSpeedTime.clearTime();
+
+                if (vehicle.Speed < 0.01f) {
+                    if (notMovingTime.isPassed(Game.GameTime)) {
+                        Logger.WriteLine("needed reload by staying in place 30 seconds");
+                        UINotify("needed reload by staying in place 30 seconds");
+                        return GameStatus.NeedReload;
+                    }
+//                    if (notMovingNorDrivingTime.isPassed(Game.GameTime) && !triedRestartingAutodrive) {
+                    if (notMovingNorDrivingTime.isPassed(Game.GameTime)) {
+                        Logger.WriteLine("starting driving from 6s inactivity");
+                        UINotify("starting driving from 6s inactivity");
+                        if (drivingOffroad) {
+                            OffroadPlanning.DriveToCurrentTarget();
+                            triedRestartingAutodrive = true;
+                        }
+                    }
+                } else {
+                    notMovingTime.clear();
+                    notMovingNorDrivingTime.clear();
                 }
+
+//                here checking the movement from previous position on some time
+                if (NearPointFromStart.isPassed(Game.GameTime, vehicle.Position)) {
+                    Logger.WriteLine("vehicle hasn't moved for 10 meters after 1 minute");
+                    return GameStatus.NeedReload;
+                }
+
+                if (LongFarFromTarget.isPassed(Game.GameTime, vehicle.Position)) {
+                    Logger.WriteLine("hasn't been any nearer to goal after 90 seconds");
+                    return GameStatus.NeedReload;
+                }
+
                 return GameStatus.NoActionNeeded;
             }
-            else
-            {
+            else {
                 return GameStatus.NeedReload;
             }
         }
 
-        public Bitmap CaptureScreen()
-        {
+        public Bitmap CaptureScreen() {
+            UINotify("CaptureScreen called");
             var cap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
             var gfx = Graphics.FromImage(cap);
             //var dat = GTAData.DumpData(Game.GameTime + ".jpg");
@@ -371,93 +597,154 @@ namespace GTAVisionExport {
             } */
             return cap;
             //cap.Save(GetFileName(".png"), ImageFormat.Png);
-
         }
 
-        public void Autostart()
-        {
-            EnterVehicle();
-            Script.Wait(200);
-            ToggleNavigation();
-            Script.Wait(200);
+        public void Autostart() {
+            if (! staticCamera) {
+                EnterVehicle();
+                Wait(200);
+                ToggleNavigation();
+                Wait(200);                
+            }
             postgresTask?.Wait();
             postgresTask = StartSession();
         }
 
-        public async Task StartSession(string name = session_name)
-        {
+        public async Task StartSession(string name = session_name) {
             if (name == null) name = Guid.NewGuid().ToString();
             if (curSessionId != -1) StopSession();
             int id = await PostgresExport.StartSession(name);
             curSessionId = id;
         }
 
-        public void StopSession()
-        {
+        public void StopSession() {
             if (curSessionId == -1) return;
             PostgresExport.StopSession(curSessionId);
             curSessionId = -1;
         }
-        public async Task StartRun()
-        {
+
+        public async Task StartRun(bool enable = true) {
             await postgresTask;
-            if(run != null) PostgresExport.StopRun(run);
+            if (run != null) PostgresExport.StopRun(run);
             var runid = await PostgresExport.StartRun(curSessionId);
-
-            //var s3Info = new S3FileInfo(client, "gtadata", run.archiveKey);
-            //S3Stream = s3Info.Create();
-            
-            outputPath = Path.GetTempFileName();
-            S3Stream = File.Open(outputPath, FileMode.Truncate);
-            archive = new ZipArchive(S3Stream, ZipArchiveMode.Create);
-            
-            //archive = new ZipArchive(, ZipArchiveMode.Create);
-            
-            //archive = ZipFile.Open(Path.Combine(dataPath, run.guid + ".zip"), ZipArchiveMode.Create);
-            
-
             run = runid;
-            enabled = true;
+            if (enable) {
+                enabled = true;
+            }
         }
 
-        public void StopRun()
-        {
+        public void StopRun() {
             runTask?.Wait();
             ImageUtils.WaitForProcessing();
-            if (S3Stream.CanWrite)
-            {
-                S3Stream.Flush();
-            }
             enabled = false;
             PostgresExport.StopRun(run);
-            UploadFile();
+//            UploadFile();
             run = null;
-            
+
             Game.Player.LastVehicle.Alpha = int.MaxValue;
         }
 
-        public void EnterVehicle()
-        {
+        public static void UINotify(string message) {
+            //just wrapper for UI.Notify, but lets us disable showing notifications ar all
+            if (notificationsAllowed) {
+                UI.Notify(message);
+            }
+        }
+
+        public void GamePause(bool value) {
+            //wraper for pausing and unpausing game, because if its paused, I don't want to pause it again and unpause it. 
+            if (!isGamePaused) {
+                Game.Pause(value);
+            }
+        }
+
+        public static void EnterVehicle() {
             /*
             var vehicle = World.GetClosestVehicle(player.Character.Position, 30f);
             player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
             */
-            Model mod = new Model(GTA.Native.VehicleHash.Asea);
-            var vehicle = GTA.World.CreateVehicle(mod, player.Character.Position);
-            player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
-            //vehicle.Alpha = 0; //transparent
-            //player.Character.Alpha = 0;
+            Model mod = null;
+            if (drivingOffroad) {
+                mod = new Model(GTAConst.OffroadVehicleHash);
+            } else {
+                mod = new Model(GTAConst.OnroadVehicleHash);  
+            }
+
+            var player = Game.Player;
+            if (mod == null) {
+                UINotify("mod is null");
+            }
+
+            if (player == null) {
+                UINotify("player is null");
+            }
+
+            if (player.Character == null) {
+                UINotify("player.Character is null");
+            }
+
+            UINotify("player position: " + player.Character.Position);
+            var vehicle = World.CreateVehicle(mod, player.Character.Position);
+            if (vehicle == null) {
+                UINotify("vehicle is null. Something is fucked up");
+            }
+            else {
+                player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
+            }
+
+//            vehicle.Alpha = 0; //transparent
+//            player.Character.Alpha = 0;
+            vehicle.Alpha = int.MaxValue;    //back to visible, not sure what the exact value means in terms of transparency
+            player.Character.Alpha = int.MaxValue;
+            vehicle.IsInvincible = true;        //very important for offroad
         }
 
-        public void ToggleNavigation()
-        {
-            //YOLO
-            MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
-            inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});
+        public void ToggleNavigation() {
+            if (drivingOffroad) {
+                //offroad driving script should handle that separately
+                OffroadPlanning.setNextTarget();
+                triedRestartingAutodrive = false;
+            }
+            else {
+                MethodInfo inf = kh.GetType().GetMethod("AtToggleAutopilot", BindingFlags.NonPublic | BindingFlags.Instance);
+                inf.Invoke(kh, new object[] {new KeyEventArgs(Keys.J)});                
+            }
+            
         }
 
-        public void ReloadGame()
-        {
+        private void ClearSurroundingVehicles(Vector3 pos, float radius) {
+            ClearSurroundingVehicles(pos.X, pos.Y, pos.Z, radius);
+        }
+
+        private void ClearSurroundingVehicles(float x, float y, float z, float radius) {
+            Function.Call(Hash.CLEAR_AREA_OF_VEHICLES, x, y, z, radius, false, false, false, false);
+        }
+
+        private void ClearSurroundingEverything(Vector3 pos, float radius) {
+            ClearSurroundingEverything(pos.X, pos.Y, pos.Z, radius);
+        }
+
+        private void ClearSurroundingEverything(float x, float y, float z, float radius) {
+            Function.Call(Hash.CLEAR_AREA, x, y, z, radius, false, false, false, false);
+        }
+
+        public static void clearStuckCheckers() {
+            lowSpeedTime.clear();
+            notMovingTime.clear();
+            notMovingNorDrivingTime.clear();
+            NearPointFromStart.clear();
+            LongFarFromTarget.clear();
+            triedRestartingAutodrive = false;
+            Logger.WriteLine("clearing checkers");
+        }
+        
+        public void ReloadGame() {
+            if (staticCamera) {
+                return;
+            }
+
+            clearStuckCheckers();
+            
             /*
             Process p = Process.GetProcessesByName("Grand Theft Auto V").FirstOrDefault();
             if (p != null)
@@ -470,88 +757,93 @@ namespace GTAVisionExport {
             */
             // or use CLEAR_AREA_OF_VEHICLES
             Ped player = Game.Player.Character;
-            //UI.Notify("x = " + player.Position.X + "y = " + player.Position.Y + "z = " + player.Position.Z);
+            //UINotify("x = " + player.Position.X + "y = " + player.Position.Y + "z = " + player.Position.Z);
             // no need to release the autodrive here
             // delete all surrounding vehicles & the driver's car
-            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y, player.Position.Z, 1000f, false, false, false, false);
+//            ClearSurroundingVehicles(player.Position, 1000f);
             player.LastVehicle.Delete();
             // teleport to the spawning position, defined in GameUtils.cs, subject to changes
-            player.Position = GTAConst.StartPos;
-            Function.Call(GTA.Native.Hash.CLEAR_AREA_OF_VEHICLES, player.Position.X, player.Position.Y, player.Position.Z, 100f, false, false, false, false);
+//            player.Position = GTAConst.OriginalStartPos;
+            if (drivingOffroad) {
+                OffroadPlanning.setNextStart();
+                OffroadPlanning.setNextTarget();
+            }
+            else {
+                player.Position = GTAConst.HighwayStartPos;
+            }
+//            ClearSurroundingVehicles(player.Position, 100f);
+//            ClearSurroundingVehicles(player.Position, 50f);
+            ClearSurroundingVehicles(player.Position, 20f);
             // start a new run
             EnterVehicle();
             //Script.Wait(2000);
             ToggleNavigation();
 
-            lowSpeedTime.clearTime();
-
+            lowSpeedTime.clear();
         }
 
-        public void TraverseWeather()
-        {
-            for (int i = 1; i < 14; i++)
-            {
+        public void TraverseWeather() {
+            for (int i = 1; i < 14; i++) {
                 //World.Weather = (Weather)i;
-                World.TransitionToWeather((Weather)i, 0.0f);
+                World.TransitionToWeather((Weather) i, 0.0f);
                 //Script.Wait(1000);
             }
         }
 
-        public void OnKeyDown(object o, KeyEventArgs k)
-        {
-            System.IO.File.AppendAllText(logFilePath, "VisionExport OnKeyDown called.\n");
+        public void OnKeyDown(object o, KeyEventArgs k) {
+//            Logger.WriteLine("VisionExport OnKeyDown called.");
+            switch (k.KeyCode) {
+                case Keys.PageUp:
+                    postgresTask?.Wait();
+                    postgresTask = StartSession();
+                    runTask?.Wait();
+                    runTask = StartRun();
+                    UINotify("GTA Vision Enabled");
+//                there is set weather, just for testing
+                    World.Weather = wantedWeather;
+                    break;
+                case Keys.PageDown:
+                    if (staticCamera) {
+                        CamerasList.Deactivate();
+                    }
+                    StopRun();
+                    StopSession();
+                    UINotify("GTA Vision Disabled");
+                    break;
+                // temp modification
+                case Keys.H:
+                    EnterVehicle();
+                    UINotify("Trying to enter vehicle");
+                    ToggleNavigation();
+                    break;
+                // temp modification
+                case Keys.Y:
+                    ReloadGame();
+                    break;
+                // temp modification
+                case Keys.X:
+                    notificationsAllowed = !notificationsAllowed;
+                    if (notificationsAllowed) {
+                        UI.Notify("Notifications Enabled");
+                    }
+                    else {
+                        UI.Notify("Notifications Disabled");
+                    }
 
-			if (k.KeyCode == Keys.Z)
-			{
-				if (notificationsEnabled)
-				{
-					UI.Notify("Notifications Disabled");
-					notificationsEnabled = false;
-				}
-				else
-				{
-					UI.Notify("Notifications Enabled");
-					notificationsEnabled = true;
+                    break;
+                // temp modification
+                case Keys.U:
+                    var settings = ScriptSettings.Load("GTAVisionExport.xml");
+                    var loc = AppDomain.CurrentDomain.BaseDirectory;
 
-				}
-			}
-            if (k.KeyCode == Keys.PageUp)
-            {
-                postgresTask?.Wait();
-                postgresTask = StartSession();
-                runTask?.Wait();
-                runTask = StartRun();
-				if (notificationsEnabled) UI.Notify("GTA Vision Enabled");
-            }
-            if (k.KeyCode == Keys.PageDown)
-            {
-                StopRun();
-                StopSession();
-				if (notificationsEnabled) UI.Notify("GTA Vision Disabled");
-            }
-            if (k.KeyCode == Keys.H) // temp modification
-            {
-                EnterVehicle();
-				if (notificationsEnabled) UI.Notify("Trying to enter vehicle");
-                ToggleNavigation();
-            }
-            if (k.KeyCode == Keys.Y) // temp modification
-            {
-                ReloadGame();
-            }
-            if (k.KeyCode == Keys.U) // temp modification
-            {
-                var settings = ScriptSettings.Load("GTAVisionExport.xml");
-                var loc = AppDomain.CurrentDomain.BaseDirectory;
-
-                //UI.Notify(ConfigurationManager.AppSettings["database_connection"]);
-                var str = settings.GetValue("", "ConnectionString");
-				if (notificationsEnabled) UI.Notify(loc);
-
-            }
-            if (k.KeyCode == Keys.G) // temp modification
-            {
-                /*
+                    //UINotify(ConfigurationManager.AppSettings["database_connection"]);
+                    var str = settings.GetValue("", "ConnectionString");
+                    UINotify("BaseDirectory: " + loc);
+                    UINotify("ConnectionString: " + str);
+                    break;
+                // temp modification
+                case Keys.G:
+                    /*
                 IsGamePaused = true;
                 Game.Pause(true);
                 Script.Wait(500);
@@ -560,146 +852,238 @@ namespace GTAVisionExport {
                 IsGamePaused = false;
                 Game.Pause(false);
                 */
-                var data = GTAData.DumpData(Game.GameTime + ".tiff", new List<Weather>(wantedWeather));
-
-                string path = @"C:\Users\NGV-02\Documents\Data\trymatrix.txt";
-                // This text is added only once to the file.
-                if (!File.Exists(path))
-                {
-                    // Create a file to write to.
-                    using (StreamWriter file = File.CreateText(path))
-                    {
-                        
-                        
-                        file.WriteLine("cam direction file");
-                        file.WriteLine("direction:");
-                        file.WriteLine(GameplayCamera.Direction.X.ToString() + ' ' + GameplayCamera.Direction.Y.ToString() + ' ' + GameplayCamera.Direction.Z.ToString());
-                        file.WriteLine("Dot Product:");
-                        file.WriteLine(Vector3.Dot(GameplayCamera.Direction, GameplayCamera.Rotation));
-                        file.WriteLine("position:");
-                        file.WriteLine(GameplayCamera.Position.X.ToString() + ' ' + GameplayCamera.Position.Y.ToString() + ' ' + GameplayCamera.Position.Z.ToString());
-                        file.WriteLine("rotation:");
-                        file.WriteLine(GameplayCamera.Rotation.X.ToString() + ' ' + GameplayCamera.Rotation.Y.ToString() + ' ' + GameplayCamera.Rotation.Z.ToString());
-                        file.WriteLine("relative heading:");
-                        file.WriteLine(GameplayCamera.RelativeHeading.ToString());
-                        file.WriteLine("relative pitch:");
-                        file.WriteLine(GameplayCamera.RelativePitch.ToString());
-                        file.WriteLine("fov:");
-                        file.WriteLine(GameplayCamera.FieldOfView.ToString());
+                    GTAData data;
+                    if (multipleWeathers) {
+                        data = GTAData.DumpData(Game.GameTime + ".tiff", wantedWeathers.ToList());
                     }
-                }
-            }
-
-            if (k.KeyCode == Keys.T) // temp modification
-            {
-                World.Weather = Weather.Raining;
-                /* set it between 0 = stop, 1 = heavy rain. set it too high will lead to sloppy ground */
-                Function.Call(GTA.Native.Hash._SET_RAIN_FX_INTENSITY, 0.5f);
-                var test = Function.Call<float>(GTA.Native.Hash.GET_RAIN_LEVEL);
-				if (notificationsEnabled) UI.Notify("" + test);
-                World.CurrentDayTime = new TimeSpan(12, 0, 0);
-                //Script.Wait(5000);
-            }
-
-            if (k.KeyCode == Keys.N)
-            {
-                /*
-                //var color = VisionNative.GetColorBuffer();
-                
-                List<byte[]> colors = new List<byte[]>();
-                Game.Pause(true);
-                Script.Wait(1);
-                var depth = VisionNative.GetDepthBuffer();
-                var stencil = VisionNative.GetStencilBuffer();
-                foreach (var wea in wantedWeather) {
-                    World.TransitionToWeather(wea, 0.0f);
-                    Script.Wait(1);
-                    colors.Add(VisionNative.GetColorBuffer());
-                }
-                Game.Pause(false);
-                if (depth != null)
-                {
-                    var res = Game.ScreenResolution;
-                    var t = Tiff.Open(Path.Combine(dataPath, "test.tiff"), "w");
-                    ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
-                    t.Close();
-                    UI.Notify(GameplayCamera.FieldOfView.ToString());
-                }
-                else
-                {
-                    UI.Notify("No Depth Data quite yet");
-                }
-                //UI.Notify((connection != null && connection.Connected).ToString());
-                */
-                //var color = VisionNative.GetColorBuffer();
-                for (int i = 0; i < 100; i++)
-                {
-                    List<byte[]> colors = new List<byte[]>();
-                    Game.Pause(true);
-                    var depth = VisionNative.GetDepthBuffer();
-                    var stencil = VisionNative.GetStencilBuffer();
-                    foreach (var wea in wantedWeather)
-                    {
-                        World.TransitionToWeather(wea, 0.0f);
-                        Script.Wait(1);
-                        colors.Add(VisionNative.GetColorBuffer());
+                    else {
+                        Weather weather = currentWeather ? GTA.World.Weather : wantedWeather;
+                        data = GTAData.DumpData(Game.GameTime + ".tiff", weather);
                     }
 
-                    Game.Pause(false);
-                    var res = Game.ScreenResolution;
-                    var t = Tiff.Open(Path.Combine(dataPath, "info" + i.ToString() + ".tiff"), "w");
-                    ImageUtils.WriteToTiff(t, res.Width, res.Height, colors, depth, stencil);
-                    t.Close();
-					if (notificationsEnabled) UI.Notify(GameplayCamera.FieldOfView.ToString());
-                    //UI.Notify((connection != null && connection.Connected).ToString());
-
-
-                    var data = GTAData.DumpData(Game.GameTime + ".dat", new List<Weather>(wantedWeather));
-
-                    string path = @"C:\Users\NGV-02\Documents\Data\info.txt";
+                    string path = @"D:\GTAV_extraction_output\trymatrix.txt";
                     // This text is added only once to the file.
-                    if (!File.Exists(path))
-                    {
+                    if (!File.Exists(path)) {
                         // Create a file to write to.
-                        using (StreamWriter file = File.CreateText(path))
-                        {
-                            file.WriteLine("cam direction & Ped pos file");
+                        using (StreamWriter file = File.CreateText(path)) {
+                            file.WriteLine("cam direction file");
+                            file.WriteLine("direction:");
+                            file.WriteLine(
+                                $"{World.RenderingCamera.Direction.X} {World.RenderingCamera.Direction.Y} {World.RenderingCamera.Direction.Z}");
+                            file.WriteLine("Dot Product:");
+                            file.WriteLine(Vector3.Dot(World.RenderingCamera.Direction, World.RenderingCamera.Rotation));
+                            file.WriteLine("position:");
+                            file.WriteLine(
+                                $"{World.RenderingCamera.Position.X} {World.RenderingCamera.Position.Y} {World.RenderingCamera.Position.Z}");
+                            file.WriteLine("rotation:");
+                            file.WriteLine(
+                                $"{World.RenderingCamera.Rotation.X} {World.RenderingCamera.Rotation.Y} {World.RenderingCamera.Rotation.Z}");
+                            file.WriteLine("relative heading:");
+                            file.WriteLine(GameplayCamera.RelativeHeading.ToString());
+                            file.WriteLine("relative pitch:");
+                            file.WriteLine(GameplayCamera.RelativePitch.ToString());
+                            file.WriteLine("fov:");
+                            file.WriteLine(GameplayCamera.FieldOfView.ToString());
                         }
                     }
 
-                    using (StreamWriter file = File.AppendText(path))
-                    {
-                        file.WriteLine("==============info" + i.ToString() + ".tiff 's metadata=======================");
-                        file.WriteLine("cam pos");
-                        file.WriteLine(GameplayCamera.Position.X.ToString());
-                        file.WriteLine(GameplayCamera.Position.Y.ToString());
-                        file.WriteLine(GameplayCamera.Position.Z.ToString());
-                        file.WriteLine("cam direction");
-                        file.WriteLine(GameplayCamera.Direction.X.ToString());
-                        file.WriteLine(GameplayCamera.Direction.Y.ToString());
-                        file.WriteLine(GameplayCamera.Direction.Z.ToString());
-                        file.WriteLine("character");
-                        file.WriteLine(data.Pos.X.ToString());
-                        file.WriteLine(data.Pos.Y.ToString());
-                        file.WriteLine(data.Pos.Z.ToString());
-                        foreach (var detection in data.Detections)
-                        {
-                            file.WriteLine(detection.Type.ToString());
-                            file.WriteLine(detection.Pos.X.ToString());
-                            file.WriteLine(detection.Pos.Y.ToString());
-                            file.WriteLine(detection.Pos.Z.ToString());
-                        }
+                    break;
+                // temp modification
+                case Keys.T:
+                    World.Weather = Weather.Raining;
+                    /* set it between 0 = stop, 1 = heavy rain. set it too high will lead to sloppy ground */
+                    Function.Call(Hash._SET_RAIN_FX_INTENSITY, 0.5f);
+                    var test = Function.Call<float>(Hash.GET_RAIN_LEVEL);
+                    UINotify("" + test);
+                    World.CurrentDayTime = new TimeSpan(12, 0, 0);
+                    //Script.Wait(5000);
+                    break;
+                case Keys.N:
+                    UINotify("N pressed, going to take screenshots");
+
+                    startRunAndSessionManual();
+                    postgresTask?.Wait();
+                    runTask?.Wait();
+                    UINotify("starting screenshots");
+                    for (int i = 0; i < 2; i++) {
+                        GamePause(true);
+                        gatherData(100);
+                        GamePause(false);
+                        Script.Wait(200); // hoping game will go on during this wait
                     }
 
-                    Script.Wait(200);
-                }
-        }
-            if (k.KeyCode == Keys.I)
-            {
-                var info = new GTAVisionUtils.InstanceData();
-				if (notificationsEnabled) UI.Notify(info.type);
-				if (notificationsEnabled) UI.Notify(info.publichostname);
+                    if (staticCamera) {
+                        CamerasList.Deactivate();
+                    }
+
+                    StopRun();
+                    StopSession();
+                    break;
+                case Keys.OemMinus: //to tlačítko vlevo od pravého shiftu, -
+                    UINotify("- pressed, going to rotate cameras");
+                
+                    Game.Pause(true);
+                    for (int i = 0; i < CamerasList.cameras.Count; i++) {
+                        Logger.WriteLine($"activating camera {i}");
+                        CamerasList.ActivateCamera(i);
+                        Script.Wait(1000);
+                    }
+                    CamerasList.Deactivate();
+                    Game.Pause(false);
+                    break;
+                case Keys.I:
+                    var info = new GTAVisionUtils.InstanceData();
+                    UINotify(info.type);
+                    UINotify(info.publichostname);
+                    break;
+                case Keys.Divide:
+                    Logger.WriteLine($"{World.GetGroundHeight(Game.Player.Character.Position)} is the current player ({Game.Player.Character.Position}) ground position.");
+                    var startRect = OffroadPlanning.GetRandomRect(OffroadPlanning.GetRandomArea());
+                    var start = OffroadPlanning.GetRandomPoint(startRect);
+                    var startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                    Logger.WriteLine($"{startZ} is the ground position of {start}.");
+//                    OffroadPlanning.setNextStart();
+                    startRect = OffroadPlanning.GetRandomRect(OffroadPlanning.GetRandomArea());
+                    start = OffroadPlanning.GetRandomPoint(startRect);
+                    somePos = start;
+                    startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                    Logger.WriteLine($"{startZ} is the ground position of {start}.");
+//                    when I use the same position, the GetGroundHeight call takes coordinates of player as ground height
+                    Game.Player.Character.Position = new Vector3(start.X + 5, start.Y + 5, 800);                    
+                    Logger.WriteLine($"teleporting player above teh position.");
+                    Script.Wait(50);
+                    startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                    Logger.WriteLine($"{startZ} is the ground position of {start}.");
+                    Logger.WriteLine($"{World.GetGroundHeight(Game.Player.Character.Position)} is the current player ({Game.Player.Character.Position}) ground position.");
+                    Logger.ForceFlush();
+                    break;
+                case Keys.F12:
+                    Logger.WriteLine($"{World.GetGroundHeight(Game.Player.Character.Position)} is the current player ({Game.Player.Character.Position}) ground position.");
+                    Logger.WriteLine($"{World.GetGroundHeight(somePos)} is the {somePos} ground position.");
+                    break;
+                case Keys.F11:
+                    Model mod = new Model(GTAConst.OffroadVehicleHash);
+                    var player = Game.Player;
+                    var vehicle = World.CreateVehicle(mod, player.Character.Position);
+                    player.Character.SetIntoVehicle(vehicle, VehicleSeat.Driver);
+                    break;
+                case Keys.F10:
+                    startRect = OffroadPlanning.GetRandomRect(OffroadPlanning.GetRandomArea());
+                    start = OffroadPlanning.GetRandomPoint(startRect);
+                    somePos = start;
+                    startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                    Logger.WriteLine($"{startZ} is the ground position of {start}.");
+                    for (int i = 900; i > 100; i-= 50) {
+//                    when I use the same position, the GetGroundHeight call takes coordinates of player as ground height
+                        Game.Player.Character.Position = new Vector3(start.X + 5, start.Y + 5, i);
+                        Logger.WriteLine($"teleporting player above teh position to height {i}.");
+                        Script.Wait(500);
+                        startZ = World.GetGroundHeight(new Vector2(start.X, start.Y));
+                        Logger.WriteLine($"{startZ} is the ground position of {start}.");                        
+                    }
+                    break;
+                case Keys.F9:
+                    //turn on and off for datagathering during driving, mostly for testing offroad
+                    gatheringData = !gatheringData;
+                    if (gatheringData) {
+                        UI.Notify("will be gathering data");
+                    }
+                    else {
+                        UI.Notify("won't be gathering data");
+                    }
+
+                    break;
+
             }
+        }
+
+        private bool saveSnapshotToFile(String name, Weather[] weathers, bool manageGamePauses = true) {
+//            returns true on success, and false on failure
+            List<byte[]> colors = new List<byte[]>();
+
+            if (manageGamePauses) {
+                GamePause(true);                
+            }
+            
+            var depth = VisionNative.GetDepthBuffer();
+            var stencil = VisionNative.GetStencilBuffer();
+            if (depth == null || stencil == null) {
+                return false;
+            }
+
+            foreach (var wea in weathers) {
+                World.TransitionToWeather(wea, 0.0f);
+                Script.Wait(1);
+                var color = VisionNative.GetColorBuffer();
+                if (color == null) {
+                    return false;
+                }
+
+                colors.Add(color);
+            }
+
+            if (manageGamePauses) {
+                GamePause(false);
+            }
+
+            var res = Game.ScreenResolution;
+            var fileName = Path.Combine(dataPath, name);
+            ImageUtils.WriteToTiff(fileName, res.Width, res.Height, colors, depth, stencil, false);
+//            UINotify("file saved to: " + fileName);
+            return true;
+        }
+
+        private bool saveSnapshotToFile(String name, Weather weather, bool manageGamePauses = true) {
+//            returns true on success, and false on failure
+            if (manageGamePauses) {
+                GamePause(true);                
+            }
+
+            World.TransitionToWeather(weather,
+                0.0f);
+            Script.Wait(10);
+            var depth = VisionNative.GetDepthBuffer();
+            var stencil = VisionNative.GetStencilBuffer();
+            var color = VisionNative.GetColorBuffer();
+            if (depth == null || stencil == null || color == null) {
+                return false;
+            }
+
+
+            if (manageGamePauses) {
+                GamePause(false);
+            }
+
+            var res = Game.ScreenResolution;
+            var fileName = Path.Combine(dataPath, name);
+            ImageUtils.WriteToTiff(fileName, res.Width, res.Height, new List<byte[]>() {color}, depth, stencil, false);
+//            UINotify("file saved to: " + fileName);
+            return true;
+        }
+
+        private void dumpTest() {
+            List<byte[]> colors = new List<byte[]>();
+            Game.Pause(true);
+            Script.Wait(1);
+            var depth = VisionNative.GetDepthBuffer();
+            var stencil = VisionNative.GetStencilBuffer();
+            foreach (var wea in wantedWeathers) {
+                World.TransitionToWeather(wea, 0.0f);
+                Script.Wait(1);
+                colors.Add(VisionNative.GetColorBuffer());
+            }
+
+            Game.Pause(false);
+            if (depth != null) {
+                var res = Game.ScreenResolution;
+                ImageUtils.WriteToTiff(Path.Combine(dataPath, "test"), res.Width, res.Height, colors, depth, stencil);
+                UINotify(World.RenderingCamera.FieldOfView.ToString());
+            }
+            else {
+                UINotify("No Depth Data quite yet");
+            }
+
+            UINotify((connection != null && connection.Connected).ToString());
         }
     }
 }

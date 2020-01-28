@@ -60,7 +60,8 @@ create table detections
 	bbox3d box3d,
 	rot geometry,
 	coverage real default 0.0,
-    created timestamp without time zone default (now() at time zone 'utc')
+    created timestamp without time zone default (now() at time zone 'utc'),
+	velocity GEOMETRY(PointZ)
 )
 ;
 
@@ -107,21 +108,30 @@ create table snapshots
 			primary key,
 	run_id integer
 		constraint snapshots_run_fkey
-			references runs
-				on delete cascade,
+			references runs,
 	version integer,
+	scene_id uuid,
 	imagepath text,
 	timestamp timestamp with time zone,
 	timeofday time,
 	currentweather weather,
 	camera_pos geometry(PointZ),
+	camera_rot geometry(PointZ),
+	camera_relative_rotation geometry(PointZ),
 	camera_direction geometry,
 	camera_fov real,
+	world_matrix double precision[],
 	view_matrix double precision[],
 	proj_matrix double precision[],
 	processed boolean default false not null,
 	width integer,
-	height integer
+	height integer,
+	ui_width integer,
+	ui_height integer,
+	cam_near_clip real,
+	cam_far_clip real,
+	player_pos GEOMETRY(PointZ),
+	velocity GEOMETRY(PointZ)
 )
 ;
 
@@ -240,12 +250,99 @@ create table system_graphics
 ;
 
 
+--
+-- Name: ngv_box3dmultipoint(box3d); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_box3dmultipoint(box3d) RETURNS geometry
+    LANGUAGE sql
+    AS $_$ select ST_Multi(ST_Collect(ST_MakePoint(ST_XMin($1), ST_YMin($1), ST_ZMin($1)), ST_MakePoint(ST_XMax($1), ST_YMax($1), ST_ZMax($1)))) $_$;
+
+
+--
+-- Name: ngv_box3dpolygon(box3d); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_box3dpolygon(box3d) RETURNS geometry
+    LANGUAGE sql
+    AS $_$
+SELECT ST_Collect(ARRAY[
+     ST_MakePoint(ST_XMin($1), ST_YMin($1), ST_ZMin($1)),
+     ST_MakePoint(ST_XMax($1), ST_YMin($1), ST_ZMin($1)),
+     ST_MakePoint(ST_XMax($1), ST_YMax($1), ST_ZMin($1)),
+     ST_MakePoint(ST_XMin($1), ST_YMax($1), ST_ZMin($1)),
+     ST_MakePoint(ST_XMin($1), ST_YMin($1), ST_ZMax($1)),
+     ST_MakePoint(ST_XMax($1), ST_YMin($1), ST_ZMax($1)),
+     ST_MakePoint(ST_XMax($1), ST_YMax($1), ST_ZMax($1)),
+     ST_MakePoint(ST_XMin($1), ST_YMax($1), ST_ZMax($1))])
+$_$;
+
+
+--
+-- Name: ngv_contract(box, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_contract(bbox box, width integer, height integer) RETURNS box
+    LANGUAGE sql
+    AS $$
+    select box(point((bbox[0])[0] / width, (bbox[0])[1] / height), point((bbox[1])[0] / width, (bbox[1])[1] / height));
+$$;
+
+
+--
+-- Name: ngv_expand(box, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_expand(bbox box, width integer, height integer) RETURNS box
+    LANGUAGE sql
+    AS $$
+    select box(point((bbox[0])[0] * width, (bbox[0])[1] * height), point((bbox[1])[0] * width, (bbox[1])[1] * height));
+$$;
+
+
+--
+-- Name: ngv_get_bytes(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_get_bytes(id integer) RETURNS bytea
+    LANGUAGE sql
+    AS $$
+SELECT ngv_get_bytes(localpath, imagepath) FROM snapshots JOIN runs USING(run_id) where snapshot_id=id
+$$;
+
+
+--
+-- Name: ngv_get_raster(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ngv_get_raster(archive text, image text) RETURNS raster
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	RETURN ST_FromGDALRaster(ngv_get_bytes(archive, image));
+END;
+$$;
+
+-- we often ask for all entities for single snapshot, this index makes querying like 20x faster
+CREATE INDEX snapshot_index ON detections (snapshot_id);
+
+-- so we see nicely even postgis objects
+CREATE VIEW snapshots_view AS
+  SELECT snapshot_id, run_id, version, scene_id, imagepath, timestamp, timeofday, currentweather, 
+    ARRAY[st_x(camera_pos), st_y(camera_pos), st_z(camera_pos)] AS camera_pos,
+    ARRAY[st_x(camera_rot), st_y(camera_rot), st_z(camera_rot)] AS camera_rot,
+    ARRAY[st_x(camera_relative_rotation), st_y(camera_relative_rotation), st_z(camera_relative_rotation)] AS camera_relative_rotation,
+    ARRAY[st_x(camera_relative_position), st_y(camera_relative_position), st_z(camera_relative_position)] AS camera_relative_position,
+    ARRAY[st_x(camera_direction), st_y(camera_direction), st_z(camera_direction)] AS camera_direction,
+    camera_fov, world_matrix, view_matrix, proj_matrix, processed, width, height, ui_width, ui_height, cam_near_clip, cam_far_clip,
+    ARRAY[st_x(player_pos), st_y(player_pos), st_z(player_pos)] AS player_pos,
+    ARRAY[st_x(velocity), st_y(velocity), st_z(velocity)] AS velocity
+  FROM snapshots;
 ```
 
 ## Copying compiled files to GTA V
 After you compile the GTAVisionExport, copy compiled files from the `path to GTAVisionExport/managed/GTAVisionExport/bin/Release` to `path to GTA V/scripts`.
 Content of `scripts` directory should be following: 
-- AWSSDK.dll
 - BitMiracle.LibTiff.NET.dll
 - BitMiracle.LibTiff.NET.xml
 - gdal_csharp.dll
@@ -294,6 +391,11 @@ To verify all plugins loaded, see the `ScriptHookVDotNet2.log` and search for th
 
 If less than 10 scripts loaded, you have problem.
 
+If you have `ScriptHookVDotNet2.dll` in the scripts directory, you need to remove it.
+
+If only 1 script is loaded (NativeUI), it can be solved by removing `YamlDotNet.pdb` from your scripts dir.
+You should not have any .pdb files except of your own dlls (`GTAVisionExport.pdb` and `GTAVisionUtils.pdb`)
+
 ## Usage
 
 ### Dependencies setup
@@ -316,7 +418,7 @@ Turn NativeUI notifications off by pressing "X" in the game.
 
 In settings, set up these things:
 - In Camera
-    - set First Person Velicle Hood to On
+    - set First Person Vehicle Hood to On
 - In Display
     - set Radar to Off
     - set HUD to Off
@@ -336,3 +438,23 @@ There is either manual or automatic way.
     It connects to the socket server inside the managed plugin. 
     When the main script starts, you can click the "START_SESSION" button and then it creates new car and starts 
     driving autonomously and grabbing screenshots automatically.
+
+### Other notes
+Data gathering, specifically grabbing data from GPU buffers, breaks when using multiple monitors, data gathering must run only on one monitor.
+    
+### Downgrading the GTA V Steam version
+Your version of GTA V can be higher than your shvdn can manage, and in that case, this error pops up and game crashes:
+Here is tutorial for it:
+https://www.youtube.com/watch?v=7HWOGLtV7Ig
+Link for files needed to download is: 
+https://mega.nz/#!Z7RVUDzb!jtWcn0sQxM7Er4pR83mDG3jFDJ49QkA_7SO9aFckawY
+if the link is dead, just write me and I'll upload files somewhere and share them with you.
+
+Basically:
+setup the update frequency in steam to updating before launch (all other options are automatic updates, which you don't want)
+The only files being changed during updates are:
+GTA5.exe
+GTAVLauncher.exe
+update/update.rpf
+
+So simply backup these files, just to be sure, and replace them by their older versions.

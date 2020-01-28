@@ -23,6 +23,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AWSSDK, Version=2.3.55.2, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
@@ -66,7 +68,13 @@
       <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.1.1.0\lib\netstandard1.1\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="NativeUI">
-      <HintPath>C:\Program Files\Rockstar Games\Grand Theft Auto V\Scripts\NativeUI.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
+    </Reference>
+    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\NativeUI.dll</HintPath>
+    </Reference>
+    <Reference Include="NativeUI, Version=1.7.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\NativeUI.dll</HintPath>
     </Reference>
     <Reference Include="Npgsql, Version=3.2.1.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\packages\Npgsql.3.2.1\lib\net451\Npgsql.dll</HintPath>
@@ -79,8 +87,8 @@
       <HintPath>..\packages\GDAL.1.11.1\lib\net40\osr_csharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ScriptHookVDotNet2">
-      <HintPath>C:\Program Files\Rockstar Games\Grand Theft Auto V\ScriptHookVDotNet2.dll</HintPath>
+    <Reference Include="ScriptHookVDotNet2, Version=2.10.3.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\ScriptHookVDotNet2.2.10.5\lib\net452\ScriptHookVDotNet2.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX, Version=3.1.1.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpDX.3.1.1\lib\net45\SharpDX.dll</HintPath>
@@ -111,10 +119,22 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="VAutodrive">
-      <HintPath>C:\Program Files\Rockstar Games\Grand Theft Auto V\Scripts\VAutodrive.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VAutodrive.dll</HintPath>
+    </Reference>
+    <Reference Include="VAutodrive, Version=7.0.3.23292, Culture=neutral, PublicKeyToken=null">
+      <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VAutodrive.dll</HintPath>
+    </Reference>
+    <Reference Include="VAutodrive, Version=8.0.3.35407, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\376923-VAutodrive V8.0.3\Scripts\VAutodrive.dll</HintPath>
     </Reference>
     <Reference Include="VCommonFunctions">
-      <HintPath>C:\Program Files\Rockstar Games\Grand Theft Auto V\Scripts\VCommonFunctions.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VCommonFunctions.dll</HintPath>
+    </Reference>
+    <Reference Include="VCommonFunctions, Version=2.9.1.32038, Culture=neutral, PublicKeyToken=null">
+      <HintPath>D:\Program Files (x86)\SteamLibrary\steamapps\common\Grand Theft Auto V\scripts\VCommonFunctions.dll</HintPath>
+    </Reference>
+    <Reference Include="VCommonFunctions, Version=3.1.0.38426, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\376923-VAutodrive V8.0.3\Scripts\VCommonFunctions.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -124,6 +144,8 @@
     <Compile Include="HashFunctions.cs" />
     <Compile Include="ImageUtils.cs" />
     <Compile Include="InstanceData.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="MathUtils.cs" />
     <Compile Include="NativeInterop.cs" />
     <Compile Include="PostgresExport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -137,6 +159,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="GdalConfiguration.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\VVVV.FreeImage.3.15.1.1\build\net40\VVVV.FreeImage.targets" Condition="Exists('..\packages\VVVV.FreeImage.3.15.1.1\build\net40\VVVV.FreeImage.targets')" />

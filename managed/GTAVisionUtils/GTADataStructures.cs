@@ -13,9 +13,11 @@ using SharpDX;
 using SharpDX.Mathematics;
 using NativeUI;
 using System.Drawing;
+using Amazon.KeyManagementService.Model.Internal.MarshallTransformations;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics;
+using Color = System.Drawing.Color;
 using Vector2 = GTA.Math.Vector2;
 using Vector3 = GTA.Math.Vector3;
 using Point = System.Drawing.Point;
@@ -101,6 +103,7 @@ namespace GTAVisionUtils
         public GTABoundingBox2 BBox { get; set; }
         public BoundingBox BBox3D { get; set; }
         public int Handle { get; set; }
+        public GTAVector velocity { get; set; }
         public GTADetection(Entity e, DetectionType type)
         {
             Type = type;
@@ -110,11 +113,12 @@ namespace GTAVisionUtils
             Handle = e.Handle;
             
             Rot = new GTAVector(e.Rotation);
+            velocity = new GTAVector(e.Velocity);
             cls = DetectionClass.Unknown;
             Vector3 gmin;
             Vector3 gmax;
             e.Model.GetDimensions(out gmin, out gmax);
-            BBox3D = new SharpDX.BoundingBox((SharpDX.Vector3)new GTAVector(gmin), (SharpDX.Vector3)new GTAVector(gmax));
+            BBox3D = new BoundingBox((SharpDX.Vector3) new GTAVector(gmin), (SharpDX.Vector3)new GTAVector(gmax));
         }
 
         public GTADetection(Ped p) : this(p, DetectionType.person)
@@ -150,6 +154,10 @@ namespace GTAVisionUtils
         public float X { get; set; }
         public float Y { get; set; }
 
+        public static GTAVector2 fromVector2(Vector2 vector2) {
+            return new GTAVector2(vector2.X, vector2.Y);
+        }
+        
         public GTAVector2(float x, float y)
         {
             X = x;
@@ -177,14 +185,29 @@ namespace GTAVisionUtils
         public TimeSpan LocalTime { get; set; }
         public Weather CurrentWeather { get; set; }
         public List<Weather> CapturedWeathers;
-        public GTAVector Pos { get; set; }
+        public GTAVector CamPos { get; set; }
+        public GTAVector CamRot { get; set; }
+        public BoundingBox CarModelBox { get; set; }
         public GTAVector CamDirection { get; set; }
         //mathnet's matrices are in heap storage, which is super annoying, 
         //but we want to use double matrices to avoid numerical issues as we
         //decompose the MVP matrix into seperate M,V and P matrices
+        public DenseMatrix WorldMatrix { get; set; }
         public DenseMatrix ViewMatrix { get; set; }
         public DenseMatrix ProjectionMatrix { get; set; }
         public double CamFOV { get; set; }
+
+        public double CamNearClip { get; set; }
+        public double CamFarClip { get; set; }
+        public GTAVector playerPos { get; set; }
+        public GTAVector velocity { get; set; }
+        public int UIHeight { get; set; }
+        public int UIWidth { get; set; }
+        public Guid sceneGuid { get; set; }
+        public GTAVector CamRelativeRot { get; set; }
+        public GTAVector CamRelativePos { get; set; }
+        public GTAVector2 CurrentTarget { get; set; }
+
         public List<GTADetection> Detections { get; set; }
         public static SharpDX.Vector3 CvtVec(GTA.Math.Vector3 inp) {
             return (SharpDX.Vector3)new GTAVector(inp);
@@ -253,36 +276,55 @@ namespace GTAVisionUtils
                 rv.Max.Y = Math.Max(rv.Max.Y, s.Y);
             }
 
-//            int width = 1280;
-//            int height = 960;
-//            int x = (int)(rv.Min.X * width);
-//            int y = (int)(rv.Min.Y * height);
-//            int x2 = (int)(rv.Max.X * width);
-//            int y2 = (int)(rv.Max.Y * height);
-//            float w = rv.Max.X - rv.Min.X;
-//            float h = rv.Max.Y - rv.Min.Y;
+            float w = rv.Max.X - rv.Min.X;
+            float h = rv.Max.Y - rv.Min.Y;
+//            just for debug purposes, show visible and not visible entities in other color
+//            if (CheckVisible(e))
+//            {
+//                HashFunctions.DrawRect(rv.Min.X + w / 2, rv.Min.Y + h / 2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y,
+//                    Color.White, 100);
+//            }
+//            else
+//            {
+//                HashFunctions.DrawRect(rv.Min.X + w / 2, rv.Min.Y + h / 2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y,
+//                    Color.Red, 100);                
+//            }
 //            HashFunctions.DrawRect(rv.Min.X + w/2, rv.Min.Y + h/2, rv.Max.X - rv.Min.X, rv.Max.Y - rv.Min.Y, 255, 255, 255, 100);
-//            new UIRectangle(new Point((int)(rv.Min.X * 1920), (int)(rv.Min.Y * 1080)), rv.)
             return rv;
         }
         public static bool CheckVisible(Entity e) {
-            return true;
-            //var p = Game.Player.LastVehicle;
+//            return true;
 
-            var ppos = GameplayCamera.Position;
+            var ppos = World.RenderingCamera.Position;
             var isLOS = Function.Call<bool>((GTA.Native.Hash) 0x0267D00AF114F17A, Game.Player.Character, e);
-            return isLOS;
-            //var ppos = GameplayCamera.Position;
+            if (isLOS) return true;
+//            return isLOS;
+//            var ppos = GameplayCamera.Position;
 
-            //var res = World.Raycast(ppos, e.Position, IntersectOptions.Everything, Game.Player.Character.CurrentVehicle);
-            //HashFunctions.Draw3DLine(ppos, e.Position);
-            //UI.Notify("Camera: " + ppos.X + " Ent: " + e.Position.X);
-            //World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, p.Position, (e.Position - p.Position).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Red);
-            //return res.HitEntity == e;
-            //if (res.HitCoords == null) return false;
-            //return e.IsInRangeOf(res.HitCoords, 10);
+            var res = World.Raycast(ppos, e.Position, IntersectOptions.Everything, Game.Player.Character.CurrentVehicle);
+//            HashFunctions.Draw3DLine(ppos, e.Position);
+//            UI.Notify("Camera: " + ppos.X + " Ent: " + e.Position.X);
+//            World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, ppos, (e.Position - ppos).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Green);
+            
+//            debugging visualization for visible or invisible vehicles
+//            var p = Game.Player.LastVehicle;
+//            HashFunctions.Draw3DLine(p.Position, e.Position, System.Drawing.Color.Green);
+//            var s = HashFunctions.Convert3dTo2d(e.Position);
+//            HashFunctions.Draw2DText("Just Monika", s.X, s.Y, 255, 255, 255, 255);
+            
+//            World.DrawMarker(MarkerType.HorizontalCircleSkinny_Arrow, p.Position, (e.Position - p.Position).Normalized, Vector3.Zero, new Vector3(1, 1, 1), System.Drawing.Color.Green);
+//            return res.HitEntity == e;
+            if (res.HitEntity == e) return true;
+            if (res.HitCoords == null) return false;
+            return e.IsInRangeOf(res.HitCoords, 10);
             //return res.HitEntity == e;
         }
+
+        public static GTAData DumpData(string imageName, Weather capturedWeather)
+        {
+            return DumpData(imageName, new List<Weather>() {capturedWeather});
+        }
+
         public static GTAData DumpData(string imageName, List<Weather> capturedWeathers)
         {
             var ret = new GTAData();
@@ -293,15 +335,26 @@ namespace GTAVisionUtils
             
             ret.Timestamp = DateTime.UtcNow;
             ret.LocalTime = World.CurrentDayTime;
-            ret.Pos = new GTAVector(GameplayCamera.Position);
-            ret.CamDirection = new GTAVector(GameplayCamera.Direction);
-            ret.CamFOV = GameplayCamera.FieldOfView;
+            ret.CamPos = new GTAVector(World.RenderingCamera.Position);
+            ret.CamRot = new GTAVector(World.RenderingCamera.Rotation);
+            //getting information about currently driving vehicle model size
+            Vector3 gmin;
+            Vector3 gmax;
+            Game.Player.Character.CurrentVehicle.Model.GetDimensions(out gmin, out gmax);
+            ret.CarModelBox = new BoundingBox((SharpDX.Vector3) new GTAVector(gmin), (SharpDX.Vector3) new GTAVector(gmax));
+            ret.CamDirection = new GTAVector(World.RenderingCamera.Direction);
+            ret.CamFOV = World.RenderingCamera.FieldOfView;
             ret.ImageWidth = Game.ScreenResolution.Width;
             ret.ImageHeight = Game.ScreenResolution.Height;
-            //ret.Pos = new GTAVector(Game.Player.Character.Position);
+            ret.UIWidth = UI.WIDTH;
+            ret.UIHeight = UI.HEIGHT;
+            ret.playerPos = new GTAVector(Game.Player.Character.Position);
+            ret.velocity = new GTAVector(Game.Player.Character.Velocity);
+            ret.CamNearClip = World.RenderingCamera.NearClip;
+            ret.CamFarClip = World.RenderingCamera.FarClip;
             
-            var peds = World.GetNearbyPeds(Game.Player.Character, 150.0f);
-            var cars = World.GetNearbyVehicles(Game.Player.Character, 150.0f);
+            var peds = World.GetNearbyPeds(Game.Player.Character, 500.0f);
+            var cars = World.GetNearbyVehicles(Game.Player.Character, 500.0f);
             //var props = World.GetNearbyProps(Game.Player.Character.Position, 300.0f);
             
             var constants = VisionNative.GetConstants();
@@ -318,15 +371,19 @@ namespace GTAVisionUtils
             var P = WVP*WV.Inverse();
             ret.ProjectionMatrix = P as DenseMatrix;
             ret.ViewMatrix = V as DenseMatrix;
+            ret.WorldMatrix = W as DenseMatrix;
             
             var pedList = from ped in peds
                 where ped.IsHuman && ped.IsOnFoot
+//                where ped.IsHuman && ped.IsOnFoot && CheckVisible(ped)
                 select new GTADetection(ped);
             var cycles = from ped in peds
                 where ped.IsOnBike
+//                where ped.IsOnBike && CheckVisible(ped)
                 select new GTADetection(ped, DetectionType.bicycle);
             
             var vehicleList = from car in cars
+//                where CheckVisible(car)
                 select new GTADetection(car);
             ret.Detections = new List<GTADetection>();
             ret.Detections.AddRange(pedList);
